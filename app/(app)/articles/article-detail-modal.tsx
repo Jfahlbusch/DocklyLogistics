@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
   Dialog,
@@ -13,6 +13,11 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ArticleForm, type ArticleFormValues } from "./article-form";
+import {
+  ArticleSupplierForm,
+  type LinkFormValues,
+  defaultLinkValues,
+} from "./article-supplier-form";
 
 type Article = {
   id: string;
@@ -63,9 +68,21 @@ export function ArticleDetailModal({
   const [editing, setEditing] = useState(false);
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [linkDialog, setLinkDialog] = useState<
+    null | { mode: "create" } | { mode: "edit"; link: ArticleSupplierLink }
+  >(null);
+  const [linkBusy, setLinkBusy] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   const canEdit = role === "USER" || role === "MANAGER" || role === "GLOBAL_ADMIN";
   const canDelete = role === "MANAGER" || role === "GLOBAL_ADMIN";
+
+  const refetchSuppliers = useCallback(async () => {
+    if (!articleId) return;
+    const r = await fetch(`/api/v1/articles/${articleId}/suppliers`);
+    const body = await r.json();
+    setSuppliers(body?.data ?? []);
+  }, [articleId]);
 
   useEffect(() => {
     if (!articleId) {
@@ -74,6 +91,8 @@ export function ArticleDetailModal({
       setBarcode(null);
       setEditing(false);
       setEditError(null);
+      setLinkDialog(null);
+      setLinkError(null);
       return;
     }
     setLoading(true);
@@ -103,7 +122,79 @@ export function ArticleDetailModal({
     else setBarcode(null);
   }
 
+  async function makePrimary(l: ArticleSupplierLink) {
+    if (!articleId) return;
+    setLinkError(null);
+    const r = await fetch(`/api/v1/articles/${articleId}/suppliers/${l.id}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ isPrimary: true }),
+    });
+    if (r.ok) {
+      await refetchSuppliers();
+      router.refresh();
+    } else {
+      const body = await r.json().catch(() => ({}));
+      setLinkError(body.detail ?? body.title ?? "Fehler beim Setzen");
+    }
+  }
+
+  async function deleteLink(l: ArticleSupplierLink) {
+    if (!articleId) return;
+    if (!confirm(`Zuordnung zu "${l.supplier.name}" wirklich entfernen?`)) return;
+    const r = await fetch(`/api/v1/articles/${articleId}/suppliers/${l.id}`, { method: "DELETE" });
+    if (r.status === 204) {
+      await refetchSuppliers();
+      router.refresh();
+    } else {
+      const body = await r.json().catch(() => ({}));
+      setLinkError(body.detail ?? body.title ?? "Löschen fehlgeschlagen");
+    }
+  }
+
+  async function submitLinkForm(values: LinkFormValues) {
+    if (!articleId || !linkDialog) return;
+    setLinkBusy(true);
+    setLinkError(null);
+    try {
+      if (linkDialog.mode === "create") {
+        const r = await fetch(`/api/v1/articles/${articleId}/suppliers`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(values),
+        });
+        const body = await r.json();
+        if (r.ok) {
+          setLinkDialog(null);
+          await refetchSuppliers();
+          router.refresh();
+        } else {
+          setLinkError(body.detail ?? body.title ?? "Fehler beim Zuordnen");
+        }
+      } else {
+        const { supplierId: _sId, ...patch } = values;
+        void _sId;
+        const r = await fetch(`/api/v1/articles/${articleId}/suppliers/${linkDialog.link.id}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(patch),
+        });
+        const body = await r.json();
+        if (r.ok) {
+          setLinkDialog(null);
+          await refetchSuppliers();
+          router.refresh();
+        } else {
+          setLinkError(body.detail ?? body.title ?? "Fehler beim Speichern");
+        }
+      }
+    } finally {
+      setLinkBusy(false);
+    }
+  }
+
   return (
+    <>
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl sm:max-w-3xl">
         {loading || !article ? (
@@ -153,49 +244,108 @@ export function ArticleDetailModal({
                 {article.longDesc && <Field label="Beschreibung" value={article.longDesc} />}
               </TabsContent>
 
-              <TabsContent value="suppliers">
-                {suppliers.length === 0 && (
-                  <div className="text-stone-500 text-sm py-4">
-                    Noch keine Lieferanten zugeordnet.
+              <TabsContent value="suppliers" className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="text-xs text-stone-500">
+                    Mehrere Lieferanten möglich · genau einer als <strong>primär</strong> markiert ·
+                    Primärlieferant wird in Vorschlägen vorausgewählt.
+                  </p>
+                  {canEdit && (
+                    <Button
+                      size="sm"
+                      onClick={() => {
+                        setLinkError(null);
+                        setLinkDialog({ mode: "create" });
+                      }}
+                      className="bg-navy-900 hover:bg-navy-700 text-white"
+                    >
+                      + Lieferant zuordnen
+                    </Button>
+                  )}
+                </div>
+
+                {linkError && !linkDialog && (
+                  <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+                    {linkError}
                   </div>
                 )}
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="text-[11px] tracking-[0.16em] uppercase text-stone-500 bg-stone-50">
-                      <th className="text-left p-2">Lieferant</th>
-                      <th className="text-left p-2">Kanal</th>
-                      <th className="text-left p-2">EK</th>
-                      <th className="text-left p-2">Lieferzeit</th>
-                      <th className="text-left p-2">Primary</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {suppliers.map((l) => (
-                      <tr key={l.id} className="border-t border-stone-100">
-                        <td className="p-2">
-                          <div className="font-medium text-navy-900">{l.supplier.name}</div>
-                          {l.supplier.city && (
-                            <div className="text-xs text-stone-500">{l.supplier.city}</div>
-                          )}
-                        </td>
-                        <td className="p-2">
-                          <Badge variant="secondary">{l.supplier.channel}</Badge>
-                        </td>
-                        <td className="p-2">
-                          € {Number(l.purchasePrice).toFixed(2)} {l.currency}
-                        </td>
-                        <td className="p-2">{l.leadTimeDays} Tage</td>
-                        <td className="p-2">
-                          {l.isPrimary && (
-                            <Badge className="bg-gold-500 text-navy-900 hover:bg-gold-400">
-                              primär
-                            </Badge>
-                          )}
-                        </td>
+
+                {suppliers.length === 0 ? (
+                  <div className="text-stone-500 text-sm py-6 text-center border border-stone-200 rounded-lg">
+                    Noch keine Lieferanten zugeordnet.
+                  </div>
+                ) : (
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-[11px] tracking-[0.16em] uppercase text-stone-500 bg-stone-50">
+                        <th className="text-left p-2">Lieferant</th>
+                        <th className="text-left p-2">Kanal</th>
+                        <th className="text-right p-2">EK</th>
+                        <th className="text-right p-2">Lieferzeit</th>
+                        <th className="text-right p-2">Min</th>
+                        <th className="text-left p-2">Lief.-SKU</th>
+                        <th className="text-center p-2">Primär</th>
+                        {canEdit && <th className="text-right p-2">Aktionen</th>}
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody>
+                      {suppliers.map((l) => (
+                        <tr key={l.id} className="border-t border-stone-100">
+                          <td className="p-2">
+                            <div className="font-medium text-navy-900">{l.supplier.name}</div>
+                            {l.supplier.city && (
+                              <div className="text-xs text-stone-500">{l.supplier.city}</div>
+                            )}
+                          </td>
+                          <td className="p-2">
+                            <Badge variant="secondary">{l.supplier.channel}</Badge>
+                          </td>
+                          <td className="p-2 text-right">
+                            € {Number(l.purchasePrice).toFixed(2)} {l.currency}
+                          </td>
+                          <td className="p-2 text-right">{l.leadTimeDays} Tage</td>
+                          <td className="p-2 text-right">{l.minOrderQty}</td>
+                          <td className="p-2 font-mono text-xs">{l.supplierSku ?? "—"}</td>
+                          <td className="p-2 text-center">
+                            {l.isPrimary ? (
+                              <Badge className="bg-gold-500 text-navy-900 hover:bg-gold-400">
+                                primär
+                              </Badge>
+                            ) : canEdit ? (
+                              <button
+                                onClick={() => makePrimary(l)}
+                                className="text-xs text-navy-900 underline hover:text-navy-700"
+                              >
+                                als primär
+                              </button>
+                            ) : (
+                              "—"
+                            )}
+                          </td>
+                          {canEdit && (
+                            <td className="p-2 text-right whitespace-nowrap">
+                              <button
+                                onClick={() => {
+                                  setLinkError(null);
+                                  setLinkDialog({ mode: "edit", link: l });
+                                }}
+                                className="text-xs text-navy-900 underline hover:text-navy-700 mr-3"
+                              >
+                                Bearbeiten
+                              </button>
+                              <button
+                                onClick={() => deleteLink(l)}
+                                className="text-xs text-rose-700 underline hover:text-rose-900"
+                              >
+                                Löschen
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
               </TabsContent>
 
               <TabsContent value="barcode" className="space-y-4">
@@ -365,6 +515,56 @@ export function ArticleDetailModal({
         )}
       </DialogContent>
     </Dialog>
+
+    {linkDialog && articleId && (
+      <Dialog
+        open
+        onOpenChange={(o) => {
+          if (!o) {
+            setLinkDialog(null);
+            setLinkError(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-xl sm:max-w-xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-xl text-navy-900">
+              {linkDialog.mode === "create" ? "Lieferant zuordnen" : "Zuordnung bearbeiten"}
+            </DialogTitle>
+            <DialogDescription>
+              {linkDialog.mode === "create"
+                ? "Wähle einen Lieferanten und gib Konditionen für diesen Artikel an."
+                : `Konditionen für ${linkDialog.link.supplier.name} bearbeiten.`}
+            </DialogDescription>
+          </DialogHeader>
+          <ArticleSupplierForm
+            initial={
+              linkDialog.mode === "create"
+                ? defaultLinkValues
+                : {
+                    supplierId: linkDialog.link.supplier.id,
+                    purchasePrice: Number(linkDialog.link.purchasePrice),
+                    currency: linkDialog.link.currency,
+                    isPrimary: linkDialog.link.isPrimary,
+                    leadTimeDays: linkDialog.link.leadTimeDays,
+                    minOrderQty: linkDialog.link.minOrderQty,
+                    supplierSku: linkDialog.link.supplierSku ?? undefined,
+                  }
+            }
+            isCreate={linkDialog.mode === "create"}
+            excludeSupplierIds={suppliers.map((s) => s.supplier.id)}
+            busy={linkBusy}
+            errorMessage={linkError}
+            onCancel={() => {
+              setLinkDialog(null);
+              setLinkError(null);
+            }}
+            onSubmit={submitLinkForm}
+          />
+        </DialogContent>
+      </Dialog>
+    )}
+    </>
   );
 }
 

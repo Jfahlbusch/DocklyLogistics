@@ -110,6 +110,14 @@ registry.registerPath({
   responses: { 201: { description: "Verknüpft" }, 404: { description: "Artikel oder Lieferant fehlt" }, 409: { description: "Bereits verknüpft" } },
 });
 registry.registerPath({
+  method: "patch", path: "/articles/{articleId}/suppliers/{linkId}", summary: "Zuordnung bearbeiten", tags: ["Articles"],
+  request: {
+    params: z.object({ articleId: z.string().cuid(), linkId: z.string().cuid() }),
+    body: { content: { "application/json": { schema: ArticleSupplierUpdateSchema } } },
+  },
+  responses: { 200: { description: "Aktualisiert" }, 404: { description: "Nicht gefunden" } },
+});
+registry.registerPath({
   method: "delete", path: "/articles/{articleId}/suppliers/{linkId}", summary: "Verknüpfung lösen", tags: ["Articles"],
   request: { params: z.object({ articleId: z.string().cuid(), linkId: z.string().cuid() }) },
   responses: { 204: { description: "Gelöst" }, 404: { description: "Nicht gefunden" } },
