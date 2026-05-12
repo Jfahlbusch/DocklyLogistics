@@ -269,10 +269,8 @@ export function ArticleDetailModal({
                 )}
               </TabsContent>
 
-              <TabsContent value="stock">
-                <div className="text-stone-500 text-sm">
-                  Bestandsverwaltung kommt in Phase M3 (Lagermodus + Stock-Engine).
-                </div>
+              <TabsContent value="stock" className="space-y-3">
+                <StockPanel articleId={article.id} minStock={article.minStock} baseUnit={article.baseUnit} />
               </TabsContent>
             </Tabs>
           </>
@@ -299,5 +297,107 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
       </div>
       <div className={mono ? "font-mono" : ""}>{value}</div>
     </div>
+  );
+}
+
+type StockRow = {
+  id: string;
+  quantity: number;
+  location: { code: string; name: string; zone: string | null };
+};
+type HistoryRow = {
+  id: string;
+  delta: number;
+  reason: string;
+  refType: string | null;
+  note: string | null;
+  createdAt: string;
+  createdBy: string;
+  location: { code: string; name: string };
+};
+
+function StockPanel({ articleId, minStock, baseUnit }: { articleId: string; minStock: number; baseUnit: string }) {
+  const [balances, setBalances] = useState<StockRow[]>([]);
+  const [history, setHistory] = useState<HistoryRow[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    Promise.all([
+      fetch(`/api/v1/stock?articleId=${articleId}&pageSize=200`).then((r) => r.json()),
+      fetch(`/api/v1/stock/${articleId}/history?pageSize=15`).then((r) => r.json()),
+    ]).then(([bRes, hRes]) => {
+      if (cancelled) return;
+      setBalances(bRes?.data ?? []);
+      setHistory(hRes?.data ?? []);
+      setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [articleId]);
+
+  const total = balances.reduce((s, b) => s + b.quantity, 0);
+  const shortfall = Math.max(0, minStock - total);
+
+  if (loading) return <div className="py-6 text-center text-stone-500 text-sm">Lade Bestand…</div>;
+
+  return (
+    <>
+      <div className="grid grid-cols-3 gap-3">
+        <Kpi label="Gesamtbestand" value={`${total} ${baseUnit}`} />
+        <Kpi label="Mindestbestand" value={`${minStock} ${baseUnit}`} />
+        <div className={"border rounded-xl px-4 py-3 " + (shortfall > 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50")}>
+          <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500">Unterdeckung</div>
+          <div className={"font-medium mt-1 " + (shortfall > 0 ? "text-rose-700" : "text-emerald-700")}>{shortfall} {baseUnit}</div>
+        </div>
+      </div>
+
+      <div className="border border-stone-200 rounded-xl overflow-hidden">
+        <div className="bg-stone-50 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-stone-500">Bestand pro Lagerplatz</div>
+        {balances.length === 0 ? (
+          <div className="px-4 py-4 text-stone-500 text-sm">Kein Bestand eingebucht.</div>
+        ) : (
+          <ul className="divide-y divide-stone-100">
+            {balances.map((b) => (
+              <li key={b.id} className="px-4 py-2 flex items-center justify-between text-sm">
+                <div>
+                  <span className="font-mono text-xs">{b.location.code}</span>
+                  <span className="text-stone-500 ml-2">{b.location.name}</span>
+                  {b.location.zone && <span className="text-stone-400 text-xs ml-2">· {b.location.zone}</span>}
+                </div>
+                <div className="font-medium">{b.quantity} {baseUnit}</div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
+      <div className="border border-stone-200 rounded-xl overflow-hidden">
+        <div className="bg-stone-50 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-stone-500">Letzte Bewegungen</div>
+        {history.length === 0 ? (
+          <div className="px-4 py-4 text-stone-500 text-sm">Keine Bewegungen.</div>
+        ) : (
+          <ul className="divide-y divide-stone-100">
+            {history.map((h) => (
+              <li key={h.id} className="px-4 py-2 flex items-center justify-between gap-3 text-sm">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className={"font-medium " + (h.delta >= 0 ? "text-emerald-700" : "text-rose-700")}>
+                      {h.delta >= 0 ? "+" : ""}{h.delta} {baseUnit}
+                    </span>
+                    <span className="text-stone-500 text-xs">{h.reason}</span>
+                    {h.refType && <span className="text-stone-400 text-xs">· {h.refType}</span>}
+                  </div>
+                  <div className="text-stone-500 text-xs">
+                    {h.location.code} · {new Date(h.createdAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })} · {h.createdBy}
+                    {h.note && <> · {h.note}</>}
+                  </div>
+                </div>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+    </>
   );
 }

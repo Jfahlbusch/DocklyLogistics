@@ -78,9 +78,7 @@ export function SupplierDetailModal({
               <TabsList>
                 <TabsTrigger value="stamm">Stamm</TabsTrigger>
                 <TabsTrigger value="kanal">Kanal</TabsTrigger>
-                <TabsTrigger value="orders" disabled>
-                  Bestellungen (M4)
-                </TabsTrigger>
+                <TabsTrigger value="orders">Bestellungen</TabsTrigger>
                 <TabsTrigger value="integrations" disabled>
                   API-Keys / Webhooks (M5)
                 </TabsTrigger>
@@ -137,9 +135,12 @@ export function SupplierDetailModal({
                   Die Tenant-seitige Absender-Identität (z. B. Mailadresse, EDI-Sender-ID) wird
                   unter
                   <strong className="text-navy-900"> Einstellungen → Versand </strong>
-                  konfiguriert. Bearbeiten der Lieferanten-Konfiguration kommt in M2-Final / über
-                  die API.
+                  konfiguriert.
                 </div>
+              </TabsContent>
+
+              <TabsContent value="orders" className="mt-4">
+                <SupplierOrdersPanel supplierId={supplier.id} />
               </TabsContent>
             </Tabs>
           </>
@@ -156,6 +157,79 @@ function Field({ label, value, mono }: { label: string; value: string; mono?: bo
         {label}
       </div>
       <div className={mono ? "font-mono" : ""}>{value}</div>
+    </div>
+  );
+}
+
+type SupplierOrder = {
+  id: string;
+  orderNo: string;
+  status: string;
+  total: string;
+  currency: string;
+  createdAt: string;
+  sentAt: string | null;
+  _count?: { items: number };
+};
+
+const STATUS_STYLES: Record<string, string> = {
+  DRAFT: "bg-stone-100 text-stone-700",
+  REVIEW: "bg-gold-50 text-gold-700",
+  APPROVED: "bg-gold-50 text-gold-700",
+  SENT: "bg-navy-100 text-navy-700",
+  CONFIRMED: "bg-emerald-50 text-emerald-700",
+  PARTIALLY_RECEIVED: "bg-emerald-50 text-emerald-700",
+  RECEIVED: "bg-emerald-50 text-emerald-700",
+  CLOSED: "bg-stone-100 text-stone-500",
+  CANCELLED: "bg-rose-50 text-rose-700",
+};
+
+function SupplierOrdersPanel({ supplierId }: { supplierId: string }) {
+  const [orders, setOrders] = useState<SupplierOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    fetch(`/api/v1/orders?supplierId=${supplierId}&pageSize=20`)
+      .then((r) => r.json())
+      .then((body) => { if (!cancelled) { setOrders(body?.data ?? []); setLoading(false); } });
+    return () => { cancelled = true; };
+  }, [supplierId]);
+
+  if (loading) return <div className="py-6 text-center text-stone-500 text-sm">Lade Bestellungen…</div>;
+  if (orders.length === 0) {
+    return <div className="py-6 text-center text-stone-500 text-sm">Noch keine Bestellungen für diesen Lieferanten.</div>;
+  }
+
+  return (
+    <div className="border border-stone-200 rounded-xl overflow-hidden">
+      <table className="w-full text-sm">
+        <thead>
+          <tr className="bg-stone-50 text-[11px] tracking-[0.16em] uppercase text-stone-500">
+            <th className="text-left font-medium px-3 py-2">Nr.</th>
+            <th className="text-left font-medium px-3 py-2">Status</th>
+            <th className="text-left font-medium px-3 py-2">Pos.</th>
+            <th className="text-right font-medium px-3 py-2">Summe</th>
+            <th className="text-left font-medium px-3 py-2">Erstellt</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map((o) => (
+            <tr key={o.id} className="border-t border-stone-100">
+              <td className="px-3 py-2 font-mono text-xs">{o.orderNo}</td>
+              <td className="px-3 py-2">
+                <span className={"inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium " + (STATUS_STYLES[o.status] ?? "bg-stone-100 text-stone-700")}>
+                  <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />{o.status}
+                </span>
+              </td>
+              <td className="px-3 py-2 text-xs">{o._count?.items ?? "—"}</td>
+              <td className="px-3 py-2 text-right font-medium">{Number(o.total).toFixed(2)} {o.currency}</td>
+              <td className="px-3 py-2 text-xs text-stone-500">{new Date(o.createdAt).toLocaleDateString("de-DE")}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

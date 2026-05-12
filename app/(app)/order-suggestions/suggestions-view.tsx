@@ -160,7 +160,7 @@ export function SuggestionsView({
         <div>
           <h1 className="font-display text-3xl text-navy-900">Bestellvorschläge</h1>
           <p className="text-sm text-stone-500 mt-1">
-            {total} Vorschläge · Bestätigung erzeugt in M4 eine Order; in M3 wird der Status nur gesetzt.
+            {total} Vorschläge · Bulk-Confirm gruppiert je Lieferant und erzeugt direkt Bestellungen im Status REVIEW.
           </p>
         </div>
         <div className="flex gap-2">
