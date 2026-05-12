@@ -12,6 +12,7 @@ import "@/lib/schemas/order";
 import "@/lib/schemas/api-key";
 import "@/lib/schemas/webhook";
 import "@/lib/schemas/audit";
+import "@/lib/schemas/reports";
 
 export const dynamic = "force-static";
 
