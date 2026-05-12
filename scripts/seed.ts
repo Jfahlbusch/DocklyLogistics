@@ -3,6 +3,7 @@ import { seedArticles } from "./seed/articles";
 import { seedSuppliers } from "./seed/suppliers";
 import { seedTenantChannels } from "./seed/tenant-channels";
 import { seedStorageLocations } from "./seed/storage-locations";
+import { seedStock } from "./seed/stock";
 
 async function main() {
   const tenantId = process.env.NEXT_PUBLIC_APP_TENANT;
@@ -31,6 +32,9 @@ async function main() {
 
   const locResult = await seedStorageLocations(prisma, tenantId);
   console.log(`[seed] storage-locations: ${locResult.locations}, article-default-location assignments: ${locResult.assigned}`);
+
+  const stockResult = await seedStock(prisma, tenantId);
+  console.log(`[seed] stock-balances: ${stockResult.balances}, initial-movements: ${stockResult.movements}`);
 
   await prisma.$disconnect();
   console.log(`[seed] done`);
