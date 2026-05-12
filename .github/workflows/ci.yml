@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: docklylogistics
+          POSTGRES_PASSWORD: docklylogistics
+          POSTGRES_DB: docklylogistics
+        ports:
+          - "5432:5432"
+        options: >-
+          --health-cmd "pg_isready -U docklylogistics"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URL: postgresql://docklylogistics:docklylogistics@localhost:5432/docklylogistics?schema=docklylogistics
+      NEXTAUTH_SECRET: ci-secret-not-used
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_TENANT: demo
+      KEYCLOAK_URL: http://example.test/auth
+      KEYCLOAK_REALM: ci
+      KEYCLOAK_CLIENT_ID: ci
+      KEYCLOAK_CLIENT_SECRET: ci
+      KEYCLOAK_ISSUER: http://example.test/auth/realms/ci
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.28.0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Create docklylogistics schema
+        run: |
+          PGPASSWORD=docklylogistics psql -h localhost -U docklylogistics -d docklylogistics \
+            -c "CREATE SCHEMA IF NOT EXISTS docklylogistics;"
+
+      - name: Prisma generate
+        run: pnpm prisma generate
+
+      - name: Prisma migrate deploy
+        run: pnpm prisma migrate deploy
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Unit tests
+        run: pnpm test
+
+      - name: Build
+        run: pnpm build
