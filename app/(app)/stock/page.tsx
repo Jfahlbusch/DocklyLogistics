@@ -68,5 +68,12 @@ export default async function StockPage() {
 
   const totalUnits = Array.from(usedByLocation.values()).reduce((s, x) => s + x, 0);
 
-  return <StockView locations={locations} articles={articleRows} totalUnits={totalUnits} />;
+  return (
+    <StockView
+      locations={locations}
+      articles={articleRows}
+      totalUnits={totalUnits}
+      role={session.role}
+    />
+  );
 }

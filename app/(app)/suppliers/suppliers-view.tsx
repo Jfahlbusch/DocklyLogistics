@@ -1,11 +1,19 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { SupplierDetailModal } from "./supplier-detail-modal";
+import { SupplierForm, defaultSupplierValues } from "./supplier-form";
 
 type SupplierCard = {
   id: string;
@@ -41,8 +49,13 @@ export function SuppliersView({
 }) {
   const router = useRouter();
   const sp = useSearchParams();
+  const [, startTransition] = useTransition();
   const [selected, setSelected] = useState<string | null>(null);
   const [searchValue, setSearchValue] = useState(q);
+  const [creating, setCreating] = useState(false);
+  const [createBusy, setCreateBusy] = useState(false);
+  const [createError, setCreateError] = useState<string | null>(null);
+  const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
 
   function onSearch(e: React.FormEvent) {
     e.preventDefault();
@@ -70,14 +83,26 @@ export function SuppliersView({
         </div>
         {canCreate && (
           <Button
+            onClick={() => setCreating(true)}
             className="bg-navy-900 hover:bg-navy-700 text-white"
-            disabled
-            title="Anlage erfolgt über die API (Scalar) oder in M2-Final"
           >
             + Neuer Lieferant
           </Button>
         )}
       </div>
+
+      {flash && (
+        <div
+          className={
+            "text-sm px-3 py-2 rounded-lg border " +
+            (flash.ok
+              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+              : "border-rose-200 bg-rose-50 text-rose-700")
+          }
+        >
+          {flash.text}
+        </div>
+      )}
 
       <Card className="shadow-soft">
         <form
@@ -165,7 +190,66 @@ export function SuppliersView({
         supplierId={selected}
         canManage={canManage}
         onClose={() => setSelected(null)}
+        onDeleted={(name) => {
+          setSelected(null);
+          setFlash({ ok: true, text: `Lieferant "${name}" gelöscht` });
+          startTransition(() => router.refresh());
+        }}
+        onUpdated={(name) => {
+          setFlash({ ok: true, text: `Lieferant "${name}" aktualisiert` });
+          startTransition(() => router.refresh());
+        }}
       />
+
+      <Dialog
+        open={creating}
+        onOpenChange={(o) => {
+          if (!o) {
+            setCreating(false);
+            setCreateError(null);
+          }
+        }}
+      >
+        <DialogContent className="max-w-2xl sm:max-w-2xl">
+          <DialogHeader>
+            <DialogTitle className="font-display text-2xl text-navy-900">
+              Neuer Lieferant
+            </DialogTitle>
+            <DialogDescription>Pflichtfelder sind mit * markiert.</DialogDescription>
+          </DialogHeader>
+          <SupplierForm
+            initial={defaultSupplierValues}
+            isCreate
+            busy={createBusy}
+            errorMessage={createError}
+            onCancel={() => {
+              setCreating(false);
+              setCreateError(null);
+            }}
+            onSubmit={async (values) => {
+              setCreateBusy(true);
+              setCreateError(null);
+              try {
+                const r = await fetch("/api/v1/suppliers", {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(values),
+                });
+                const body = await r.json();
+                if (r.ok) {
+                  setFlash({ ok: true, text: `Lieferant "${values.name}" angelegt` });
+                  setCreating(false);
+                  startTransition(() => router.refresh());
+                } else {
+                  setCreateError(body.detail ?? body.title ?? "Fehler beim Anlegen");
+                }
+              } finally {
+                setCreateBusy(false);
+              }
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

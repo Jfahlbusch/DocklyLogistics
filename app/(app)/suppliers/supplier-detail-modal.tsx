@@ -13,6 +13,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { SupplierForm, type SupplierFormValues } from "./supplier-form";
 
 type Supplier = {
   id: string;
@@ -33,16 +34,25 @@ export function SupplierDetailModal({
   supplierId,
   canManage,
   onClose,
+  onDeleted,
+  onUpdated,
 }: {
   supplierId: string | null;
   canManage: boolean;
   onClose: () => void;
+  onDeleted?: (name: string) => void;
+  onUpdated?: (name: string) => void;
 }) {
   const open = supplierId !== null;
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editBusy, setEditBusy] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
 
   useEffect(() => {
+    setEditing(false);
+    setEditError(null);
     if (!supplierId) {
       setSupplier(null);
       return;
@@ -80,82 +90,167 @@ export function SupplierDetailModal({
               </DialogDescription>
             </DialogHeader>
 
-            <Tabs defaultValue="stamm">
-              <TabsList>
-                <TabsTrigger value="stamm">Stamm</TabsTrigger>
-                <TabsTrigger value="kanal">Kanal</TabsTrigger>
-                <TabsTrigger value="orders">Bestellungen</TabsTrigger>
-                <TabsTrigger value="api-keys">API-Keys</TabsTrigger>
-              </TabsList>
+            {!editing && (
+              <Tabs defaultValue="stamm">
+                <TabsList>
+                  <TabsTrigger value="stamm">Stamm</TabsTrigger>
+                  <TabsTrigger value="kanal">Kanal</TabsTrigger>
+                  <TabsTrigger value="orders">Bestellungen</TabsTrigger>
+                  <TabsTrigger value="api-keys">API-Keys</TabsTrigger>
+                </TabsList>
 
-              <TabsContent value="stamm" className="space-y-2 text-sm mt-4">
-                <Field label="Name" value={supplier.name} />
-                <Field label="Kontakt" value={supplier.contactName ?? "—"} />
-                <Field label="E-Mail" value={supplier.email ?? "—"} mono />
-                <Field label="Telefon" value={supplier.phone ?? "—"} />
-                <Field label="Straße" value={supplier.street ?? "—"} />
-                <Field
-                  label="PLZ / Ort"
-                  value={`${supplier.postalCode ?? "—"} ${supplier.city ?? ""}`.trim()}
-                />
-                <Field label="Land" value={supplier.country ?? "—"} />
-                <Field label="Status" value={supplier.active ? "aktiv" : "inaktiv"} />
-              </TabsContent>
+                <TabsContent value="stamm" className="space-y-2 text-sm mt-4">
+                  <Field label="Name" value={supplier.name} />
+                  <Field label="Kontakt" value={supplier.contactName ?? "—"} />
+                  <Field label="E-Mail" value={supplier.email ?? "—"} mono />
+                  <Field label="Telefon" value={supplier.phone ?? "—"} />
+                  <Field label="Straße" value={supplier.street ?? "—"} />
+                  <Field
+                    label="PLZ / Ort"
+                    value={`${supplier.postalCode ?? "—"} ${supplier.city ?? ""}`.trim()}
+                  />
+                  <Field label="Land" value={supplier.country ?? "—"} />
+                  <Field label="Status" value={supplier.active ? "aktiv" : "inaktiv"} />
+                </TabsContent>
 
-              <TabsContent value="kanal" className="space-y-4 mt-4">
-                <div className="flex gap-2">
-                  {(["EMAIL", "API", "EDI"] as const).map((c) => (
-                    <div
-                      key={c}
-                      className={
-                        "flex-1 rounded-xl border px-4 py-3 text-left " +
-                        (supplier.channel === c
-                          ? "bg-navy-900 text-white border-navy-900"
-                          : "bg-white text-stone-500 border-stone-200")
-                      }
-                    >
-                      <div className="font-medium">{c}</div>
-                      <div className="text-xs mt-1 opacity-80">
-                        {c === "EMAIL"
-                          ? "PDF-Bestellschein per Mail"
-                          : c === "API"
-                            ? "JSON HTTP POST"
-                            : "EDIFACT/ORDERS D.96A"}
+                <TabsContent value="kanal" className="space-y-4 mt-4">
+                  <div className="flex gap-2">
+                    {(["EMAIL", "API", "EDI"] as const).map((c) => (
+                      <div
+                        key={c}
+                        className={
+                          "flex-1 rounded-xl border px-4 py-3 text-left " +
+                          (supplier.channel === c
+                            ? "bg-navy-900 text-white border-navy-900"
+                            : "bg-white text-stone-500 border-stone-200")
+                        }
+                      >
+                        <div className="font-medium">{c}</div>
+                        <div className="text-xs mt-1 opacity-80">
+                          {c === "EMAIL"
+                            ? "PDF-Bestellschein per Mail"
+                            : c === "API"
+                              ? "JSON HTTP POST"
+                              : "EDIFACT/ORDERS D.96A"}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="border border-stone-200 rounded-xl p-4 bg-stone-50">
-                  <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-2">
-                    Empfänger-Konfiguration
+                    ))}
                   </div>
-                  <pre className="text-xs font-mono whitespace-pre-wrap break-words text-stone-900">
-                    {JSON.stringify(supplier.channelConfig ?? {}, null, 2)}
-                  </pre>
-                </div>
 
-                <div className="text-xs text-stone-500">
-                  Die Tenant-seitige Absender-Identität (z. B. Mailadresse, EDI-Sender-ID) wird
-                  unter
-                  <strong className="text-navy-900"> Einstellungen → Versand </strong>
-                  konfiguriert.
-                </div>
-              </TabsContent>
+                  <div className="border border-stone-200 rounded-xl p-4 bg-stone-50">
+                    <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-2">
+                      Empfänger-Konfiguration
+                    </div>
+                    <pre className="text-xs font-mono whitespace-pre-wrap break-words text-stone-900">
+                      {JSON.stringify(supplier.channelConfig ?? {}, null, 2)}
+                    </pre>
+                  </div>
 
-              <TabsContent value="orders" className="mt-4">
-                <SupplierOrdersPanel supplierId={supplier.id} />
-              </TabsContent>
+                  <div className="text-xs text-stone-500">
+                    Die Tenant-seitige Absender-Identität (z. B. Mailadresse, EDI-Sender-ID) wird
+                    unter
+                    <strong className="text-navy-900"> Einstellungen → Versand </strong>
+                    konfiguriert.
+                  </div>
+                </TabsContent>
 
-              <TabsContent value="api-keys" className="mt-4">
-                <ApiKeysPanel supplierId={supplier.id} canManage={canManage} />
-              </TabsContent>
-            </Tabs>
+                <TabsContent value="orders" className="mt-4">
+                  <SupplierOrdersPanel supplierId={supplier.id} />
+                </TabsContent>
+
+                <TabsContent value="api-keys" className="mt-4">
+                  <ApiKeysPanel supplierId={supplier.id} canManage={canManage} />
+                </TabsContent>
+              </Tabs>
+            )}
+
+            {editing && supplier && (
+              <SupplierForm
+                initial={supplierToFormValues(supplier)}
+                isCreate={false}
+                busy={editBusy}
+                errorMessage={editError}
+                onCancel={() => {
+                  setEditing(false);
+                  setEditError(null);
+                }}
+                onSubmit={async (values) => {
+                  setEditBusy(true);
+                  setEditError(null);
+                  try {
+                    const r = await fetch(`/api/v1/suppliers/${supplier.id}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(values),
+                    });
+                    const body = await r.json();
+                    if (r.ok) {
+                      setEditing(false);
+                      const fresh = await fetch(`/api/v1/suppliers/${supplier.id}`).then((res) =>
+                        res.json(),
+                      );
+                      setSupplier(fresh?.data ?? null);
+                      onUpdated?.(values.name);
+                    } else {
+                      setEditError(body.detail ?? body.title ?? "Fehler beim Speichern");
+                    }
+                  } finally {
+                    setEditBusy(false);
+                  }
+                }}
+              />
+            )}
+
+            {!editing && supplier && canManage && (
+              <div className="flex justify-end gap-2 pt-4 border-t border-stone-100">
+                <Button
+                  variant="outline"
+                  className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                  onClick={async () => {
+                    if (!confirm(`Lieferant "${supplier.name}" wirklich löschen?`)) return;
+                    const r = await fetch(`/api/v1/suppliers/${supplier.id}`, {
+                      method: "DELETE",
+                    });
+                    if (r.status === 204) {
+                      onDeleted?.(supplier.name);
+                      onClose();
+                    } else {
+                      const body = await r.json().catch(() => ({}));
+                      alert(body.detail ?? body.title ?? "Löschen fehlgeschlagen");
+                    }
+                  }}
+                >
+                  Löschen
+                </Button>
+                <Button
+                  onClick={() => setEditing(true)}
+                  className="bg-navy-900 hover:bg-navy-700 text-white"
+                >
+                  Bearbeiten
+                </Button>
+              </div>
+            )}
           </>
         )}
       </DialogContent>
     </Dialog>
   );
+}
+
+function supplierToFormValues(s: Supplier): SupplierFormValues {
+  return {
+    name: s.name,
+    contactName: s.contactName ?? undefined,
+    email: s.email ?? undefined,
+    phone: s.phone ?? undefined,
+    street: s.street ?? undefined,
+    city: s.city ?? undefined,
+    postalCode: s.postalCode ?? undefined,
+    country: s.country ?? undefined,
+    channel: s.channel,
+    channelConfig: (s.channelConfig ?? {}) as Record<string, unknown>,
+    active: s.active,
+  };
 }
 
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
