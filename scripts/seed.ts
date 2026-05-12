@@ -2,6 +2,7 @@ import { prisma } from "../lib/db/client";
 import { seedArticles } from "./seed/articles";
 import { seedSuppliers } from "./seed/suppliers";
 import { seedTenantChannels } from "./seed/tenant-channels";
+import { seedStorageLocations } from "./seed/storage-locations";
 
 async function main() {
   const tenantId = process.env.NEXT_PUBLIC_APP_TENANT;
@@ -27,6 +28,9 @@ async function main() {
 
   const channelCount = await seedTenantChannels(prisma, tenantId);
   console.log(`[seed] tenant-channels: ${channelCount}`);
+
+  const locResult = await seedStorageLocations(prisma, tenantId);
+  console.log(`[seed] storage-locations: ${locResult.locations}, article-default-location assignments: ${locResult.assigned}`);
 
   await prisma.$disconnect();
   console.log(`[seed] done`);

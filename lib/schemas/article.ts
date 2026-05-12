@@ -138,3 +138,25 @@ registry.registerPath({
     404: { description: "Nicht gefunden" },
   },
 });
+
+registry.registerPath({
+  method: "post", path: "/articles/{id}/barcode", summary: "Barcode generieren", tags: ["Articles"],
+  request: {
+    params: z.object({ id: z.string().cuid() }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({
+            format: z.enum(["code128", "ean13"]),
+            source: z.enum(["SKU", "EAN"]).default("SKU"),
+          }),
+        },
+      },
+    },
+  },
+  responses: {
+    200: { description: "Barcode generiert (SVG + Base64-PNG)" },
+    404: { description: "Artikel nicht gefunden" },
+    422: { description: "Generierung fehlgeschlagen" },
+  },
+});
