@@ -106,6 +106,9 @@ model Article {
 
   suppliers         ArticleSupplier[]
   defaultLocation   StorageLocation? @relation(fields: [defaultLocationId], references: [id])
+  balances          StockBalance[]
+  movements         StockMovement[]
+  suggestions       OrderSuggestion[]
 
   @@unique([tenantId, sku])
   @@index([tenantId])
@@ -130,6 +133,7 @@ model Supplier {
   updatedAt     DateTime @updatedAt
 
   articles      ArticleSupplier[]
+  suggestions   OrderSuggestion[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -168,6 +172,8 @@ model StorageLocation {
   updatedAt DateTime @updatedAt
 
   articles  Article[]
+  balances  StockBalance[]
+  movements StockMovement[]
 
   @@unique([tenantId, code])
   @@index([tenantId])
@@ -206,4 +212,62 @@ model AuditLog {
 
   @@index([tenantId, entity, entityId])
   @@index([createdAt])
+}
+
+model StockBalance {
+  id            String    @id @default(cuid())
+  tenantId      String
+  articleId     String
+  locationId    String
+  quantity      Int       @default(0)
+  lastCountedAt DateTime?
+  updatedAt     DateTime  @updatedAt
+  createdAt     DateTime  @default(now())
+
+  article  Article         @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  location StorageLocation @relation(fields: [locationId], references: [id], onDelete: Restrict)
+
+  @@unique([articleId, locationId])
+  @@index([tenantId])
+  @@index([tenantId, articleId])
+}
+
+model StockMovement {
+  id         String   @id @default(cuid())
+  tenantId   String
+  articleId  String
+  locationId String
+  delta      Int
+  reason     String
+  refType    String?
+  refId      String?
+  note       String?
+  createdBy  String
+  createdAt  DateTime @default(now())
+
+  article  Article         @relation(fields: [articleId], references: [id])
+  location StorageLocation @relation(fields: [locationId], references: [id])
+
+  @@index([tenantId, articleId, createdAt])
+  @@index([tenantId, locationId, createdAt])
+}
+
+model OrderSuggestion {
+  id           String   @id @default(cuid())
+  tenantId     String
+  articleId    String
+  supplierId   String?
+  qtyOrderUnit Int
+  reason       String   // AUTO_MIN_STOCK | MANUAL_SCAN
+  status       String   @default("PENDING") // PENDING | CONFIRMED | DISMISSED
+  note         String?
+  createdBy    String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  article  Article   @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  supplier Supplier? @relation(fields: [supplierId], references: [id])
+
+  @@index([tenantId, status])
+  @@index([tenantId, articleId])
 }

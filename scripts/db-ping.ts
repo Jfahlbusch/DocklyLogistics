@@ -12,6 +12,9 @@ async function main() {
     locations: await prisma.storageLocation.count(),
     channelConfigs: await prisma.tenantChannelConfig.count(),
     auditLogs: await prisma.auditLog.count(),
+    stockBalances: await prisma.stockBalance.count(),
+    stockMovements: await prisma.stockMovement.count(),
+    orderSuggestions: await prisma.orderSuggestion.count(),
   };
   console.log("Counts:", counts);
 
