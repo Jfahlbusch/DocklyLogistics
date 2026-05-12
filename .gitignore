@@ -39,3 +39,13 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/lib/generated/prisma
+
+# Local env
+.env.local
+.env.bak
+.env*.local
+
+# Allow committed env template
+!.env.example

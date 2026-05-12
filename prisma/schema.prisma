@@ -1,0 +1,50 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Connection URL is defined in `prisma.config.ts` (Prisma 7 requirement).
+// The runtime PrismaClient still reads DATABASE_URL from the environment.
+datasource db {
+  provider = "postgresql"
+}
+
+enum UserRole {
+  GLOBAL_ADMIN
+  MANAGER
+  USER
+  VIEWER
+}
+
+model Tenant {
+  id        String   @id @default(cuid())
+  name      String   @unique  // Keycloak-Gruppen-Name, z.B. "Demo"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users User[]
+
+  @@index([name])
+}
+
+model User {
+  id                      String    @id @default(cuid())
+  email                   String
+  name                    String?
+  keycloakSub             String?   @unique  // Keycloak-User-UUID
+  role                    UserRole  @default(VIEWER)
+  tenantId                String
+
+  internalApprovalAt      DateTime?
+  internalApprovalBy      String?
+  internalApprovalComment String?
+
+  lastLoginAt             DateTime?
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+
+  tenant Tenant @relation(fields: [tenantId], references: [id], onDelete: Restrict)
+
+  @@unique([email, tenantId])
+  @@index([tenantId])
+  @@index([role])
+}
