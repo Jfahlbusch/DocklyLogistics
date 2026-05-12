@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +12,7 @@ import {
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { ArticleForm, type ArticleFormValues } from "./article-form";
 
 type Article = {
   id: string;
@@ -25,6 +27,8 @@ type Article = {
   packFactor: number;
   barcodeSource: string;
   minStock: number;
+  defaultLocationId: string | null;
+  vatRate: string | null;
 };
 
 type ArticleSupplierLink = {
@@ -42,23 +46,34 @@ type BarcodeResult = { format: string; value: string; svg: string; pngBase64: st
 
 export function ArticleDetailModal({
   articleId,
+  role,
   onClose,
 }: {
   articleId: string | null;
+  role?: string;
   onClose: () => void;
 }) {
+  const router = useRouter();
   const open = articleId !== null;
   const [article, setArticle] = useState<Article | null>(null);
   const [suppliers, setSuppliers] = useState<ArticleSupplierLink[]>([]);
   const [barcode, setBarcode] = useState<BarcodeResult | null>(null);
   const [barcodeFormat, setBarcodeFormat] = useState<"code128" | "ean13">("code128");
   const [loading, setLoading] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [editBusy, setEditBusy] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  const canEdit = role === "USER" || role === "MANAGER" || role === "GLOBAL_ADMIN";
+  const canDelete = role === "MANAGER" || role === "GLOBAL_ADMIN";
 
   useEffect(() => {
     if (!articleId) {
       setArticle(null);
       setSuppliers([]);
       setBarcode(null);
+      setEditing(false);
+      setEditError(null);
       return;
     }
     setLoading(true);
@@ -117,7 +132,8 @@ export function ArticleDetailModal({
               <Kpi label="Mindestbestand" value={String(article.minStock)} />
             </div>
 
-            <Tabs defaultValue="stamm">
+            {!editing && (
+              <Tabs defaultValue="stamm">
               <TabsList>
                 <TabsTrigger value="stamm">Stamm</TabsTrigger>
                 <TabsTrigger value="suppliers">Lieferanten ({suppliers.length})</TabsTrigger>
@@ -273,11 +289,101 @@ export function ArticleDetailModal({
                 <StockPanel articleId={article.id} minStock={article.minStock} baseUnit={article.baseUnit} />
               </TabsContent>
             </Tabs>
+            )}
+
+            {editing && article && (
+              <ArticleForm
+                initial={articleToFormValues(article)}
+                isCreate={false}
+                busy={editBusy}
+                errorMessage={editError}
+                onCancel={() => {
+                  setEditing(false);
+                  setEditError(null);
+                }}
+                onSubmit={async (values) => {
+                  setEditBusy(true);
+                  setEditError(null);
+                  try {
+                    // Strip sku from PATCH (immutable per UX); also strip empty optionals.
+                    const { sku: _sku, ...patch } = values;
+                    void _sku;
+                    const r = await fetch(`/api/v1/articles/${article.id}`, {
+                      method: "PATCH",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify(patch),
+                    });
+                    const body = await r.json();
+                    if (r.ok) {
+                      setEditing(false);
+                      // Refetch the article to update tabs
+                      const fresh = await fetch(`/api/v1/articles/${article.id}`).then((res) => res.json());
+                      setArticle(fresh?.data ?? null);
+                      router.refresh();
+                    } else {
+                      setEditError(body.detail ?? body.title ?? "Fehler beim Speichern");
+                    }
+                  } finally {
+                    setEditBusy(false);
+                  }
+                }}
+              />
+            )}
+
+            {!editing && article && (canEdit || canDelete) && (
+              <div className="flex justify-end gap-2 pt-4 border-t border-stone-100">
+                {canDelete && (
+                  <Button
+                    variant="outline"
+                    className="text-rose-600 border-rose-200 hover:bg-rose-50"
+                    onClick={async () => {
+                      if (!confirm(`Artikel "${article.name}" (${article.sku}) wirklich löschen?`)) return;
+                      const r = await fetch(`/api/v1/articles/${article.id}`, { method: "DELETE" });
+                      if (r.status === 204) {
+                        onClose();
+                        router.refresh();
+                      } else {
+                        const body = await r.json().catch(() => ({}));
+                        alert(body.detail ?? body.title ?? "Löschen fehlgeschlagen");
+                      }
+                    }}
+                  >
+                    Löschen
+                  </Button>
+                )}
+                {canEdit && (
+                  <Button
+                    onClick={() => setEditing(true)}
+                    className="bg-navy-900 hover:bg-navy-700 text-white"
+                  >
+                    Bearbeiten
+                  </Button>
+                )}
+              </div>
+            )}
           </>
         )}
       </DialogContent>
     </Dialog>
   );
+}
+
+function articleToFormValues(a: Article): ArticleFormValues {
+  return {
+    sku: a.sku,
+    name: a.name,
+    shortDesc: a.shortDesc ?? undefined,
+    longDesc: a.longDesc ?? undefined,
+    category: a.category ?? undefined,
+    eanGtin: a.eanGtin ?? undefined,
+    baseUnit: a.baseUnit as ArticleFormValues["baseUnit"],
+    orderUnit: a.orderUnit as ArticleFormValues["orderUnit"],
+    packFactor: a.packFactor,
+    barcodeSource: a.barcodeSource as ArticleFormValues["barcodeSource"],
+    minStock: a.minStock,
+    defaultLocationId: a.defaultLocationId ?? undefined,
+    vatRate: a.vatRate === null ? undefined : Number(a.vatRate),
+  };
 }
 
 function Kpi({ label, value }: { label: string; value: string }) {
