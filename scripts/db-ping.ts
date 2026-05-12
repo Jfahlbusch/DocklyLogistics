@@ -3,6 +3,18 @@ import { prisma } from "../lib/db/client";
 async function main() {
   const result = await prisma.$queryRaw`SELECT 1 as ok`;
   console.log("DB OK:", result);
+
+  const counts = {
+    tenants: await prisma.tenant.count(),
+    users: await prisma.user.count(),
+    articles: await prisma.article.count(),
+    suppliers: await prisma.supplier.count(),
+    locations: await prisma.storageLocation.count(),
+    channelConfigs: await prisma.tenantChannelConfig.count(),
+    auditLogs: await prisma.auditLog.count(),
+  };
+  console.log("Counts:", counts);
+
   await prisma.$disconnect();
 }
 
