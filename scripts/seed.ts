@@ -7,6 +7,7 @@ import { seedStock } from "./seed/stock";
 import { seedOrderSuggestions } from "./seed/order-suggestions";
 import { seedOrders } from "./seed/orders";
 import { seedApiKeys } from "./seed/api-keys";
+import { seedWebhooks } from "./seed/webhooks";
 
 async function main() {
   const tenantId = process.env.NEXT_PUBLIC_APP_TENANT;
@@ -50,6 +51,9 @@ async function main() {
   for (const k of apiKeyResult.printed) {
     console.log(`         ${k.supplier}: ${k.fullKey}`);
   }
+
+  const webhookResult = await seedWebhooks(prisma, tenantId);
+  console.log(`[seed] webhooks: ${webhookResult.created} created`);
 
   await prisma.$disconnect();
   console.log(`[seed] done`);

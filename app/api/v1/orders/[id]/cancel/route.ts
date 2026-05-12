@@ -2,6 +2,7 @@ import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { orderService, OrderStatusError } from "@/lib/services/order-service";
 import { appendAudit } from "@/lib/audit/append";
+import { emitEvent } from "@/lib/services/webhook-emit";
 import { auth } from "@/lib/auth";
 import { handler } from "@/lib/api/handler";
 import { requireRoleFromHeaders, UnauthenticatedError } from "@/lib/api/guard";
@@ -34,6 +35,13 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
         tenantId: ctx.tenantId, entity: "Order", entityId: id, action: "CANCEL",
         actorId, actorEmail,
         before: { status: existing.status }, after: { status: "CANCELLED", reason: body.reason ?? null },
+      });
+      await emitEvent(tx, ctx.tenantId, "order.cancelled", {
+        orderId: id,
+        orderNo: existing.orderNo,
+        supplierId: existing.supplierId,
+        reason: body.reason ?? null,
+        from: existing.status,
       });
       return u;
     });

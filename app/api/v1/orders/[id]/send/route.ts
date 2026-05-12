@@ -6,6 +6,7 @@ import { tenantChannelRepo } from "@/lib/db/repos/tenant-channel";
 import { renderOrderPdfBuffer, type OrderPdfData } from "@/lib/pdf/order-pdf";
 import { dispatchOrder } from "@/lib/channels";
 import { appendAudit } from "@/lib/audit/append";
+import { emitEvent } from "@/lib/services/webhook-emit";
 import { auth } from "@/lib/auth";
 import { handler } from "@/lib/api/handler";
 import { requireRoleFromHeaders, UnauthenticatedError } from "@/lib/api/guard";
@@ -97,6 +98,12 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
         actorId, actorEmail,
         before: { status: "APPROVED" },
         after: { status: "SENT", channel: order.supplier.channel, pdfHash },
+      });
+      await emitEvent(tx, ctx.tenantId, "order.sent", {
+        orderId: id,
+        orderNo: order.orderNo,
+        supplierId: order.supplier.id,
+        total: Number(order.total),
       });
       return u;
     });

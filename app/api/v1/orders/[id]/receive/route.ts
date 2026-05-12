@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db/client";
 import { orderService, OrderStatusError } from "@/lib/services/order-service";
 import { stockRepo } from "@/lib/db/repos/stock";
 import { appendAudit } from "@/lib/audit/append";
+import { emitEvent } from "@/lib/services/webhook-emit";
 import { auth } from "@/lib/auth";
 import { handler } from "@/lib/api/handler";
 import { requireRoleFromHeaders, UnauthenticatedError } from "@/lib/api/guard";
@@ -86,6 +87,14 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
         tenantId: ctx.tenantId, entity: "Order", entityId: id, action: "RECEIVE",
         actorId, actorEmail,
         after: { status: nextStatus, movements },
+      });
+      const event = fullyReceived ? "order.received" : "order.partially_received";
+      await emitEvent(tx, ctx.tenantId, event, {
+        orderId: id,
+        orderNo: order.orderNo,
+        supplierId: order.supplierId,
+        movements,
+        fullyReceived,
       });
       return { order: updated, movements };
     });

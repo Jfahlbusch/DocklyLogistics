@@ -4,6 +4,7 @@ import { publicHandler } from "@/lib/api/public-handler";
 import { authenticatePublic, PublicAuthError } from "@/lib/api/public-auth";
 import { orderService, OrderStatusError } from "@/lib/services/order-service";
 import { appendAudit } from "@/lib/audit/append";
+import { emitEvent } from "@/lib/services/webhook-emit";
 import { ok, fail } from "@/lib/api/respond";
 import { PublicOrderConfirmSchema } from "@/lib/schemas/public-api";
 
@@ -50,6 +51,14 @@ export const POST = publicHandler(async (req: NextRequest, { params }: Ctx) => {
         actorEmail: `api:${ctx.prefix}`,
         before: { status: order.status },
         after: { status: "CONFIRMED", source: "public-api" },
+      });
+      await emitEvent(tx, ctx.tenantId, "order.confirmed", {
+        orderId: id,
+        orderNo: order.orderNo,
+        supplierId: order.supplierId,
+        source: "public-api",
+        acknowledgement: body.acknowledgement ?? null,
+        expectedDeliveryAt: body.expectedDeliveryAt ?? null,
       });
       return u;
     });
