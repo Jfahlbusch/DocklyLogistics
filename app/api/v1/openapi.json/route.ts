@@ -9,6 +9,7 @@ import "@/lib/schemas/storage-location";
 import "@/lib/schemas/stock";
 import "@/lib/schemas/order-suggestion";
 import "@/lib/schemas/order";
+import "@/lib/schemas/api-key";
 
 export const dynamic = "force-static";
 
