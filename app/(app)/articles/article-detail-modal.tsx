@@ -92,7 +92,12 @@ export function ArticleDetailModal({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl sm:max-w-3xl">
         {loading || !article ? (
-          <div className="py-10 text-center text-stone-500">Lade…</div>
+          <>
+            <DialogHeader className="sr-only">
+              <DialogTitle>Artikel-Detail wird geladen</DialogTitle>
+            </DialogHeader>
+            <div className="py-10 text-center text-stone-500">Lade…</div>
+          </>
         ) : (
           <>
             <DialogHeader>

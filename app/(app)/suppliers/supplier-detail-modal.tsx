@@ -52,7 +52,12 @@ export function SupplierDetailModal({
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="max-w-3xl sm:max-w-3xl">
         {loading || !supplier ? (
-          <div className="py-10 text-center text-stone-500">Lade…</div>
+          <>
+            <DialogHeader className="sr-only">
+              <DialogTitle>Lieferanten-Detail wird geladen</DialogTitle>
+            </DialogHeader>
+            <div className="py-10 text-center text-stone-500">Lade…</div>
+          </>
         ) : (
           <>
             <DialogHeader>

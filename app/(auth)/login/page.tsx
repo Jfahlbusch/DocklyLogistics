@@ -1,6 +1,6 @@
-import { signIn } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { loginWithKeycloak } from "./actions";
 
 export default async function LoginPage({
   searchParams,
@@ -36,12 +36,8 @@ export default async function LoginPage({
           <p className="text-sm text-stone-600">
             Anmeldung über Keycloak (BackOfficeDigital).
           </p>
-          <form
-            action={async () => {
-              "use server";
-              await signIn("keycloak", { redirectTo: callbackUrl });
-            }}
-          >
+          <form action={loginWithKeycloak}>
+            <input type="hidden" name="callbackUrl" value={callbackUrl} />
             <Button type="submit" className="w-full bg-navy-900 hover:bg-navy-700 text-white">
               Mit Keycloak anmelden
             </Button>

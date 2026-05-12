@@ -110,7 +110,12 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
         <DialogContent className="max-w-4xl sm:max-w-4xl">
           {loading || !order ? (
-            <div className="py-10 text-center text-stone-500">Lade…</div>
+            <>
+              <DialogHeader className="sr-only">
+                <DialogTitle>Bestellungs-Detail wird geladen</DialogTitle>
+              </DialogHeader>
+              <div className="py-10 text-center text-stone-500">Lade…</div>
+            </>
           ) : (
             <>
               <DialogHeader>
