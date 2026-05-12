@@ -17,7 +17,7 @@ export const apiKeyRepo = {
     // Cross-tenant lookup — caller validates tenant via supplier afterwards
     return prisma.supplierApiKey.findUnique({
       where: { prefix },
-      include: { supplier: { select: { id: true, tenantId: true, channel: true, active: true } } },
+      include: { supplier: { select: { id: true, tenantId: true, name: true, channel: true, active: true } } },
     });
   },
 
