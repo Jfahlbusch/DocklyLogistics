@@ -213,16 +213,58 @@ export function ArticleDetailModal({
                   </div>
                 )}
                 {barcode && (
-                  <div className="border border-stone-200 rounded-xl p-4 bg-white flex flex-col items-center gap-2">
-                    <div className="text-xs text-stone-500 font-mono">{barcode.value}</div>
-                    <div dangerouslySetInnerHTML={{ __html: barcode.svg }} />
-                    <a
-                      href={`data:image/png;base64,${barcode.pngBase64}`}
-                      download={`${article.sku}-${barcode.format}.png`}
-                      className="text-xs text-navy-900 underline"
-                    >
-                      PNG herunterladen
-                    </a>
+                  <div className="border border-stone-200 rounded-xl p-6 bg-white flex flex-col items-center gap-4">
+                    <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500">
+                      {barcode.format === "code128" ? "Code-128" : "EAN-13"}
+                    </div>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`data:image/png;base64,${barcode.pngBase64}`}
+                      alt={`Barcode ${barcode.value}`}
+                      className="max-w-full h-auto"
+                      style={{ minHeight: "80px", imageRendering: "pixelated" }}
+                    />
+                    <div className="text-sm font-mono tracking-widest text-stone-900">{barcode.value}</div>
+                    <div className="flex flex-wrap gap-3 pt-2 text-xs">
+                      <a
+                        href={`data:image/png;base64,${barcode.pngBase64}`}
+                        download={`${article.sku}-${barcode.format}.png`}
+                        className="text-navy-900 underline hover:text-navy-700"
+                      >
+                        PNG herunterladen
+                      </a>
+                      <a
+                        href={`data:image/svg+xml;utf8,${encodeURIComponent(barcode.svg)}`}
+                        download={`${article.sku}-${barcode.format}.svg`}
+                        className="text-navy-900 underline hover:text-navy-700"
+                      >
+                        SVG herunterladen
+                      </a>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const w = window.open("", "_blank", "width=480,height=320");
+                          if (!w) return;
+                          w.document.write(
+                            `<html><head><title>${article.sku} — ${barcode.format}</title>` +
+                            `<style>body{font-family:system-ui,sans-serif;margin:32px;text-align:center}` +
+                            `img{max-width:100%;height:auto;image-rendering:pixelated}` +
+                            `h2{font-size:14px;letter-spacing:.18em;text-transform:uppercase;color:#78716C;margin:0 0 8px 0}` +
+                            `.code{font-family:ui-monospace,monospace;letter-spacing:.2em;color:#0F2A44;margin-top:8px}` +
+                            `@media print{button{display:none}}</style></head><body>` +
+                            `<h2>${article.sku} — ${article.name}</h2>` +
+                            `<img src="data:image/png;base64,${barcode.pngBase64}" alt="${barcode.value}"/>` +
+                            `<div class="code">${barcode.value}</div>` +
+                            `<button onclick="window.print()" style="margin-top:24px;padding:8px 16px">Drucken</button>` +
+                            `</body></html>`,
+                          );
+                          w.document.close();
+                        }}
+                        className="text-navy-900 underline hover:text-navy-700"
+                      >
+                        Drucken
+                      </button>
+                    </div>
                   </div>
                 )}
               </TabsContent>
