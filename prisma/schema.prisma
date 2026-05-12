@@ -109,6 +109,7 @@ model Article {
   balances          StockBalance[]
   movements         StockMovement[]
   suggestions       OrderSuggestion[]
+  orderItems        OrderItem[]
 
   @@unique([tenantId, sku])
   @@index([tenantId])
@@ -134,6 +135,7 @@ model Supplier {
 
   articles      ArticleSupplier[]
   suggestions   OrderSuggestion[]
+  orders        Order[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -270,4 +272,81 @@ model OrderSuggestion {
 
   @@index([tenantId, status])
   @@index([tenantId, articleId])
+}
+
+enum OrderStatus {
+  DRAFT
+  REVIEW
+  APPROVED
+  SENT
+  CONFIRMED
+  PARTIALLY_RECEIVED
+  RECEIVED
+  CLOSED
+  CANCELLED
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  tenantId    String
+  orderNo     String      @unique
+  supplierId  String
+  status      OrderStatus @default(DRAFT)
+  currency    String      @default("EUR")
+  total       Decimal     @db.Decimal(14,2) @default(0)
+  notes       String?
+  createdBy   String
+  sentAt      DateTime?
+  confirmedAt DateTime?
+  cancelledAt DateTime?
+  closedAt    DateTime?
+  pdfPath     String?
+  pdfHash     String?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  supplier Supplier     @relation(fields: [supplierId], references: [id])
+  items    OrderItem[]
+  events   OrderEvent[]
+
+  @@index([tenantId, status])
+  @@index([supplierId])
+  @@index([tenantId, createdAt])
+}
+
+model OrderItem {
+  id           String   @id @default(cuid())
+  orderId      String
+  articleId    String
+  qtyOrderUnit Int
+  qtyBase      Int
+  unitPrice    Decimal  @db.Decimal(12,4)
+  lineTotal    Decimal  @db.Decimal(14,2)
+  qtyReceived  Int      @default(0)
+  createdAt    DateTime @default(now())
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  article Article @relation(fields: [articleId], references: [id])
+
+  @@index([orderId])
+}
+
+model OrderEvent {
+  id         String       @id @default(cuid())
+  orderId    String
+  type       String       // CREATED | STATUS_CHANGED | NOTE | SEND | CANCEL | RECEIVE | WEBHOOK | UPDATE
+  fromStatus OrderStatus?
+  toStatus   OrderStatus?
+  actorId    String
+  actorEmail String
+  ip         String?
+  userAgent  String?
+  payload    Json
+  hash       String       @default("")
+  prevHash   String       @default("")
+  createdAt  DateTime     @default(now())
+
+  order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId, createdAt])
 }
