@@ -411,3 +411,15 @@ model WebhookDelivery {
   @@index([status, nextAttemptAt])
   @@index([tenantId, webhookId])
 }
+
+model AuditSeal {
+  id         String   @id @default(cuid())
+  tenantId   String
+  sealDate   String   // YYYY-MM-DD (UTC)
+  rootHash   String
+  entryCount Int
+  sealedAt   DateTime @default(now())
+
+  @@unique([tenantId, sealDate])
+  @@index([tenantId, sealDate])
+}

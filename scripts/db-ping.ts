@@ -21,6 +21,7 @@ async function main() {
     apiKeys: await prisma.supplierApiKey.count(),
     webhooks: await prisma.webhook.count(),
     webhookDeliveries: await prisma.webhookDelivery.count(),
+    auditSeals: await prisma.auditSeal.count(),
   };
   console.log("Counts:", counts);
 

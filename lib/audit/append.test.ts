@@ -5,6 +5,13 @@ import type { Prisma } from "@prisma/client";
 
 const TENANT_ID = "test-audit-tenant";
 
+async function disableAuditLogTrigger() {
+  await prisma.$executeRawUnsafe('ALTER TABLE "AuditLog" DISABLE TRIGGER auditlog_no_update;');
+}
+async function enableAuditLogTrigger() {
+  await prisma.$executeRawUnsafe('ALTER TABLE "AuditLog" ENABLE TRIGGER auditlog_no_update;');
+}
+
 async function clearTenant(tx: Prisma.TransactionClient | typeof prisma) {
   await tx.auditLog.deleteMany({ where: { tenantId: TENANT_ID } });
   await tx.user.deleteMany({ where: { tenantId: TENANT_ID } });
@@ -12,19 +19,25 @@ async function clearTenant(tx: Prisma.TransactionClient | typeof prisma) {
 }
 
 beforeAll(async () => {
+  await disableAuditLogTrigger();
   await clearTenant(prisma);
+  await enableAuditLogTrigger();
   await prisma.tenant.create({
     data: { id: TENANT_ID, name: "test-audit" },
   });
 });
 
 afterAll(async () => {
+  await disableAuditLogTrigger();
   await clearTenant(prisma);
+  await enableAuditLogTrigger();
   await prisma.$disconnect();
 });
 
 beforeEach(async () => {
+  await disableAuditLogTrigger();
   await prisma.auditLog.deleteMany({ where: { tenantId: TENANT_ID } });
+  await enableAuditLogTrigger();
 });
 
 describe("appendAudit", () => {
