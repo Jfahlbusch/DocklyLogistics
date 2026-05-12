@@ -1,6 +1,7 @@
 import type { Order, OrderStatus, Prisma } from "@prisma/client";
 import { nextOrderNo } from "./order-number";
 import { Prisma as PrismaNs } from "@prisma/client";
+import { orderEventHash, GENESIS_PREV_HASH } from "@/lib/audit/chain";
 
 export class OrderStatusError extends Error {
   constructor(message: string) { super(message); this.name = "OrderStatusError"; }
@@ -10,8 +11,8 @@ export type OrderItemInput = { articleId: string; qtyOrderUnit: number; unitPric
 
 export const orderService = {
   /**
-   * Record an OrderEvent (append-only).
-   * Hash chain comes in M6; for M4 we leave hash/prevHash at default "".
+   * Record an OrderEvent (append-only) with hash chain.
+   * Chain is per-order: prevHash = hash of previous event, or GENESIS for first.
    */
   async recordEvent(
     tx: Prisma.TransactionClient,
@@ -27,6 +28,28 @@ export const orderService = {
       payload?: Record<string, unknown>;
     },
   ) {
+    const last = await tx.orderEvent.findFirst({
+      where: { orderId: args.orderId },
+      orderBy: [{ createdAt: "desc" }, { id: "desc" }],
+      select: { hash: true },
+    });
+    const prevHash = last?.hash && last.hash.length === 64 ? last.hash : GENESIS_PREV_HASH;
+
+    const createdAt = new Date();
+    const payload = (args.payload ?? {}) as Prisma.InputJsonValue;
+    const hash = orderEventHash(
+      {
+        orderId: args.orderId,
+        type: args.type,
+        fromStatus: args.fromStatus ?? null,
+        toStatus: args.toStatus ?? null,
+        actorId: args.actorId,
+        payload,
+        createdAt,
+      },
+      prevHash,
+    );
+
     await tx.orderEvent.create({
       data: {
         orderId: args.orderId,
@@ -37,7 +60,10 @@ export const orderService = {
         actorEmail: args.actorEmail,
         ip: args.ip ?? null,
         userAgent: args.userAgent ?? null,
-        payload: (args.payload ?? {}) as Prisma.InputJsonValue,
+        payload,
+        hash,
+        prevHash,
+        createdAt,
       },
     });
   },

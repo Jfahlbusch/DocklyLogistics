@@ -11,6 +11,7 @@ import "@/lib/schemas/order-suggestion";
 import "@/lib/schemas/order";
 import "@/lib/schemas/api-key";
 import "@/lib/schemas/webhook";
+import "@/lib/schemas/audit";
 
 export const dynamic = "force-static";
 
