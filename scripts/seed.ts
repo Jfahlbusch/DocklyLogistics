@@ -1,6 +1,7 @@
 import { prisma } from "../lib/db/client";
 import { seedArticles } from "./seed/articles";
 import { seedSuppliers } from "./seed/suppliers";
+import { seedTenantChannels } from "./seed/tenant-channels";
 
 async function main() {
   const tenantId = process.env.NEXT_PUBLIC_APP_TENANT;
@@ -23,6 +24,9 @@ async function main() {
 
   const supplierResult = await seedSuppliers(prisma, tenantId);
   console.log(`[seed] suppliers: ${supplierResult.suppliers}, article-supplier links: ${supplierResult.links}`);
+
+  const channelCount = await seedTenantChannels(prisma, tenantId);
+  console.log(`[seed] tenant-channels: ${channelCount}`);
 
   await prisma.$disconnect();
   console.log(`[seed] done`);
