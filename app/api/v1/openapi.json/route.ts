@@ -8,6 +8,7 @@ import "@/lib/schemas/tenant-channel";
 import "@/lib/schemas/storage-location";
 import "@/lib/schemas/stock";
 import "@/lib/schemas/order-suggestion";
+import "@/lib/schemas/order";
 
 export const dynamic = "force-static";
 
