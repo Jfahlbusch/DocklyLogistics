@@ -3,10 +3,16 @@ import { NextResponse } from "next/server";
 
 const PUBLIC_PATHS = ["/login", "/api/auth", "/api/public", "/_next", "/favicon.ico"];
 
+// PWA-related static files that must be reachable without authentication.
+const PUBLIC_FILES = ["/manifest.webmanifest", "/sw.js", "/icon-192.svg", "/icon-512.svg"];
+
 export default auth((req) => {
   const { pathname } = req.nextUrl;
 
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
+    return NextResponse.next();
+  }
+  if (PUBLIC_FILES.includes(pathname)) {
     return NextResponse.next();
   }
 
