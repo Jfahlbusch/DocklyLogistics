@@ -1,6 +1,7 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { articleRepo } from "@/lib/db/repos/article";
+import { stockRepo } from "@/lib/db/repos/stock";
 import { prisma } from "@/lib/db/client";
 import { ArticlesView } from "./articles-view";
 
@@ -56,13 +57,19 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
       .map((a) => [a.id, locations.find((l) => l.id === a.defaultLocationId)?.code ?? ""]),
   );
 
-  const belowMinCount = items.filter((a) => a.minStock > 0).length;
+  // Real stock from StockBalance (aggregated across all locations)
+  const stockTotals = await stockRepo.totalsByArticle(
+    session.tenant,
+    items.map((a) => a.id),
+  );
+
   const categories = Array.from(
     new Set(items.map((a) => a.category).filter((c): c is string => Boolean(c))),
   );
 
   const rows = items.map((a) => {
     const primary = primaryByArticle.get(a.id);
+    const stock = stockTotals.get(a.id) ?? 0;
     return {
       id: a.id,
       sku: a.sku,
@@ -70,7 +77,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
       eanGtin: a.eanGtin,
       category: a.category,
       locationCode: locByArticle.get(a.id) ?? "—",
-      stock: 0, // Real stock arrives in M3; for now show 0/—
+      stock,
       minStock: a.minStock,
       orderUnit: a.orderUnit,
       ek: primary?.purchasePrice ?? null,
@@ -78,6 +85,8 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
       role: session.role!,
     };
   });
+
+  const belowMinCount = rows.filter((r) => r.minStock > 0 && r.stock < r.minStock).length;
 
   const canCreate =
     session.role === "USER" || session.role === "MANAGER" || session.role === "GLOBAL_ADMIN";
