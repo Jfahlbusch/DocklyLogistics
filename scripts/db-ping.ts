@@ -18,6 +18,9 @@ async function main() {
     orders: await prisma.order.count(),
     orderItems: await prisma.orderItem.count(),
     orderEvents: await prisma.orderEvent.count(),
+    apiKeys: await prisma.supplierApiKey.count(),
+    webhooks: await prisma.webhook.count(),
+    webhookDeliveries: await prisma.webhookDelivery.count(),
   };
   console.log("Counts:", counts);
 

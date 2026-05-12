@@ -136,6 +136,7 @@ model Supplier {
   articles      ArticleSupplier[]
   suggestions   OrderSuggestion[]
   orders        Order[]
+  apiKeys       SupplierApiKey[]
 
   @@unique([tenantId, name])
   @@index([tenantId])
@@ -349,4 +350,64 @@ model OrderEvent {
   order Order @relation(fields: [orderId], references: [id], onDelete: Cascade)
 
   @@index([orderId, createdAt])
+}
+
+model SupplierApiKey {
+  id         String    @id @default(cuid())
+  tenantId   String
+  supplierId String
+  label      String?
+  prefix     String    @unique
+  hash       String
+  scopes     String[]
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  expiresAt  DateTime?
+  createdBy  String
+  createdAt  DateTime  @default(now())
+
+  supplier Supplier @relation(fields: [supplierId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, supplierId])
+  @@index([prefix])
+}
+
+model Webhook {
+  id              String   @id @default(cuid())
+  tenantId        String
+  url             String
+  events          String[]
+  active          Boolean  @default(true)
+  secretEncrypted String
+  description     String?
+  lastDeliveredAt DateTime?
+  createdBy       String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  deliveries WebhookDelivery[]
+
+  @@index([tenantId, active])
+}
+
+model WebhookDelivery {
+  id             String   @id @default(cuid())
+  tenantId       String
+  webhookId      String
+  event          String
+  payload        Json
+  status         String   @default("PENDING")
+  attempts       Int      @default(0)
+  lastStatusCode Int?
+  lastError      String?
+  nextAttemptAt  DateTime @default(now())
+  succeededAt    DateTime?
+  givenUpAt      DateTime?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  webhook Webhook @relation(fields: [webhookId], references: [id], onDelete: Cascade)
+
+  @@index([status, nextAttemptAt])
+  @@index([tenantId, webhookId])
 }
