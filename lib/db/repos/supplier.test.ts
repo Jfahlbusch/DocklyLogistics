@@ -6,7 +6,9 @@ import { articleSupplierRepo } from "./article-supplier";
 const TENANT_ID = "test-supplier-tenant";
 
 async function cleanup() {
-  await prisma.articleSupplier.deleteMany({});
+  // Scope deletes to this tenant only — unscoped deletes race with parallel
+  // suites that depend on cross-tenant articleSupplier rows (e.g. suggestion-engine).
+  await prisma.articleSupplier.deleteMany({ where: { article: { tenantId: TENANT_ID } } });
   await prisma.supplier.deleteMany({ where: { tenantId: TENANT_ID } });
   await prisma.article.deleteMany({ where: { tenantId: TENANT_ID } });
   await prisma.tenant.deleteMany({ where: { id: TENANT_ID } });
@@ -23,7 +25,7 @@ afterAll(async () => {
 });
 
 beforeEach(async () => {
-  await prisma.articleSupplier.deleteMany({});
+  await prisma.articleSupplier.deleteMany({ where: { article: { tenantId: TENANT_ID } } });
   await prisma.supplier.deleteMany({ where: { tenantId: TENANT_ID } });
   await prisma.article.deleteMany({ where: { tenantId: TENANT_ID } });
 });

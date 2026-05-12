@@ -5,6 +5,7 @@ import { seedTenantChannels } from "./seed/tenant-channels";
 import { seedStorageLocations } from "./seed/storage-locations";
 import { seedStock } from "./seed/stock";
 import { seedOrderSuggestions } from "./seed/order-suggestions";
+import { seedOrders } from "./seed/orders";
 
 async function main() {
   const tenantId = process.env.NEXT_PUBLIC_APP_TENANT;
@@ -39,6 +40,9 @@ async function main() {
 
   const suggestionResult = await seedOrderSuggestions(prisma, tenantId);
   console.log(`[seed] auto-suggestions created: ${suggestionResult.created}, already-pending: ${suggestionResult.skippedAlreadyPending}`);
+
+  const orderResult = await seedOrders(prisma, tenantId);
+  console.log(`[seed] orders: ${orderResult.orders}, skipped: ${orderResult.skipped}`);
 
   await prisma.$disconnect();
   console.log(`[seed] done`);
