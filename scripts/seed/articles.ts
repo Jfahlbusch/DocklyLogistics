@@ -33,7 +33,7 @@ const ARTICLES = [
   {
     sku: "SALZ-SIED-1",
     name: "Siedesalz 1 kg",
-    eanGtin: "4014400900102",
+    eanGtin: "4014400900101",
     category: "Salz",
     baseUnit: "PACK",
     orderUnit: "BOX",
@@ -44,7 +44,7 @@ const ARTICLES = [
   {
     sku: "HEFE-FR-500",
     name: "Frischhefe 500 g",
-    eanGtin: "4002400500005",
+    eanGtin: "4002400500001",
     category: "Hefe",
     baseUnit: "PACK",
     orderUnit: "BOX",
@@ -55,7 +55,7 @@ const ARTICLES = [
   {
     sku: "BUTTR-25",
     name: "Butter 2,5 kg Block",
-    eanGtin: "4011200250002",
+    eanGtin: "4011200250009",
     category: "Milchprodukte",
     baseUnit: "PACK",
     orderUnit: "BOX",
@@ -66,7 +66,7 @@ const ARTICLES = [
   {
     sku: "SCHO-70-100",
     name: "Kuvertüre 70% 1 kg",
-    eanGtin: "4105500700014",
+    eanGtin: "4105500700019",
     category: "Schokolade",
     baseUnit: "PACK",
     orderUnit: "BOX",
