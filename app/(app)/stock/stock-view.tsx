@@ -26,7 +26,7 @@ export function StockView({
         <div>
           <h1 className="font-display text-3xl text-navy-900">Lager & Bestand</h1>
           <p className="text-sm text-stone-500 mt-1">
-            {locations.length} Lagerplätze · {totalUnits} Einheiten eingelagert (Phase M2-Placeholder; reale Bestände in M3)
+            {locations.length} Lagerplätze · {totalUnits} Einheiten eingelagert
           </p>
         </div>
         <div className="flex gap-2">
@@ -97,7 +97,6 @@ export function StockView({
         <Card className="shadow-soft">
           <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
             <h2 className="font-display text-lg text-navy-900">Bestände je Artikel</h2>
-            <span className="text-[11px] text-stone-500">Reale Daten in Phase M3</span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
