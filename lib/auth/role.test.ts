@@ -9,18 +9,18 @@ describe("deriveRole", () => {
     expect(deriveRole(claims, TENANT)).toBe("GLOBAL_ADMIN");
   });
 
-  it("MANAGER bei manage_docklylogistics enthält tenant", () => {
-    const claims = { manage_docklylogistics: ["Demo", "Other"] };
+  it("MANAGER bei manage_docklylogistic enthält tenant", () => {
+    const claims = { manage_docklylogistic: ["Demo", "Other"] };
     expect(deriveRole(claims, TENANT)).toBe("MANAGER");
   });
 
-  it("USER bei internal_user_docklylogistics enthält tenant", () => {
-    const claims = { internal_user_docklylogistics: ["Demo"] };
+  it("USER bei internal_user_docklylogistic enthält tenant", () => {
+    const claims = { internal_user_docklylogistic: ["Demo"] };
     expect(deriveRole(claims, TENANT)).toBe("USER");
   });
 
-  it("VIEWER bei use_docklylogistics enthält tenant", () => {
-    const claims = { use_docklylogistics: ["Demo"] };
+  it("VIEWER bei use_docklylogistic enthält tenant", () => {
+    const claims = { use_docklylogistic: ["Demo"] };
     expect(deriveRole(claims, TENANT)).toBe("VIEWER");
   });
 
@@ -29,16 +29,16 @@ describe("deriveRole", () => {
   });
 
   it("wirft UnauthorizedError wenn Tenant nicht im Array", () => {
-    const claims = { use_docklylogistics: ["Other"] };
+    const claims = { use_docklylogistic: ["Other"] };
     expect(() => deriveRole(claims, TENANT)).toThrow(UnauthorizedError);
   });
 
   it("Priorität: ADMIN > MANAGER > USER > VIEWER", () => {
     const claims = {
       realm_access: { roles: ["global_admin"] },
-      manage_docklylogistics: ["Demo"],
-      internal_user_docklylogistics: ["Demo"],
-      use_docklylogistics: ["Demo"],
+      manage_docklylogistic: ["Demo"],
+      internal_user_docklylogistic: ["Demo"],
+      use_docklylogistic: ["Demo"],
     };
     expect(deriveRole(claims, TENANT)).toBe("GLOBAL_ADMIN");
   });
