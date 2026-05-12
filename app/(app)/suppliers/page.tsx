@@ -60,7 +60,15 @@ export default async function SuppliersPage({ searchParams }: { searchParams: Se
     ytdRevenue: (ytdByS.get(s.id) ?? 0).toLocaleString("de-DE", { minimumFractionDigits: 2, maximumFractionDigits: 2 }),
   }));
 
-  const canCreate = session.role === "MANAGER" || session.role === "GLOBAL_ADMIN";
+  const canManage = session.role === "MANAGER" || session.role === "GLOBAL_ADMIN";
 
-  return <SuppliersView cards={cards} total={total} canCreate={canCreate} q={sp.q ?? ""} />;
+  return (
+    <SuppliersView
+      cards={cards}
+      total={total}
+      canCreate={canManage}
+      canManage={canManage}
+      q={sp.q ?? ""}
+    />
+  );
 }

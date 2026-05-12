@@ -9,6 +9,10 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 
 type Supplier = {
   id: string;
@@ -27,9 +31,11 @@ type Supplier = {
 
 export function SupplierDetailModal({
   supplierId,
+  canManage,
   onClose,
 }: {
   supplierId: string | null;
+  canManage: boolean;
   onClose: () => void;
 }) {
   const open = supplierId !== null;
@@ -79,9 +85,7 @@ export function SupplierDetailModal({
                 <TabsTrigger value="stamm">Stamm</TabsTrigger>
                 <TabsTrigger value="kanal">Kanal</TabsTrigger>
                 <TabsTrigger value="orders">Bestellungen</TabsTrigger>
-                <TabsTrigger value="integrations" disabled>
-                  API-Keys / Webhooks (M5)
-                </TabsTrigger>
+                <TabsTrigger value="api-keys">API-Keys</TabsTrigger>
               </TabsList>
 
               <TabsContent value="stamm" className="space-y-2 text-sm mt-4">
@@ -141,6 +145,10 @@ export function SupplierDetailModal({
 
               <TabsContent value="orders" className="mt-4">
                 <SupplierOrdersPanel supplierId={supplier.id} />
+              </TabsContent>
+
+              <TabsContent value="api-keys" className="mt-4">
+                <ApiKeysPanel supplierId={supplier.id} canManage={canManage} />
               </TabsContent>
             </Tabs>
           </>
@@ -230,6 +238,245 @@ function SupplierOrdersPanel({ supplierId }: { supplierId: string }) {
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+type ApiKeyRow = {
+  id: string;
+  label: string | null;
+  prefix: string;
+  scopes: string[];
+  lastUsedAt: string | null;
+  revokedAt: string | null;
+  expiresAt: string | null;
+  createdAt: string;
+};
+
+const SCOPES = ["orders:read", "orders:confirm", "deliveries:write"];
+
+function ApiKeysPanel({
+  supplierId,
+  canManage,
+}: {
+  supplierId: string;
+  canManage: boolean;
+}) {
+  const [keys, setKeys] = useState<ApiKeyRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [creating, setCreating] = useState(false);
+  const [newKey, setNewKey] = useState<{ prefix: string; fullKey: string } | null>(null);
+
+  async function load() {
+    setLoading(true);
+    const r = await fetch(`/api/v1/suppliers/${supplierId}/api-keys`);
+    const body = await r.json();
+    setKeys(body?.data ?? []);
+    setLoading(false);
+  }
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [supplierId]);
+
+  async function createKey(label: string, scopes: string[]) {
+    const r = await fetch(`/api/v1/suppliers/${supplierId}/api-keys`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ label, scopes }),
+    });
+    const body = await r.json();
+    if (r.ok) {
+      setNewKey({ prefix: body.data.prefix, fullKey: body.data.fullKey });
+      setCreating(false);
+      await load();
+    }
+  }
+
+  async function revoke(id: string) {
+    if (!confirm("API-Key widerrufen? Lieferant kann diesen Key danach nicht mehr nutzen.")) return;
+    await fetch(`/api/v1/suppliers/${supplierId}/api-keys/${id}`, { method: "DELETE" });
+    await load();
+  }
+
+  if (loading) return <div className="py-6 text-center text-stone-500 text-sm">Lade API-Keys…</div>;
+
+  return (
+    <div className="space-y-3">
+      <p className="text-xs text-stone-600">
+        API-Keys werden vom Lieferanten im <code>X-API-Key</code>-Header der Public-API mitgesendet
+        (<code>/api/public/v1/*</code>). Das volle Key-Secret wird nur einmal angezeigt.
+      </p>
+
+      {newKey && (
+        <div className="border border-gold-400 rounded-xl p-3 bg-gold-50 space-y-2">
+          <div className="text-[11px] tracking-[0.18em] uppercase text-gold-700">Neuer API-Key</div>
+          <pre className="text-xs font-mono bg-white border border-stone-200 rounded p-2 whitespace-pre-wrap break-all">
+            {newKey.fullKey}
+          </pre>
+          <p className="text-xs text-rose-700">
+            Speichere den vollen Key jetzt — er wird nie wieder angezeigt.
+          </p>
+          <Button size="sm" variant="outline" onClick={() => setNewKey(null)}>
+            Schließen
+          </Button>
+        </div>
+      )}
+
+      <div className="flex justify-between items-center">
+        <div className="text-sm text-stone-700">{keys.length} Key(s)</div>
+        {canManage && (
+          <Button
+            size="sm"
+            onClick={() => setCreating(true)}
+            className="bg-navy-900 hover:bg-navy-700 text-white"
+          >
+            + Neuer Key
+          </Button>
+        )}
+      </div>
+
+      {keys.length === 0 ? (
+        <div className="py-4 text-center text-stone-500 text-sm">Keine Keys angelegt.</div>
+      ) : (
+        <ul className="space-y-2">
+          {keys.map((k) => (
+            <li
+              key={k.id}
+              className="border border-stone-200 rounded-lg p-3 flex flex-wrap items-start justify-between gap-2"
+            >
+              <div className="min-w-0 flex-1 space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-mono text-xs">{k.prefix}.•••</span>
+                  {k.revokedAt ? (
+                    <Badge className="bg-rose-50 text-rose-700">widerrufen</Badge>
+                  ) : (
+                    <Badge className="bg-emerald-50 text-emerald-700">aktiv</Badge>
+                  )}
+                  {k.label && <span className="text-xs text-stone-500">{k.label}</span>}
+                </div>
+                <div className="flex gap-1 flex-wrap">
+                  {k.scopes.map((s) => (
+                    <span
+                      key={s}
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-700"
+                    >
+                      {s}
+                    </span>
+                  ))}
+                </div>
+                <div className="text-xs text-stone-500">
+                  Erstellt {new Date(k.createdAt).toLocaleDateString("de-DE")}
+                  {k.lastUsedAt && (
+                    <>
+                      {" "}
+                      · zuletzt verwendet{" "}
+                      {new Date(k.lastUsedAt).toLocaleString("de-DE", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </>
+                  )}
+                </div>
+              </div>
+              {canManage && !k.revokedAt && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-rose-700 border-rose-200 hover:bg-rose-50"
+                  onClick={() => revoke(k.id)}
+                >
+                  Widerrufen
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {creating && <CreateKeyDialog onClose={() => setCreating(false)} onCreate={createKey} />}
+    </div>
+  );
+}
+
+function CreateKeyDialog({
+  onClose,
+  onCreate,
+}: {
+  onClose: () => void;
+  onCreate: (label: string, scopes: string[]) => Promise<void>;
+}) {
+  const [label, setLabel] = useState("");
+  const [scopes, setScopes] = useState<string[]>(["orders:read"]);
+  const [busy, setBusy] = useState(false);
+
+  function toggleScope(s: string) {
+    setScopes((cur) => (cur.includes(s) ? cur.filter((x) => x !== s) : [...cur, s]));
+  }
+
+  async function submit() {
+    setBusy(true);
+    await onCreate(label, scopes);
+    setBusy(false);
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
+      <Card className="w-full max-w-md shadow-soft" onClick={(e) => e.stopPropagation()}>
+        <CardContent className="p-5 space-y-3">
+          <h3 className="font-display text-lg text-navy-900">Neuer API-Key</h3>
+          <label className="block text-sm">
+            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">
+              Bezeichnung
+            </div>
+            <Input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              placeholder="z.B. Lieferanten-Portal"
+            />
+          </label>
+          <div className="text-sm">
+            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">Scopes</div>
+            <div className="flex flex-wrap gap-2">
+              {SCOPES.map((s) => (
+                <label
+                  key={s}
+                  className={
+                    "px-3 py-1.5 rounded-lg border text-xs cursor-pointer " +
+                    (scopes.includes(s)
+                      ? "bg-navy-900 text-white border-navy-900"
+                      : "bg-white text-stone-700 border-stone-200")
+                  }
+                >
+                  <input
+                    type="checkbox"
+                    checked={scopes.includes(s)}
+                    onChange={() => toggleScope(s)}
+                    className="sr-only"
+                  />
+                  {s}
+                </label>
+              ))}
+            </div>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={onClose} disabled={busy}>
+              Abbrechen
+            </Button>
+            <Button
+              onClick={submit}
+              disabled={busy || scopes.length === 0}
+              className="bg-navy-900 hover:bg-navy-700 text-white"
+            >
+              {busy ? "Erstelle…" : "Erstellen"}
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -10,6 +10,7 @@ import "@/lib/schemas/stock";
 import "@/lib/schemas/order-suggestion";
 import "@/lib/schemas/order";
 import "@/lib/schemas/api-key";
+import "@/lib/schemas/webhook";
 
 export const dynamic = "force-static";
 

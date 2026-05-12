@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { WebhooksTab, type WebhookRow } from "./webhooks-tab";
 
 type ChannelProfile = {
   id: string;
@@ -27,10 +28,12 @@ export function SettingsView({
   tenant,
   role,
   channels,
+  webhooks,
 }: {
   tenant: string;
   role: string;
   channels: ChannelProfile[];
+  webhooks: WebhookRow[];
 }) {
   const canManage = role === "MANAGER" || role === "GLOBAL_ADMIN";
 
@@ -50,9 +53,7 @@ export function SettingsView({
           <TabsTrigger value="versand">Versand</TabsTrigger>
           <TabsTrigger value="tenant">Tenant</TabsTrigger>
           <TabsTrigger value="api-docs">API-Dokumentation</TabsTrigger>
-          <TabsTrigger value="users" disabled>
-            Benutzer & Freigaben (kommt)
-          </TabsTrigger>
+          <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
         </TabsList>
 
         <TabsContent value="versand" className="mt-4 space-y-4">
@@ -135,6 +136,10 @@ export function SettingsView({
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="webhooks" className="mt-4">
+          <WebhooksTab webhooks={webhooks} canManage={canManage} />
         </TabsContent>
       </Tabs>
     </div>

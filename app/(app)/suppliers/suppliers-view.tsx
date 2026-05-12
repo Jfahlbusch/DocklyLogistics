@@ -30,11 +30,13 @@ export function SuppliersView({
   cards,
   total,
   canCreate,
+  canManage,
   q,
 }: {
   cards: SupplierCard[];
   total: number;
   canCreate: boolean;
+  canManage: boolean;
   q: string;
 }) {
   const router = useRouter();
@@ -159,7 +161,11 @@ export function SuppliersView({
         </div>
       )}
 
-      <SupplierDetailModal supplierId={selected} onClose={() => setSelected(null)} />
+      <SupplierDetailModal
+        supplierId={selected}
+        canManage={canManage}
+        onClose={() => setSelected(null)}
+      />
     </div>
   );
 }
