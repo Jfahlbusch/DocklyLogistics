@@ -8,7 +8,16 @@ import type { Prisma } from "@prisma/client";
 export async function nextOrderNo(tx: Prisma.TransactionClient, tenantId: string): Promise<string> {
   const year = new Date().getFullYear();
   const yearPrefix = `ORD-${year}-`;
-  // Lock the tenant+year row implicitly via a SELECT FOR UPDATE on existing orders
+
+  // Serialize concurrent order-number generation per tenant+year with a
+  // transaction-scoped advisory lock (auto-released on commit/rollback). Without
+  // it, two parallel creates could read the same last number and collide on the
+  // unique orderNo — `findFirst` does NOT lock rows, so the lock must be explicit.
+  // $executeRaw (not $queryRaw): pg_advisory_xact_lock returns void, which $queryRaw
+  // cannot deserialize. $executeRaw just runs the statement.
+  const lockKey = `ordno:${tenantId}:${year}`;
+  await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${lockKey})::bigint)`;
+
   const lastOrder = await tx.order.findFirst({
     where: { tenantId, orderNo: { startsWith: yearPrefix } },
     orderBy: { orderNo: "desc" },

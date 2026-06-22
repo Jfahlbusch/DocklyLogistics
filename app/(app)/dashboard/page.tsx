@@ -35,8 +35,11 @@ export default async function DashboardPage() {
     where: { tenantId, reason: "RECEIPT", refType: "ORDER", createdAt: { gte: todayStart } },
   });
 
-  // KPI 4: Webhook errors → kommt mit Phase M5
-  const webhookErrors = "—";
+  // KPI 4: Webhook deliveries permanently failed (given up after retries) in the last 24h.
+  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
+  const webhookErrors = await prisma.webhookDelivery.count({
+    where: { tenantId, givenUpAt: { gte: dayAgo } },
+  });
 
   // Recent audit activity
   const recentAudit = await prisma.auditLog.findMany({
@@ -49,7 +52,7 @@ export default async function DashboardPage() {
     { label: "Unter Mindestbestand", value: String(belowMin.length), href: "/articles", accent: belowMin.length > 0 },
     { label: "Offene Bestellungen", value: String(openOrders), href: "/orders" },
     { label: "Wareneingänge heute", value: String(receiptsToday), href: "/orders?status=PARTIALLY_RECEIVED" },
-    { label: "Webhook-Fehler (24h)", value: webhookErrors, href: "/settings", muted: true },
+    { label: "Webhook-Fehler (24h)", value: String(webhookErrors), href: "/settings", accent: webhookErrors > 0, muted: webhookErrors === 0 },
   ];
 
   return (
