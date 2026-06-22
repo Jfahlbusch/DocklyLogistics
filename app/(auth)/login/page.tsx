@@ -16,7 +16,7 @@ export default async function LoginPage({
     <main className="min-h-screen flex items-center justify-center bg-muted/40 p-6">
       <Card className="w-full max-w-md shadow-soft">
         <CardHeader className="space-y-2">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col items-center gap-2">
             <Logo variant="auto" />
             <CardDescription className="text-xs tracking-[0.18em] uppercase text-muted-foreground">
               Logistikverwaltung

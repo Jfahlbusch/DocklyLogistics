@@ -47,7 +47,7 @@ export function Logo({ variant = "dark", className }: Props) {
         ? "text-navy-900"
         : "text-navy-900 dark:text-white";
   return (
-    <span className={cn("inline-flex items-center gap-2 select-none", textColor, className)}>
+    <span className={cn("inline-flex flex-col items-center gap-1.5 select-none", textColor, className)}>
       <Mark variant={variant} />
       <span
         style={{ fontFamily: "var(--font-poppins)", fontWeight: 800 }}
