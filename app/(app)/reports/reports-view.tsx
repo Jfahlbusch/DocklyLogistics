@@ -81,8 +81,8 @@ export function ReportsView({
     <div className="space-y-6 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-navy-900">Reports</h1>
-          <p className="text-sm text-stone-500 mt-1">
+          <h1 className="font-display text-3xl text-foreground">Reports</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Zeitraum: seit {new Date(yearStart).toLocaleDateString("de-DE")}
           </p>
         </div>
@@ -100,15 +100,15 @@ export function ReportsView({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="shadow-soft">
-          <div className="px-5 py-4 border-b border-stone-200">
-            <h2 className="font-display text-lg text-navy-900">Status-Verteilung</h2>
-            <p className="text-xs text-stone-500 mt-0.5">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="font-display text-lg text-foreground">Status-Verteilung</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Storno-Quote: {cancelRate.toFixed(1)} %
             </p>
           </div>
           <CardContent className="p-5">
             {statusPie.length === 0 ? (
-              <div className="py-10 text-center text-stone-500 text-sm">Keine Daten.</div>
+              <div className="py-10 text-center text-muted-foreground text-sm">Keine Daten.</div>
             ) : (
               <div style={{ width: "100%", height: 280 }}>
                 <ResponsiveContainer>
@@ -136,15 +136,15 @@ export function ReportsView({
         </Card>
 
         <Card className="shadow-soft">
-          <div className="px-5 py-4 border-b border-stone-200">
-            <h2 className="font-display text-lg text-navy-900">Volume je Lieferant</h2>
-            <p className="text-xs text-stone-500 mt-0.5">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="font-display text-lg text-foreground">Volume je Lieferant</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">
               Top {Math.min(bySupplier.length, 8)} im Zeitraum
             </p>
           </div>
           <CardContent className="p-5">
             {bySupplier.length === 0 ? (
-              <div className="py-10 text-center text-stone-500 text-sm">Keine Daten.</div>
+              <div className="py-10 text-center text-muted-foreground text-sm">Keine Daten.</div>
             ) : (
               <div style={{ width: "100%", height: 280 }}>
                 <ResponsiveContainer>
@@ -177,13 +177,13 @@ export function ReportsView({
       </div>
 
       <Card className="shadow-soft">
-        <div className="px-5 py-4 border-b border-stone-200">
-          <h2 className="font-display text-lg text-navy-900">Lieferanten-Tabelle</h2>
+        <div className="px-5 py-4 border-b border-border">
+          <h2 className="font-display text-lg text-foreground">Lieferanten-Tabelle</h2>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-stone-50 text-[11px] tracking-[0.16em] uppercase text-stone-500">
+              <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
                 <th className="text-left font-medium px-4 py-3">Lieferant</th>
                 <th className="text-left font-medium px-4 py-3">Kanal</th>
                 <th className="text-right font-medium px-4 py-3">Bestellungen</th>
@@ -193,14 +193,14 @@ export function ReportsView({
             <tbody>
               {bySupplier.length === 0 && (
                 <tr>
-                  <td colSpan={4} className="text-center text-stone-500 py-8">
+                  <td colSpan={4} className="text-center text-muted-foreground py-8">
                     Keine Daten.
                   </td>
                 </tr>
               )}
               {bySupplier.map((s) => (
-                <tr key={s.supplierId} className="border-t border-stone-100">
-                  <td className="px-4 py-3 font-medium text-navy-900">{s.supplierName}</td>
+                <tr key={s.supplierId} className="border-t border-border">
+                  <td className="px-4 py-3 font-medium text-foreground">{s.supplierName}</td>
                   <td className="px-4 py-3 text-xs">{s.channel}</td>
                   <td className="px-4 py-3 text-right">{s.orderCount}</td>
                   <td className="px-4 py-3 text-right font-medium">{fmtEur(s.volume)}</td>
@@ -218,8 +218,8 @@ function Kpi({ label, value }: { label: string; value: string }) {
   return (
     <Card className="shadow-soft">
       <CardContent className="p-5">
-        <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500">{label}</div>
-        <div className="font-display text-3xl text-navy-900 mt-1.5">{value}</div>
+        <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">{label}</div>
+        <div className="font-display text-3xl text-foreground mt-1.5">{value}</div>
       </CardContent>
     </Card>
   );

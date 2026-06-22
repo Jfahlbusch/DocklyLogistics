@@ -44,14 +44,14 @@ type Order = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-stone-100 text-stone-700",
+  DRAFT: "bg-muted text-foreground",
   REVIEW: "bg-gold-50 text-gold-700",
   APPROVED: "bg-gold-50 text-gold-700",
   SENT: "bg-navy-100 text-navy-700",
   CONFIRMED: "bg-emerald-50 text-emerald-700",
   PARTIALLY_RECEIVED: "bg-emerald-50 text-emerald-700",
   RECEIVED: "bg-emerald-50 text-emerald-700",
-  CLOSED: "bg-stone-100 text-stone-500",
+  CLOSED: "bg-muted text-muted-foreground",
   CANCELLED: "bg-rose-50 text-rose-700",
 };
 
@@ -114,19 +114,19 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
               <DialogHeader className="sr-only">
                 <DialogTitle>Bestellungs-Detail wird geladen</DialogTitle>
               </DialogHeader>
-              <div className="py-10 text-center text-stone-500">Lade…</div>
+              <div className="py-10 text-center text-muted-foreground">Lade…</div>
             </>
           ) : (
             <>
               <DialogHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
-                    <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 font-mono">{order.orderNo}</div>
-                    <DialogTitle className="font-display text-2xl text-navy-900">{order.supplier.name}</DialogTitle>
-                    <DialogDescription className="text-stone-500">{order.supplier.city ?? "—"} · {order.supplier.email ?? "—"}</DialogDescription>
+                    <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">{order.orderNo}</div>
+                    <DialogTitle className="font-display text-2xl text-foreground">{order.supplier.name}</DialogTitle>
+                    <DialogDescription className="text-muted-foreground">{order.supplier.city ?? "—"} · {order.supplier.email ?? "—"}</DialogDescription>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${STATUS_STYLES[order.status] ?? "bg-stone-100 text-stone-700"}`}>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${STATUS_STYLES[order.status] ?? "bg-muted text-foreground"}`}>
                       <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />{order.status}
                     </span>
                     <Badge variant="outline" className="text-xs">{order.supplier.channel}</Badge>
@@ -151,52 +151,52 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
               </div>
 
               {/* Items table */}
-              <div className="border border-stone-200 rounded-xl overflow-hidden">
-                <div className="bg-stone-50 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-stone-500 grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3">
+              <div className="border border-border rounded-xl overflow-hidden">
+                <div className="bg-muted/40 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-muted-foreground grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3">
                   <div>Artikel</div><div>Menge</div><div>Erhalten</div><div className="text-right">EK</div><div className="text-right">Summe</div>
                 </div>
                 {order.items.map((it) => (
-                  <div key={it.id} className="px-4 py-3 grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 border-t border-stone-100 items-center">
+                  <div key={it.id} className="px-4 py-3 grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 border-t border-border items-center">
                     <div>
-                      <div className="font-medium text-navy-900">{it.article.name}</div>
-                      <div className="text-stone-500 font-mono text-xs">{it.article.sku}</div>
+                      <div className="font-medium text-foreground">{it.article.name}</div>
+                      <div className="text-muted-foreground font-mono text-xs">{it.article.sku}</div>
                     </div>
-                    <div className="text-sm">{it.qtyOrderUnit} × {it.article.orderUnit} <span className="text-stone-400 text-xs">({it.qtyBase} {it.article.baseUnit})</span></div>
-                    <div className={"text-sm " + (it.qtyReceived >= it.qtyBase ? "text-emerald-700" : it.qtyReceived > 0 ? "text-gold-700" : "text-stone-500")}>
+                    <div className="text-sm">{it.qtyOrderUnit} × {it.article.orderUnit} <span className="text-muted-foreground text-xs">({it.qtyBase} {it.article.baseUnit})</span></div>
+                    <div className={"text-sm " + (it.qtyReceived >= it.qtyBase ? "text-emerald-700" : it.qtyReceived > 0 ? "text-gold-700" : "text-muted-foreground")}>
                       {it.qtyReceived} / {it.qtyBase} {it.article.baseUnit}
                     </div>
                     <div className="text-right text-sm">{Number(it.unitPrice).toFixed(2)} {order.currency}</div>
                     <div className="text-right font-medium">{Number(it.lineTotal).toFixed(2)} {order.currency}</div>
                   </div>
                 ))}
-                <div className="px-4 py-3 bg-stone-50 grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 font-display text-navy-900 text-sm">
+                <div className="px-4 py-3 bg-muted/40 grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3 font-display text-foreground text-sm">
                   <div className="col-span-4 text-right">Gesamt</div>
                   <div className="text-right">{Number(order.total).toFixed(2)} {order.currency}</div>
                 </div>
               </div>
 
               {order.notes && (
-                <div className="border border-stone-200 rounded-xl p-3 bg-stone-50">
-                  <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">Notiz</div>
+                <div className="border border-border rounded-xl p-3 bg-muted/40">
+                  <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">Notiz</div>
                   <div className="text-sm">{order.notes}</div>
                 </div>
               )}
 
               {/* Event-Timeline */}
-              <div className="border border-stone-200 rounded-xl">
-                <div className="bg-stone-50 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-stone-500">Ereignis-Timeline</div>
+              <div className="border border-border rounded-xl">
+                <div className="bg-muted/40 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Ereignis-Timeline</div>
                 <ol className="p-4 space-y-3">
                   {order.events.map((e) => (
                     <li key={e.id} className="flex gap-3">
                       <span className="mt-1.5 w-2 h-2 rounded-full bg-gold-500 flex-none" />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 flex-wrap text-sm">
-                          <span className="font-medium text-navy-900">{e.type}</span>
+                          <span className="font-medium text-foreground">{e.type}</span>
                           {e.fromStatus && e.toStatus && (
-                            <span className="text-stone-500 text-xs">{e.fromStatus} → {e.toStatus}</span>
+                            <span className="text-muted-foreground text-xs">{e.fromStatus} → {e.toStatus}</span>
                           )}
                         </div>
-                        <div className="text-xs text-stone-500 mt-0.5">
+                        <div className="text-xs text-muted-foreground mt-0.5">
                           {new Date(e.createdAt).toLocaleString("de-DE")} · {e.actorEmail}
                         </div>
                       </div>
@@ -219,12 +219,12 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
                     </Button>
                   )}
                   {can.approve && (
-                    <Button onClick={() => transition("approve", { successText: "Freigegeben (APPROVED)" })} disabled={busy} className="bg-gold-500 hover:bg-gold-400 text-navy-900 text-sm font-medium">
+                    <Button onClick={() => transition("approve", { successText: "Freigegeben (APPROVED)" })} disabled={busy} className="bg-gold-500 hover:bg-gold-400 text-foreground text-sm font-medium">
                       Freigeben
                     </Button>
                   )}
                   {can.send && (
-                    <Button onClick={() => transition("send", { successText: "Versendet — Status SENT" })} disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white text-sm">
+                    <Button onClick={() => transition("send", { successText: "Versendet — Status SENT" })} disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm">
                       Senden
                     </Button>
                   )}
@@ -253,9 +253,9 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-stone-200 rounded-xl px-3 py-2">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500">{label}</div>
-      <div className="font-medium text-navy-900 mt-0.5">{value}</div>
+    <div className="border border-border rounded-xl px-3 py-2">
+      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">{label}</div>
+      <div className="font-medium text-foreground mt-0.5">{value}</div>
     </div>
   );
 }

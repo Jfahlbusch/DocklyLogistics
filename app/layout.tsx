@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Playfair_Display, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/layout/service-worker-register";
+import { ThemeProvider, THEME_FOUC_SCRIPT } from "@/components/theme/theme-provider";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -27,17 +28,20 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0F2A44",
+  themeColor: "#041E24",
 };
 
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="de" className={`${playfair.variable} ${dmSans.variable}`}>
-      <body className="bg-stone-50 text-stone-900 antialiased">
-        {children}
-        <ServiceWorkerRegister />
+    <html lang="de" className={`${playfair.variable} ${dmSans.variable}`} suppressHydrationWarning>
+      <body className="bg-background text-foreground antialiased">
+        <script dangerouslySetInnerHTML={{ __html: THEME_FOUC_SCRIPT }} />
+        <ThemeProvider>
+          {children}
+          <ServiceWorkerRegister />
+        </ThemeProvider>
       </body>
     </html>
   );

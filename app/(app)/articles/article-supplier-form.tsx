@@ -93,7 +93,7 @@ export function ArticleSupplierForm({
           onChange={(e) => set("supplierId", e.target.value)}
           disabled={!isCreate}
           required
-          className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-white text-sm"
+          className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
         >
           {isCreate && <option value="">— bitte wählen —</option>}
           {selectableSuppliers.map((s) => (
@@ -103,7 +103,7 @@ export function ArticleSupplierForm({
           ))}
         </select>
         {!isCreate && (
-          <p className="text-[10px] text-stone-500 mt-1">
+          <p className="text-[10px] text-muted-foreground mt-1">
             Lieferant ist nicht änderbar — Zuordnung löschen und neu anlegen
           </p>
         )}
@@ -181,7 +181,7 @@ export function ArticleSupplierForm({
         <Button
           type="submit"
           disabled={busy || !v.supplierId}
-          className="bg-navy-900 hover:bg-navy-700 text-white"
+          className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
         >
           {busy ? "Speichere…" : isCreate ? "Zuordnen" : "Speichern"}
         </Button>
@@ -201,7 +201,7 @@ function Field({
 }) {
   return (
     <label className="block text-sm">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">
+      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
         {label}
         {required && <span className="text-rose-600 ml-1">*</span>}
       </div>

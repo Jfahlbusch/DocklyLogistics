@@ -22,19 +22,19 @@ type Row = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT:              "bg-stone-100 text-stone-700",
+  DRAFT:              "bg-muted text-foreground",
   REVIEW:             "bg-gold-50 text-gold-700",
   APPROVED:           "bg-gold-50 text-gold-700",
   SENT:               "bg-navy-100 text-navy-700",
   CONFIRMED:          "bg-emerald-50 text-emerald-700",
   PARTIALLY_RECEIVED: "bg-emerald-50 text-emerald-700",
   RECEIVED:           "bg-emerald-50 text-emerald-700",
-  CLOSED:             "bg-stone-100 text-stone-500",
+  CLOSED:             "bg-muted text-muted-foreground",
   CANCELLED:          "bg-rose-50 text-rose-700",
 };
 
 const CHANNEL_STYLES: Record<string, string> = {
-  EMAIL: "bg-stone-100 text-stone-700",
+  EMAIL: "bg-muted text-foreground",
   API:   "bg-navy-100 text-navy-700",
   EDI:   "bg-gold-50 text-gold-700",
 };
@@ -69,26 +69,26 @@ export function OrdersView({
     <div className="space-y-4 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-navy-900">Bestellungen</h1>
-          <p className="text-sm text-stone-500 mt-1">{total} Bestellungen im Zeitraum</p>
+          <h1 className="font-display text-3xl text-foreground">Bestellungen</h1>
+          <p className="text-sm text-muted-foreground mt-1">{total} Bestellungen im Zeitraum</p>
         </div>
         {canCreate && (
-          <Button className="bg-navy-900 hover:bg-navy-700 text-white" disabled title="Manuelle Anlage über die API (Scalar) oder über Bestellvorschläge → Bulk-Confirm">
+          <Button className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900" disabled title="Manuelle Anlage über die API (Scalar) oder über Bestellvorschläge → Bulk-Confirm">
             + Neue Bestellung
           </Button>
         )}
       </div>
 
       <Card className="shadow-soft">
-        <form onSubmit={onSearch} className="flex flex-wrap items-center gap-2 px-5 py-4 border-b border-stone-200">
+        <form onSubmit={onSearch} className="flex flex-wrap items-center gap-2 px-5 py-4 border-b border-border">
           <Input value={searchValue} onChange={(e) => setSearchValue(e.target.value)} placeholder="Suche nach Bestell-Nr. oder Lieferant…" className="flex-1 min-w-[240px]" />
-          <select className="px-3 py-2 rounded-lg border border-stone-200 text-sm bg-white" value={filters.status} onChange={(e) => setParam("status", e.target.value)}>
+          <select className="px-3 py-2 rounded-lg border border-border text-sm bg-card" value={filters.status} onChange={(e) => setParam("status", e.target.value)}>
             <option value="">Alle Status</option>
             {["DRAFT","REVIEW","APPROVED","SENT","CONFIRMED","PARTIALLY_RECEIVED","RECEIVED","CLOSED","CANCELLED"].map((s) =>
               <option key={s} value={s}>{s}</option>
             )}
           </select>
-          <select className="px-3 py-2 rounded-lg border border-stone-200 text-sm bg-white" value={filters.supplierId} onChange={(e) => setParam("supplierId", e.target.value)}>
+          <select className="px-3 py-2 rounded-lg border border-border text-sm bg-card" value={filters.supplierId} onChange={(e) => setParam("supplierId", e.target.value)}>
             <option value="">Alle Lieferanten</option>
             {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
@@ -98,7 +98,7 @@ export function OrdersView({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-stone-50 text-[11px] tracking-[0.16em] uppercase text-stone-500">
+              <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
                 <th className="text-left font-medium px-4 py-3">Nr.</th>
                 <th className="text-left font-medium px-4 py-3">Lieferant</th>
                 <th className="text-left font-medium px-4 py-3">Kanal</th>
@@ -111,26 +111,26 @@ export function OrdersView({
             </thead>
             <tbody>
               {rows.length === 0 && (
-                <tr><td colSpan={8} className="text-center text-stone-500 py-10">Keine Bestellungen.</td></tr>
+                <tr><td colSpan={8} className="text-center text-muted-foreground py-10">Keine Bestellungen.</td></tr>
               )}
               {rows.map((r) => (
-                <tr key={r.id} onClick={() => setSelected(r.id)} className="border-t border-stone-100 hover:bg-stone-50 cursor-pointer">
+                <tr key={r.id} onClick={() => setSelected(r.id)} className="border-t border-border hover:bg-muted/40 cursor-pointer">
                   <td className="px-4 py-3 font-mono text-xs">{r.orderNo}</td>
-                  <td className="px-4 py-3 font-medium text-navy-900">{r.supplierName}</td>
+                  <td className="px-4 py-3 font-medium text-foreground">{r.supplierName}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${CHANNEL_STYLES[r.channel] ?? "bg-stone-100 text-stone-700"}`}>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${CHANNEL_STYLES[r.channel] ?? "bg-muted text-foreground"}`}>
                       <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />{r.channel}
                     </span>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${STATUS_STYLES[r.status] ?? "bg-stone-100 text-stone-700"}`}>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${STATUS_STYLES[r.status] ?? "bg-muted text-foreground"}`}>
                       <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />{r.status}
                     </span>
                   </td>
                   <td className="px-4 py-3">{r.itemCount}</td>
                   <td className="px-4 py-3 font-medium">€ {Number(r.total).toFixed(2)}</td>
-                  <td className="px-4 py-3 text-xs text-stone-500">{new Date(r.createdAt).toLocaleDateString("de-DE")}</td>
-                  <td className="px-4 py-3 text-xs text-stone-500">{r.sentAt ? new Date(r.sentAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "—"}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{new Date(r.createdAt).toLocaleDateString("de-DE")}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground">{r.sentAt ? new Date(r.sentAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "—"}</td>
                 </tr>
               ))}
             </tbody>

@@ -202,15 +202,15 @@ export function ArticleDetailModal({
             <DialogHeader className="sr-only">
               <DialogTitle>Artikel-Detail wird geladen</DialogTitle>
             </DialogHeader>
-            <div className="py-10 text-center text-stone-500">Lade…</div>
+            <div className="py-10 text-center text-muted-foreground">Lade…</div>
           </>
         ) : (
           <>
             <DialogHeader>
-              <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 font-mono">
+              <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">
                 {article.sku}
               </div>
-              <DialogTitle className="font-display text-2xl text-navy-900">
+              <DialogTitle className="font-display text-2xl text-foreground">
                 {article.name}
               </DialogTitle>
               {article.shortDesc && <DialogDescription>{article.shortDesc}</DialogDescription>}
@@ -246,7 +246,7 @@ export function ArticleDetailModal({
 
               <TabsContent value="suppliers" className="space-y-3">
                 <div className="flex items-center justify-between">
-                  <p className="text-xs text-stone-500">
+                  <p className="text-xs text-muted-foreground">
                     Mehrere Lieferanten möglich · genau einer als <strong>primär</strong> markiert ·
                     Primärlieferant wird in Vorschlägen vorausgewählt.
                   </p>
@@ -257,7 +257,7 @@ export function ArticleDetailModal({
                         setLinkError(null);
                         setLinkDialog({ mode: "create" });
                       }}
-                      className="bg-navy-900 hover:bg-navy-700 text-white"
+                      className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
                     >
                       + Lieferant zuordnen
                     </Button>
@@ -271,13 +271,13 @@ export function ArticleDetailModal({
                 )}
 
                 {suppliers.length === 0 ? (
-                  <div className="text-stone-500 text-sm py-6 text-center border border-stone-200 rounded-lg">
+                  <div className="text-muted-foreground text-sm py-6 text-center border border-border rounded-lg">
                     Noch keine Lieferanten zugeordnet.
                   </div>
                 ) : (
                   <table className="w-full text-sm">
                     <thead>
-                      <tr className="text-[11px] tracking-[0.16em] uppercase text-stone-500 bg-stone-50">
+                      <tr className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground bg-muted/40">
                         <th className="text-left p-2">Lieferant</th>
                         <th className="text-left p-2">Kanal</th>
                         <th className="text-right p-2">EK</th>
@@ -290,11 +290,11 @@ export function ArticleDetailModal({
                     </thead>
                     <tbody>
                       {suppliers.map((l) => (
-                        <tr key={l.id} className="border-t border-stone-100">
+                        <tr key={l.id} className="border-t border-border">
                           <td className="p-2">
-                            <div className="font-medium text-navy-900">{l.supplier.name}</div>
+                            <div className="font-medium text-foreground">{l.supplier.name}</div>
                             {l.supplier.city && (
-                              <div className="text-xs text-stone-500">{l.supplier.city}</div>
+                              <div className="text-xs text-muted-foreground">{l.supplier.city}</div>
                             )}
                           </td>
                           <td className="p-2">
@@ -308,13 +308,13 @@ export function ArticleDetailModal({
                           <td className="p-2 font-mono text-xs">{l.supplierSku ?? "—"}</td>
                           <td className="p-2 text-center">
                             {l.isPrimary ? (
-                              <Badge className="bg-gold-500 text-navy-900 hover:bg-gold-400">
+                              <Badge className="bg-gold-500 text-foreground hover:bg-gold-400">
                                 primär
                               </Badge>
                             ) : canEdit ? (
                               <button
                                 onClick={() => makePrimary(l)}
-                                className="text-xs text-navy-900 underline hover:text-navy-700"
+                                className="text-xs text-foreground underline hover:text-navy-700"
                               >
                                 als primär
                               </button>
@@ -329,7 +329,7 @@ export function ArticleDetailModal({
                                   setLinkError(null);
                                   setLinkDialog({ mode: "edit", link: l });
                                 }}
-                                className="text-xs text-navy-900 underline hover:text-navy-700 mr-3"
+                                className="text-xs text-foreground underline hover:text-navy-700 mr-3"
                               >
                                 Bearbeiten
                               </button>
@@ -355,7 +355,7 @@ export function ArticleDetailModal({
                     onClick={() => generateBarcode("code128")}
                     className={
                       barcodeFormat === "code128"
-                        ? "bg-navy-900 hover:bg-navy-700 text-white"
+                        ? "bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
                         : ""
                     }
                   >
@@ -367,20 +367,20 @@ export function ArticleDetailModal({
                     disabled={!article.eanGtin}
                     title={!article.eanGtin ? "Artikel hat keine EAN" : undefined}
                     className={
-                      barcodeFormat === "ean13" ? "bg-navy-900 hover:bg-navy-700 text-white" : ""
+                      barcodeFormat === "ean13" ? "bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900" : ""
                     }
                   >
                     EAN-13
                   </Button>
                 </div>
                 {!barcode && (
-                  <div className="text-stone-500 text-sm">
+                  <div className="text-muted-foreground text-sm">
                     Format wählen, um Barcode zu generieren.
                   </div>
                 )}
                 {barcode && (
-                  <div className="border border-stone-200 rounded-xl p-6 bg-white flex flex-col items-center gap-4">
-                    <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500">
+                  <div className="border border-border rounded-xl p-6 bg-card flex flex-col items-center gap-4">
+                    <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
                       {barcode.format === "code128" ? "Code-128" : "EAN-13"}
                     </div>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -390,19 +390,19 @@ export function ArticleDetailModal({
                       className="max-w-full h-auto"
                       style={{ minHeight: "80px", imageRendering: "pixelated" }}
                     />
-                    <div className="text-sm font-mono tracking-widest text-stone-900">{barcode.value}</div>
+                    <div className="text-sm font-mono tracking-widest text-foreground">{barcode.value}</div>
                     <div className="flex flex-wrap gap-3 pt-2 text-xs">
                       <a
                         href={`data:image/png;base64,${barcode.pngBase64}`}
                         download={`${article.sku}-${barcode.format}.png`}
-                        className="text-navy-900 underline hover:text-navy-700"
+                        className="text-foreground underline hover:text-navy-700"
                       >
                         PNG herunterladen
                       </a>
                       <a
                         href={`data:image/svg+xml;utf8,${encodeURIComponent(barcode.svg)}`}
                         download={`${article.sku}-${barcode.format}.svg`}
-                        className="text-navy-900 underline hover:text-navy-700"
+                        className="text-foreground underline hover:text-navy-700"
                       >
                         SVG herunterladen
                       </a>
@@ -426,7 +426,7 @@ export function ArticleDetailModal({
                           );
                           w.document.close();
                         }}
-                        className="text-navy-900 underline hover:text-navy-700"
+                        className="text-foreground underline hover:text-navy-700"
                       >
                         Drucken
                       </button>
@@ -481,7 +481,7 @@ export function ArticleDetailModal({
             )}
 
             {!editing && article && (canEdit || canDelete) && (
-              <div className="flex justify-end gap-2 pt-4 border-t border-stone-100">
+              <div className="flex justify-end gap-2 pt-4 border-t border-border">
                 {canDelete && (
                   <Button
                     variant="outline"
@@ -504,7 +504,7 @@ export function ArticleDetailModal({
                 {canEdit && (
                   <Button
                     onClick={() => setEditing(true)}
-                    className="bg-navy-900 hover:bg-navy-700 text-white"
+                    className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
                   >
                     Bearbeiten
                   </Button>
@@ -528,7 +528,7 @@ export function ArticleDetailModal({
       >
         <DialogContent className="max-w-xl sm:max-w-xl">
           <DialogHeader>
-            <DialogTitle className="font-display text-xl text-navy-900">
+            <DialogTitle className="font-display text-xl text-foreground">
               {linkDialog.mode === "create" ? "Lieferant zuordnen" : "Zuordnung bearbeiten"}
             </DialogTitle>
             <DialogDescription>
@@ -588,9 +588,9 @@ function articleToFormValues(a: Article): ArticleFormValues {
 
 function Kpi({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border border-stone-200 rounded-xl px-4 py-3">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500">{label}</div>
-      <div className="font-medium text-navy-900 mt-1">{value}</div>
+    <div className="border border-border rounded-xl px-4 py-3">
+      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">{label}</div>
+      <div className="font-medium text-foreground mt-1">{value}</div>
     </div>
   );
 }
@@ -598,7 +598,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex gap-2 items-baseline">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 w-44 flex-shrink-0">
+      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground w-44 flex-shrink-0">
         {label}
       </div>
       <div className={mono ? "font-mono" : ""}>{value}</div>
@@ -645,7 +645,7 @@ function StockPanel({ articleId, minStock, baseUnit }: { articleId: string; minS
   const total = balances.reduce((s, b) => s + b.quantity, 0);
   const shortfall = Math.max(0, minStock - total);
 
-  if (loading) return <div className="py-6 text-center text-stone-500 text-sm">Lade Bestand…</div>;
+  if (loading) return <div className="py-6 text-center text-muted-foreground text-sm">Lade Bestand…</div>;
 
   return (
     <>
@@ -653,23 +653,23 @@ function StockPanel({ articleId, minStock, baseUnit }: { articleId: string; minS
         <Kpi label="Gesamtbestand" value={`${total} ${baseUnit}`} />
         <Kpi label="Mindestbestand" value={`${minStock} ${baseUnit}`} />
         <div className={"border rounded-xl px-4 py-3 " + (shortfall > 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50")}>
-          <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500">Unterdeckung</div>
+          <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">Unterdeckung</div>
           <div className={"font-medium mt-1 " + (shortfall > 0 ? "text-rose-700" : "text-emerald-700")}>{shortfall} {baseUnit}</div>
         </div>
       </div>
 
-      <div className="border border-stone-200 rounded-xl overflow-hidden">
-        <div className="bg-stone-50 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-stone-500">Bestand pro Lagerplatz</div>
+      <div className="border border-border rounded-xl overflow-hidden">
+        <div className="bg-muted/40 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Bestand pro Lagerplatz</div>
         {balances.length === 0 ? (
-          <div className="px-4 py-4 text-stone-500 text-sm">Kein Bestand eingebucht.</div>
+          <div className="px-4 py-4 text-muted-foreground text-sm">Kein Bestand eingebucht.</div>
         ) : (
-          <ul className="divide-y divide-stone-100">
+          <ul className="divide-y divide-border">
             {balances.map((b) => (
               <li key={b.id} className="px-4 py-2 flex items-center justify-between text-sm">
                 <div>
                   <span className="font-mono text-xs">{b.location.code}</span>
-                  <span className="text-stone-500 ml-2">{b.location.name}</span>
-                  {b.location.zone && <span className="text-stone-400 text-xs ml-2">· {b.location.zone}</span>}
+                  <span className="text-muted-foreground ml-2">{b.location.name}</span>
+                  {b.location.zone && <span className="text-muted-foreground text-xs ml-2">· {b.location.zone}</span>}
                 </div>
                 <div className="font-medium">{b.quantity} {baseUnit}</div>
               </li>
@@ -678,12 +678,12 @@ function StockPanel({ articleId, minStock, baseUnit }: { articleId: string; minS
         )}
       </div>
 
-      <div className="border border-stone-200 rounded-xl overflow-hidden">
-        <div className="bg-stone-50 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-stone-500">Letzte Bewegungen</div>
+      <div className="border border-border rounded-xl overflow-hidden">
+        <div className="bg-muted/40 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Letzte Bewegungen</div>
         {history.length === 0 ? (
-          <div className="px-4 py-4 text-stone-500 text-sm">Keine Bewegungen.</div>
+          <div className="px-4 py-4 text-muted-foreground text-sm">Keine Bewegungen.</div>
         ) : (
-          <ul className="divide-y divide-stone-100">
+          <ul className="divide-y divide-border">
             {history.map((h) => (
               <li key={h.id} className="px-4 py-2 flex items-center justify-between gap-3 text-sm">
                 <div className="min-w-0 flex-1">
@@ -691,10 +691,10 @@ function StockPanel({ articleId, minStock, baseUnit }: { articleId: string; minS
                     <span className={"font-medium " + (h.delta >= 0 ? "text-emerald-700" : "text-rose-700")}>
                       {h.delta >= 0 ? "+" : ""}{h.delta} {baseUnit}
                     </span>
-                    <span className="text-stone-500 text-xs">{h.reason}</span>
-                    {h.refType && <span className="text-stone-400 text-xs">· {h.refType}</span>}
+                    <span className="text-muted-foreground text-xs">{h.reason}</span>
+                    {h.refType && <span className="text-muted-foreground text-xs">· {h.refType}</span>}
                   </div>
-                  <div className="text-stone-500 text-xs">
+                  <div className="text-muted-foreground text-xs">
                     {h.location.code} · {new Date(h.createdAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })} · {h.createdBy}
                     {h.note && <> · {h.note}</>}
                   </div>

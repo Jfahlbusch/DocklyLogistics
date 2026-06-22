@@ -76,18 +76,18 @@ export function ReceiveModal({
       <Card className="w-full max-w-2xl shadow-soft" onClick={(e) => e.stopPropagation()}>
         <CardContent className="p-5 space-y-4">
           <div>
-            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 font-mono">{order.orderNo}</div>
-            <h3 className="font-display text-xl text-navy-900">Wareneingang buchen</h3>
+            <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">{order.orderNo}</div>
+            <h3 className="font-display text-xl text-foreground">Wareneingang buchen</h3>
           </div>
 
           <div className="space-y-3">
             {order.items.map((it) => {
               const open = Math.max(0, it.qtyBase - it.qtyReceived);
               return (
-                <div key={it.id} className="grid grid-cols-[2fr_1fr_1.5fr] gap-3 items-center border-b border-stone-100 pb-3 last:border-b-0 last:pb-0">
+                <div key={it.id} className="grid grid-cols-[2fr_1fr_1.5fr] gap-3 items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
                   <div>
-                    <div className="font-medium text-navy-900">{it.article.name}</div>
-                    <div className="text-stone-500 font-mono text-xs">{it.article.sku} · offen: {open} {it.article.baseUnit}</div>
+                    <div className="font-medium text-foreground">{it.article.name}</div>
+                    <div className="text-muted-foreground font-mono text-xs">{it.article.sku} · offen: {open} {it.article.baseUnit}</div>
                   </div>
                   <Input
                     type="number" min={0} max={open}
@@ -98,7 +98,7 @@ export function ReceiveModal({
                   <select
                     value={lines[it.id]?.locationId ?? ""}
                     onChange={(e) => setLoc(it.id, e.target.value)}
-                    className="px-3 py-2 border border-stone-200 rounded-lg bg-white text-sm"
+                    className="px-3 py-2 border border-border rounded-lg bg-card text-sm"
                   >
                     <option value="">{it.article.defaultLocationId ? "Standard-Lagerplatz" : "— Lagerplatz wählen —"}</option>
                     {locations.map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
@@ -109,7 +109,7 @@ export function ReceiveModal({
           </div>
 
           <label className="block text-sm">
-            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">Notiz (optional)</div>
+            <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">Notiz (optional)</div>
             <Input value={note} onChange={(e) => setNote(e.target.value)} placeholder="z.B. Bruch / Verspätung" />
           </label>
 

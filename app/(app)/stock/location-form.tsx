@@ -61,7 +61,7 @@ export function LocationForm({ initial, isCreate, busy, errorMessage, onSubmit, 
             className="font-mono"
           />
           {!isCreate && (
-            <p className="text-[10px] text-stone-500 mt-1">Code ist nicht änderbar</p>
+            <p className="text-[10px] text-muted-foreground mt-1">Code ist nicht änderbar</p>
           )}
         </Field>
         <Field label="Name" required>
@@ -120,7 +120,7 @@ export function LocationForm({ initial, isCreate, busy, errorMessage, onSubmit, 
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
           Abbrechen
         </Button>
-        <Button type="submit" disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white">
+        <Button type="submit" disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900">
           {busy ? "Speichere…" : isCreate ? "Anlegen" : "Speichern"}
         </Button>
       </div>
@@ -139,7 +139,7 @@ function Field({
 }) {
   return (
     <label className="block text-sm">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">
+      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
         {label}
         {required && <span className="text-rose-600 ml-1">*</span>}
       </div>

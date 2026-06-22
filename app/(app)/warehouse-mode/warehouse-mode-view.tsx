@@ -276,7 +276,7 @@ export function WarehouseModeView({
           <div className="text-[11px] tracking-[0.18em] uppercase text-gold-700 font-medium">
             Lagermodus
           </div>
-          <h1 className="font-display text-3xl text-navy-900">Scanner</h1>
+          <h1 className="font-display text-3xl text-foreground">Scanner</h1>
         </div>
         <div className="flex gap-2 items-center">
           {scanning && (
@@ -322,7 +322,7 @@ export function WarehouseModeView({
                   <Camera size={48} className="mx-auto opacity-70" />
                   <Button
                     onClick={startScanner}
-                    className="bg-gold-500 hover:bg-gold-400 text-navy-900 font-medium"
+                    className="bg-gold-500 hover:bg-gold-400 text-foreground font-medium"
                   >
                     Kamera starten
                   </Button>
@@ -396,26 +396,26 @@ export function WarehouseModeView({
         <Card className="shadow-soft">
           <CardContent className="p-5">
             {!article ? (
-              <div className="py-10 text-center text-stone-500 text-sm">
+              <div className="py-10 text-center text-muted-foreground text-sm">
                 Bitte einen Barcode scannen oder Code manuell eingeben.
               </div>
             ) : (
               <>
                 <div className="flex justify-between items-start gap-3">
                   <div className="min-w-0 flex-1">
-                    <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 font-mono">
+                    <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">
                       {article.sku}
                     </div>
-                    <h2 className="font-display text-xl text-navy-900 mt-1">
+                    <h2 className="font-display text-xl text-foreground mt-1">
                       {article.name}
                     </h2>
-                    <div className="text-xs text-stone-500 mt-1">
+                    <div className="text-xs text-muted-foreground mt-1">
                       {article.category ?? "—"} · {article.orderUnit} (
                       {article.packFactor} × {article.baseUnit})
                     </div>
                   </div>
                   {busy && (
-                    <span className="text-xs text-stone-500">Lade…</span>
+                    <span className="text-xs text-muted-foreground">Lade…</span>
                   )}
                 </div>
 
@@ -438,8 +438,8 @@ export function WarehouseModeView({
                 </div>
 
                 {stock && stock.perLocation.length > 0 && (
-                  <div className="mt-4 border border-stone-100 rounded-lg p-3">
-                    <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-2">
+                  <div className="mt-4 border border-border rounded-lg p-3">
+                    <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-2">
                       Bestand pro Lagerplatz
                     </div>
                     <ul className="space-y-1 text-sm">
@@ -464,14 +464,14 @@ export function WarehouseModeView({
                   <Button
                     onClick={() => setAdjustOpen(true)}
                     disabled={!canAdjust}
-                    className="bg-navy-900 hover:bg-navy-700 text-white text-sm"
+                    className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm"
                   >
                     Bestand korrigieren
                   </Button>
                   <Button
                     onClick={createSuggestionFromArticle}
                     disabled={!canAdjust || busy}
-                    className="bg-gold-500 hover:bg-gold-400 text-navy-900 text-sm font-medium"
+                    className="bg-gold-500 hover:bg-gold-400 text-foreground text-sm font-medium"
                   >
                     Bestellvorschlag
                   </Button>
@@ -484,8 +484,8 @@ export function WarehouseModeView({
 
       {/* Open suggestions footer */}
       <Card className="shadow-soft">
-        <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
-          <h2 className="font-display text-lg text-navy-900">
+        <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+          <h2 className="font-display text-lg text-foreground">
             Offene Bestellvorschläge ({suggestions.length})
           </h2>
           <Link href="/order-suggestions">
@@ -496,21 +496,21 @@ export function WarehouseModeView({
         </div>
         <CardContent className="p-0">
           {suggestions.length === 0 ? (
-            <div className="py-6 text-center text-stone-500 text-sm">
+            <div className="py-6 text-center text-muted-foreground text-sm">
               Keine offenen Vorschläge.
             </div>
           ) : (
-            <ul className="divide-y divide-stone-100">
+            <ul className="divide-y divide-border">
               {suggestions.map((s) => (
                 <li
                   key={s.id}
                   className="px-5 py-3 flex justify-between items-center text-sm"
                 >
                   <div>
-                    <div className="font-medium text-navy-900">
+                    <div className="font-medium text-foreground">
                       {s.article.name}
                     </div>
-                    <div className="text-stone-500 text-xs">
+                    <div className="text-muted-foreground text-xs">
                       {s.article.sku} ·{" "}
                       {s.reason === "AUTO_MIN_STOCK" ? "Auto" : "Manuell"} ·{" "}
                       {s.supplier?.name ?? "—"}
@@ -550,14 +550,14 @@ function Kpi({
   variant?: "default" | "rose";
 }) {
   return (
-    <div className="border border-stone-200 rounded-lg p-3">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500">
+    <div className="border border-border rounded-lg p-3">
+      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
         {label}
       </div>
       <div
         className={
           "font-display text-2xl mt-1 " +
-          (variant === "rose" ? "text-rose-600" : "text-navy-900")
+          (variant === "rose" ? "text-rose-600" : "text-foreground")
         }
       >
         {value}
@@ -621,17 +621,17 @@ function AdjustModal({
         onClick={(e) => e.stopPropagation()}
       >
         <CardContent className="p-5 space-y-3">
-          <h3 className="font-display text-lg text-navy-900">
+          <h3 className="font-display text-lg text-foreground">
             Bestand korrigieren — {article.sku}
           </h3>
           <label className="block text-sm">
-            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">
+            <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
               Lagerplatz
             </div>
             <select
               value={locationId}
               onChange={(e) => setLocationId(e.target.value)}
-              className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-white text-sm"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
             >
               <option value="">— bitte wählen —</option>
               {locations.map((l) => (
@@ -642,7 +642,7 @@ function AdjustModal({
             </select>
           </label>
           <label className="block text-sm">
-            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">
+            <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
               Delta (Basiseinheiten, positiv = Eingang, negativ = Korrektur/Abgang)
             </div>
             <Input
@@ -652,7 +652,7 @@ function AdjustModal({
             />
           </label>
           <label className="block text-sm">
-            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">
+            <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
               Grund
             </div>
             <select
@@ -660,7 +660,7 @@ function AdjustModal({
               onChange={(e) =>
                 setReason(e.target.value as typeof reason)
               }
-              className="w-full px-3 py-2 border border-stone-200 rounded-lg bg-white text-sm"
+              className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
             >
               <option value="CORRECTION">Korrektur</option>
               <option value="RECEIPT">Wareneingang</option>
@@ -670,7 +670,7 @@ function AdjustModal({
             </select>
           </label>
           <label className="block text-sm">
-            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">
+            <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
               Notiz (optional)
             </div>
             <Input
@@ -691,7 +691,7 @@ function AdjustModal({
             <Button
               onClick={submit}
               disabled={busy || !locationId || delta === 0}
-              className="bg-navy-900 hover:bg-navy-700 text-white"
+              className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
             >
               {busy ? "Speichere…" : "Speichern"}
             </Button>

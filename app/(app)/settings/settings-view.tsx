@@ -86,8 +86,8 @@ export function SettingsView({
     <div className="space-y-4 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-navy-900">Einstellungen</h1>
-          <p className="text-sm text-stone-500 mt-1">
+          <h1 className="font-display text-3xl text-foreground">Einstellungen</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             Tenant: <span className="font-mono">{tenant}</span> · Deine Rolle: {role}
           </p>
         </div>
@@ -115,7 +115,7 @@ export function SettingsView({
         </TabsList>
 
         <TabsContent value="versand" className="mt-4 space-y-4">
-          <p className="text-sm text-stone-600 max-w-3xl">
+          <p className="text-sm text-muted-foreground max-w-3xl">
             Versand-Profile definieren, wie dieser Tenant Bestellungen <strong>versendet</strong>{" "}
             (Absender-Identität, SMTP, EDI-Sender-ID). Lieferanten-spezifische Empfänger-Konfiguration
             wird beim Lieferanten gepflegt.
@@ -125,12 +125,12 @@ export function SettingsView({
             const ofChannel = channels.filter((c) => c.channel === channelKey);
             return (
               <Card key={channelKey} className="shadow-soft">
-                <div className="px-5 py-4 border-b border-stone-200 flex flex-wrap items-center justify-between gap-2">
+                <div className="px-5 py-4 border-b border-border flex flex-wrap items-center justify-between gap-2">
                   <div>
-                    <h2 className="font-display text-lg text-navy-900">
+                    <h2 className="font-display text-lg text-foreground">
                       {CHANNEL_TITLES[channelKey]}
                     </h2>
-                    <p className="text-xs text-stone-500">{CHANNEL_DESC[channelKey]}</p>
+                    <p className="text-xs text-muted-foreground">{CHANNEL_DESC[channelKey]}</p>
                   </div>
                   {canManage && (
                     <Button
@@ -148,11 +148,11 @@ export function SettingsView({
 
                 <CardContent className="p-0">
                   {ofChannel.length === 0 ? (
-                    <div className="px-5 py-8 text-center text-stone-500 text-sm">
+                    <div className="px-5 py-8 text-center text-muted-foreground text-sm">
                       Noch kein Profil für diesen Kanal konfiguriert.
                     </div>
                   ) : (
-                    <ul className="divide-y divide-stone-100">
+                    <ul className="divide-y divide-border">
                       {ofChannel.map((p) => (
                         <ProfileRow
                           key={p.id}
@@ -187,27 +187,27 @@ export function SettingsView({
         <TabsContent value="api-docs" className="mt-4">
           <Card className="shadow-soft">
             <CardContent className="p-5 space-y-3">
-              <p className="text-sm text-stone-600">
+              <p className="text-sm text-muted-foreground">
                 Die OpenAPI 3.1 Spezifikation wird automatisch generiert und über Scalar UI
                 bereitgestellt.
               </p>
               <div className="flex flex-wrap gap-3">
                 <a
                   href="/api-docs"
-                  className="inline-flex items-center px-4 py-2 rounded-lg bg-navy-900 text-white text-sm font-medium hover:bg-navy-700"
+                  className="inline-flex items-center px-4 py-2 rounded-lg bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 text-sm font-medium hover:bg-navy-700"
                 >
                   Scalar UI öffnen
                 </a>
                 <a
                   href="/api/v1/openapi.json"
-                  className="inline-flex items-center px-4 py-2 rounded-lg border border-stone-200 text-sm hover:bg-stone-50 font-mono"
+                  className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted/40 font-mono"
                 >
                   openapi.json
                 </a>
               </div>
-              <div className="text-xs text-stone-500 mt-2">
+              <div className="text-xs text-muted-foreground mt-2">
                 Public-API (Lieferanten) folgt in Phase M5 unter{" "}
-                <span className="font-mono text-navy-900">/api-docs/public</span>.
+                <span className="font-mono text-foreground">/api-docs/public</span>.
               </div>
             </CardContent>
           </Card>
@@ -230,7 +230,7 @@ export function SettingsView({
       >
         <DialogContent className="max-w-2xl sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-navy-900">
+            <DialogTitle className="font-display text-2xl text-foreground">
               {isCreate ? "Neues Versand-Profil" : "Profil bearbeiten"}
             </DialogTitle>
             <DialogDescription>Konfiguration je Kanal als JSON pflegen.</DialogDescription>
@@ -343,17 +343,17 @@ function ProfileRow({
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-medium text-navy-900">{profile.label}</h3>
+            <h3 className="font-medium text-foreground">{profile.label}</h3>
             {profile.isDefault && (
-              <Badge className="bg-gold-500 text-navy-900 hover:bg-gold-400">Standard</Badge>
+              <Badge className="bg-gold-500 text-foreground hover:bg-gold-400">Standard</Badge>
             )}
             {!profile.active && (
-              <Badge variant="outline" className="text-stone-500">
+              <Badge variant="outline" className="text-muted-foreground">
                 inaktiv
               </Badge>
             )}
           </div>
-          <div className="text-xs text-stone-500 mt-1 font-mono">{profile.id}</div>
+          <div className="text-xs text-muted-foreground mt-1 font-mono">{profile.id}</div>
         </div>
         <div className="flex gap-2 flex-wrap">
           {canManage && (
@@ -394,10 +394,10 @@ function ProfileRow({
       )}
 
       <details className="text-xs">
-        <summary className="cursor-pointer text-stone-500 hover:text-stone-700">
+        <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
           Konfiguration anzeigen
         </summary>
-        <pre className="mt-2 bg-stone-50 border border-stone-200 rounded-lg p-3 font-mono whitespace-pre-wrap break-words text-stone-800">
+        <pre className="mt-2 bg-muted/40 border border-border rounded-lg p-3 font-mono whitespace-pre-wrap break-words text-foreground">
           {JSON.stringify(profile.config, null, 2)}
         </pre>
       </details>
@@ -408,7 +408,7 @@ function ProfileRow({
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex gap-2 items-baseline">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 w-40 flex-shrink-0">
+      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground w-40 flex-shrink-0">
         {label}
       </div>
       <div className={mono ? "font-mono text-sm" : "text-sm"}>{value}</div>

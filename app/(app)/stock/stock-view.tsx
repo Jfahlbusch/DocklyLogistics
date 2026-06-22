@@ -35,8 +35,8 @@ type ArticleRow = {
 };
 
 const ZONE_STYLES: Record<string, string> = {
-  Trocken: "bg-stone-100 text-stone-700",
-  Kühl: "bg-navy-100 text-navy-900",
+  Trocken: "bg-muted text-foreground",
+  Kühl: "bg-navy-100 text-foreground",
 };
 
 export function StockView({
@@ -108,8 +108,8 @@ export function StockView({
     <div className="space-y-4 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-navy-900">Lager & Bestand</h1>
-          <p className="text-sm text-stone-500 mt-1">
+          <h1 className="font-display text-3xl text-foreground">Lager & Bestand</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {locations.length} Lagerplätze · {totalUnits} Einheiten eingelagert
           </p>
         </div>
@@ -127,7 +127,7 @@ export function StockView({
             </Button>
           )}
           <Button
-            className="bg-navy-900 hover:bg-navy-700 text-white text-sm"
+            className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm"
             disabled
             title="Inventur-Workflow kommt in M3"
           >
@@ -152,13 +152,13 @@ export function StockView({
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* Lagerplätze */}
         <Card className="shadow-soft">
-          <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
-            <h2 className="font-display text-lg text-navy-900">Lagerplätze</h2>
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <h2 className="font-display text-lg text-foreground">Lagerplätze</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-stone-50 text-[11px] tracking-[0.16em] uppercase text-stone-500">
+                <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
                   <th className="text-left font-medium px-4 py-3">Code</th>
                   <th className="text-left font-medium px-4 py-3">Name</th>
                   <th className="text-left font-medium px-4 py-3">Zone</th>
@@ -173,7 +173,7 @@ export function StockView({
                   <tr>
                     <td
                       colSpan={canManage ? 5 : 4}
-                      className="text-center text-stone-500 py-8"
+                      className="text-center text-muted-foreground py-8"
                     >
                       Keine Lagerplätze.
                     </td>
@@ -187,12 +187,12 @@ export function StockView({
                   const barClass =
                     pct >= 95 ? "bg-rose-600" : pct >= 70 ? "bg-gold-500" : "bg-navy-900";
                   return (
-                    <tr key={l.id} className="border-t border-stone-100">
+                    <tr key={l.id} className="border-t border-border">
                       <td className="px-4 py-3 font-mono text-xs">{l.code}</td>
-                      <td className="px-4 py-3 text-stone-700">{l.name}</td>
+                      <td className="px-4 py-3 text-foreground">{l.name}</td>
                       <td className="px-4 py-3">
                         <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${ZONE_STYLES[l.zone] ?? "bg-stone-100 text-stone-700"}`}
+                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${ZONE_STYLES[l.zone] ?? "bg-muted text-foreground"}`}
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                           {l.zone}
@@ -200,13 +200,13 @@ export function StockView({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">
-                          <div className="flex-1 min-w-[80px] h-2 bg-stone-100 rounded-full overflow-hidden">
+                          <div className="flex-1 min-w-[80px] h-2 bg-muted rounded-full overflow-hidden">
                             <div
                               className={`h-full ${barClass}`}
                               style={{ width: `${pct}%` }}
                             />
                           </div>
-                          <div className="text-stone-500 text-xs w-16 text-right tabular-nums">
+                          <div className="text-muted-foreground text-xs w-16 text-right tabular-nums">
                             {l.used}/{l.capacity ?? "—"}
                           </div>
                         </div>
@@ -218,7 +218,7 @@ export function StockView({
                               setEditingId(l.id);
                               setFormError(null);
                             }}
-                            className="text-xs text-navy-900 underline hover:text-navy-700 mr-3"
+                            className="text-xs text-foreground underline hover:text-navy-700 mr-3"
                           >
                             Bearbeiten
                           </button>
@@ -240,13 +240,13 @@ export function StockView({
 
         {/* Bestände je Artikel */}
         <Card className="shadow-soft">
-          <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
-            <h2 className="font-display text-lg text-navy-900">Bestände je Artikel</h2>
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <h2 className="font-display text-lg text-foreground">Bestände je Artikel</h2>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-stone-50 text-[11px] tracking-[0.16em] uppercase text-stone-500">
+                <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
                   <th className="text-left font-medium px-4 py-3">Artikel</th>
                   <th className="text-left font-medium px-4 py-3">Platz</th>
                   <th className="text-left font-medium px-4 py-3">Bestand</th>
@@ -256,7 +256,7 @@ export function StockView({
               <tbody>
                 {articles.length === 0 && (
                   <tr>
-                    <td colSpan={4} className="text-center text-stone-500 py-8">
+                    <td colSpan={4} className="text-center text-muted-foreground py-8">
                       Keine Artikel.
                     </td>
                   </tr>
@@ -264,10 +264,10 @@ export function StockView({
                 {articles.map((a) => {
                   const belowMin = a.stock < a.minStock && a.minStock > 0;
                   return (
-                    <tr key={a.id} className="border-t border-stone-100">
+                    <tr key={a.id} className="border-t border-border">
                       <td className="px-4 py-3">
-                        <div className="font-medium text-navy-900">{a.name}</div>
-                        <div className="text-stone-500 font-mono text-xs">{a.sku}</div>
+                        <div className="font-medium text-foreground">{a.name}</div>
+                        <div className="text-muted-foreground font-mono text-xs">{a.sku}</div>
                       </td>
                       <td className="px-4 py-3 font-mono text-xs">{a.locationCode}</td>
                       <td className="px-4 py-3">
@@ -297,7 +297,7 @@ export function StockView({
       >
         <DialogContent className="max-w-2xl sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-navy-900">
+            <DialogTitle className="font-display text-2xl text-foreground">
               {isCreate ? "Neuer Lagerplatz" : "Lagerplatz bearbeiten"}
             </DialogTitle>
             <DialogDescription>Pflichtfelder sind mit * markiert.</DialogDescription>
@@ -355,7 +355,7 @@ export function StockView({
             />
           )}
           {dialogOpen && !initial && !isCreate && (
-            <div className="py-10 text-center text-stone-500">Lade…</div>
+            <div className="py-10 text-center text-muted-foreground">Lade…</div>
           )}
         </DialogContent>
       </Dialog>

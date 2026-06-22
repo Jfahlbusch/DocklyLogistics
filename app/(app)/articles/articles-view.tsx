@@ -69,15 +69,15 @@ export function ArticlesView({
     <div className="space-y-4 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-navy-900">Artikel / Rohstoffe</h1>
-          <p className="text-sm text-stone-500 mt-1">
+          <h1 className="font-display text-3xl text-foreground">Artikel / Rohstoffe</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {total} Artikel · {belowMinCount} unter Mindestbestand
           </p>
         </div>
         {canCreate && (
           <Button
             onClick={() => setCreating(true)}
-            className="bg-navy-900 hover:bg-navy-700 text-white"
+            className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
           >
             + Neuer Artikel
           </Button>
@@ -100,7 +100,7 @@ export function ArticlesView({
       <Card className="shadow-soft">
         <form
           onSubmit={onSearch}
-          className="flex flex-wrap items-center gap-2 px-5 py-4 border-b border-stone-200"
+          className="flex flex-wrap items-center gap-2 px-5 py-4 border-b border-border"
         >
           <Input
             value={searchValue}
@@ -108,7 +108,7 @@ export function ArticlesView({
             placeholder="Suche nach SKU, EAN, Name…"
             className="flex-1 min-w-[200px]"
           />
-          <select className="px-3 py-2 rounded-lg border border-stone-200 text-sm bg-white">
+          <select className="px-3 py-2 rounded-lg border border-border text-sm bg-card">
             <option>Alle Kategorien</option>
             {categories.map((c) => (
               <option key={c}>{c}</option>
@@ -122,7 +122,7 @@ export function ArticlesView({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-stone-50 text-[11px] tracking-[0.16em] uppercase text-stone-500">
+              <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
                 <th className="text-left font-medium px-4 py-3">SKU</th>
                 <th className="text-left font-medium px-4 py-3">Name</th>
                 <th className="text-left font-medium px-4 py-3">Lagerplatz</th>
@@ -136,7 +136,7 @@ export function ArticlesView({
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center text-stone-500 py-10">
+                  <td colSpan={8} className="text-center text-muted-foreground py-10">
                     Keine Artikel gefunden.
                   </td>
                 </tr>
@@ -147,13 +147,13 @@ export function ArticlesView({
                   <tr
                     key={r.id}
                     onClick={() => setSelected(r.id)}
-                    className="border-t border-stone-100 hover:bg-stone-50 cursor-pointer"
+                    className="border-t border-border hover:bg-muted/40 cursor-pointer"
                   >
                     <td className="px-4 py-3 font-mono text-xs">{r.sku}</td>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-navy-900">{r.name}</div>
+                      <div className="font-medium text-foreground">{r.name}</div>
                       {r.eanGtin && (
-                        <div className="text-stone-500 text-xs">EAN {r.eanGtin}</div>
+                        <div className="text-muted-foreground text-xs">EAN {r.eanGtin}</div>
                       )}
                     </td>
                     <td className="px-4 py-3">{r.locationCode}</td>
@@ -161,7 +161,7 @@ export function ArticlesView({
                       <span className={belowMin ? "text-rose-600 font-medium" : ""}>{r.stock}</span>
                     </td>
                     <td className="px-4 py-3">{r.minStock}</td>
-                    <td className="px-4 py-3 text-stone-500 text-xs">{r.orderUnit}</td>
+                    <td className="px-4 py-3 text-muted-foreground text-xs">{r.orderUnit}</td>
                     <td className="px-4 py-3">
                       {r.ek !== null ? `€ ${Number(r.ek).toFixed(2)}` : "—"}
                     </td>
@@ -191,7 +191,7 @@ export function ArticlesView({
       >
         <DialogContent className="max-w-2xl sm:max-w-2xl">
           <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-navy-900">Neuer Artikel</DialogTitle>
+            <DialogTitle className="font-display text-2xl text-foreground">Neuer Artikel</DialogTitle>
             <DialogDescription>Pflichtfelder sind mit * markiert.</DialogDescription>
           </DialogHeader>
           <ArticleForm

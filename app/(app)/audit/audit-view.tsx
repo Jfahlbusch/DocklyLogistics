@@ -38,8 +38,8 @@ const ACTION_STYLES: Record<string, string> = {
   SEND: "bg-navy-100 text-navy-700",
   CANCEL: "bg-rose-50 text-rose-700",
   RECEIVE: "bg-emerald-50 text-emerald-700",
-  LOGIN: "bg-stone-100 text-stone-700",
-  EXPORT: "bg-stone-100 text-stone-700",
+  LOGIN: "bg-muted text-foreground",
+  EXPORT: "bg-muted text-foreground",
 };
 
 export function AuditView({
@@ -98,18 +98,18 @@ export function AuditView({
     <div className="space-y-4 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-navy-900">Audit-Journal</h1>
-          <p className="text-sm text-stone-500 mt-1">
+          <h1 className="font-display text-3xl text-foreground">Audit-Journal</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {total} Einträge · Hash-Chain mit SHA-256 + Tages-Sealing
           </p>
         </div>
       </div>
 
       <Card className="shadow-soft">
-        <div className="px-5 py-4 border-b border-stone-200 flex flex-wrap items-end justify-between gap-3">
+        <div className="px-5 py-4 border-b border-border flex flex-wrap items-end justify-between gap-3">
           <div className="flex items-center gap-2">
             <label className="text-sm">
-              <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">
+              <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
                 Tag verifizieren
               </div>
               <Input
@@ -122,7 +122,7 @@ export function AuditView({
             <Button
               onClick={runVerify}
               disabled={verifying}
-              className="bg-navy-900 hover:bg-navy-700 text-white text-sm"
+              className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm"
             >
               {verifying ? "Prüfe…" : "Verifizieren"}
             </Button>
@@ -165,9 +165,9 @@ export function AuditView({
           )}
         </div>
 
-        <div className="px-5 py-3 border-b border-stone-100 flex flex-wrap gap-2 items-center text-sm">
+        <div className="px-5 py-3 border-b border-border flex flex-wrap gap-2 items-center text-sm">
           <select
-            className="px-3 py-2 rounded-lg border border-stone-200 bg-white"
+            className="px-3 py-2 rounded-lg border border-border bg-card"
             value={filters.entity}
             onChange={(e) => applyFilter("entity", e.target.value)}
           >
@@ -178,7 +178,7 @@ export function AuditView({
               </option>
             ))}
           </select>
-          <label className="text-xs text-stone-500">
+          <label className="text-xs text-muted-foreground">
             Von:
             <Input
               type="datetime-local"
@@ -189,7 +189,7 @@ export function AuditView({
               className="inline-block ml-1 w-48"
             />
           </label>
-          <label className="text-xs text-stone-500">
+          <label className="text-xs text-muted-foreground">
             Bis:
             <Input
               type="datetime-local"
@@ -205,7 +205,7 @@ export function AuditView({
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-stone-50 text-[11px] tracking-[0.16em] uppercase text-stone-500">
+              <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
                 <th className="text-left font-medium px-4 py-3">Zeit</th>
                 <th className="text-left font-medium px-4 py-3">Aktion</th>
                 <th className="text-left font-medium px-4 py-3">Entität</th>
@@ -217,28 +217,28 @@ export function AuditView({
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center text-stone-500 py-10">
+                  <td colSpan={6} className="text-center text-muted-foreground py-10">
                     Keine Einträge.
                   </td>
                 </tr>
               )}
               {rows.map((r) => (
                 <Fragment key={r.id}>
-                  <tr className="border-t border-stone-100 hover:bg-stone-50">
-                    <td className="px-4 py-3 text-xs text-stone-500">
+                  <tr className="border-t border-border hover:bg-muted/40">
+                    <td className="px-4 py-3 text-xs text-muted-foreground">
                       {new Date(r.createdAt).toLocaleString("de-DE", {
                         dateStyle: "short",
                         timeStyle: "medium",
                       })}
                     </td>
                     <td className="px-4 py-3">
-                      <Badge className={ACTION_STYLES[r.action] ?? "bg-stone-100 text-stone-700"}>
+                      <Badge className={ACTION_STYLES[r.action] ?? "bg-muted text-foreground"}>
                         {r.action}
                       </Badge>
                     </td>
                     <td className="px-4 py-3">
-                      <div className="font-medium text-navy-900">{r.entity}</div>
-                      <div className="text-stone-500 font-mono text-xs truncate max-w-[180px]">
+                      <div className="font-medium text-foreground">{r.entity}</div>
+                      <div className="text-muted-foreground font-mono text-xs truncate max-w-[180px]">
                         {r.entityId}
                       </div>
                     </td>
@@ -249,34 +249,34 @@ export function AuditView({
                     <td className="px-4 py-3 text-right">
                       <button
                         onClick={() => toggleExpand(r.id)}
-                        className="text-xs text-navy-900 underline hover:text-navy-700"
+                        className="text-xs text-foreground underline hover:text-navy-700"
                       >
                         {expanded.has(r.id) ? "ausblenden" : "anzeigen"}
                       </button>
                     </td>
                   </tr>
                   {expanded.has(r.id) && (
-                    <tr className="border-t border-stone-100 bg-stone-50">
+                    <tr className="border-t border-border bg-muted/40">
                       <td colSpan={6} className="px-4 py-3 text-xs">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <div className="text-[10px] tracking-[0.16em] uppercase text-stone-500 mb-1">
+                            <div className="text-[10px] tracking-[0.16em] uppercase text-muted-foreground mb-1">
                               Vorher
                             </div>
-                            <pre className="font-mono text-xs whitespace-pre-wrap bg-white border border-stone-200 rounded p-2">
+                            <pre className="font-mono text-xs whitespace-pre-wrap bg-card border border-border rounded p-2">
                               {r.before ? JSON.stringify(r.before, null, 2) : "—"}
                             </pre>
                           </div>
                           <div>
-                            <div className="text-[10px] tracking-[0.16em] uppercase text-stone-500 mb-1">
+                            <div className="text-[10px] tracking-[0.16em] uppercase text-muted-foreground mb-1">
                               Nachher
                             </div>
-                            <pre className="font-mono text-xs whitespace-pre-wrap bg-white border border-stone-200 rounded p-2">
+                            <pre className="font-mono text-xs whitespace-pre-wrap bg-card border border-border rounded p-2">
                               {r.after ? JSON.stringify(r.after, null, 2) : "—"}
                             </pre>
                           </div>
                         </div>
-                        <div className="mt-2 text-[10px] text-stone-500 font-mono">
+                        <div className="mt-2 text-[10px] text-muted-foreground font-mono">
                           hash:     {r.hash}
                           <br />
                           prevHash: {r.prevHash}

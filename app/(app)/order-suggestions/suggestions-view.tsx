@@ -27,7 +27,7 @@ type SupplierOption = { id: string; name: string; channel: string };
 const STATUS_STYLES: Record<string, string> = {
   PENDING: "bg-gold-50 text-gold-700",
   CONFIRMED: "bg-emerald-50 text-emerald-700",
-  DISMISSED: "bg-stone-100 text-stone-500",
+  DISMISSED: "bg-muted text-muted-foreground",
 };
 
 const REASON_LABELS: Record<string, string> = {
@@ -158,8 +158,8 @@ export function SuggestionsView({
     <div className="space-y-4 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-navy-900">Bestellvorschläge</h1>
-          <p className="text-sm text-stone-500 mt-1">
+          <h1 className="font-display text-3xl text-foreground">Bestellvorschläge</h1>
+          <p className="text-sm text-muted-foreground mt-1">
             {total} Vorschläge · Bulk-Confirm gruppiert je Lieferant und erzeugt direkt Bestellungen im Status REVIEW.
           </p>
         </div>
@@ -178,7 +178,7 @@ export function SuggestionsView({
             <Button
               onClick={bulkConfirm}
               disabled={selected.size === 0 || isPending}
-              className="bg-gold-500 hover:bg-gold-400 text-navy-900 text-sm font-medium"
+              className="bg-gold-500 hover:bg-gold-400 text-foreground text-sm font-medium"
             >
               {selected.size} bestätigen
             </Button>
@@ -209,8 +209,8 @@ export function SuggestionsView({
               "px-3 py-1.5 rounded-lg text-xs border transition-colors " +
               (currentStatus === s ||
               (s === "ALL" && currentStatus === "PENDING" && !sp.get("status"))
-                ? "bg-navy-900 text-white border-navy-900"
-                : "bg-white text-stone-700 border-stone-200 hover:bg-stone-50")
+                ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 border-navy-900"
+                : "bg-card text-foreground border-border hover:bg-muted/40")
             }
           >
             {s === "ALL" ? "Alle" : s}
@@ -220,14 +220,14 @@ export function SuggestionsView({
 
       <Card className="shadow-soft">
         {rows.length === 0 ? (
-          <CardContent className="py-10 text-center text-stone-500">
+          <CardContent className="py-10 text-center text-muted-foreground">
             Keine Vorschläge.
           </CardContent>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-stone-50 text-[11px] tracking-[0.16em] uppercase text-stone-500">
+                <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
                   <th className="text-left font-medium px-4 py-3 w-12">
                     {canConfirm && currentStatus === "PENDING" && (
                       <input
@@ -257,7 +257,7 @@ export function SuggestionsView({
                     edit.supplierId !== undefined ? edit.supplierId : r.supplier?.id ?? null;
                   const hasEdit = Object.keys(edit).length > 0;
                   return (
-                    <tr key={r.id} className="border-t border-stone-100">
+                    <tr key={r.id} className="border-t border-border">
                       <td className="px-4 py-3">
                         {canConfirm && isRowPending && (
                           <input
@@ -268,8 +268,8 @@ export function SuggestionsView({
                         )}
                       </td>
                       <td className="px-4 py-3">
-                        <div className="font-medium text-navy-900">{r.article.name}</div>
-                        <div className="text-stone-500 font-mono text-xs">
+                        <div className="font-medium text-foreground">{r.article.name}</div>
+                        <div className="text-muted-foreground font-mono text-xs">
                           {r.article.sku} · {r.article.orderUnit} ({r.article.packFactor} Stk)
                         </div>
                       </td>
@@ -279,7 +279,7 @@ export function SuggestionsView({
                       <td className="px-4 py-3">
                         {isRowPending && canConfirm ? (
                           <select
-                            className="px-2 py-1 rounded-md border border-stone-200 text-sm bg-white"
+                            className="px-2 py-1 rounded-md border border-border text-sm bg-card"
                             value={effectiveSupplierId ?? ""}
                             onChange={(e) =>
                               editDraft(r.id, { supplierId: e.target.value || null })
@@ -307,7 +307,7 @@ export function SuggestionsView({
                                 qtyOrderUnit: Math.max(1, Number(e.target.value)),
                               })
                             }
-                            className="w-20 px-2 py-1 rounded-md border border-stone-200 text-sm bg-white text-right"
+                            className="w-20 px-2 py-1 rounded-md border border-border text-sm bg-card text-right"
                           />
                         ) : (
                           <div className="font-medium">{r.qtyOrderUnit}</div>
@@ -317,14 +317,14 @@ export function SuggestionsView({
                         <span
                           className={
                             "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium " +
-                            (STATUS_STYLES[r.status] ?? "bg-stone-100 text-stone-700")
+                            (STATUS_STYLES[r.status] ?? "bg-muted text-foreground")
                           }
                         >
                           <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
                           {r.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-stone-500">
+                      <td className="px-4 py-3 text-xs text-muted-foreground">
                         {new Date(r.createdAt).toLocaleString("de-DE", {
                           dateStyle: "short",
                           timeStyle: "short",
@@ -335,7 +335,7 @@ export function SuggestionsView({
                           <button
                             type="button"
                             onClick={() => savePatch(r.id)}
-                            className="text-xs px-2.5 py-1 rounded-md bg-navy-900 text-white hover:bg-navy-700"
+                            className="text-xs px-2.5 py-1 rounded-md bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 hover:bg-navy-700"
                           >
                             Speichern
                           </button>
@@ -344,7 +344,7 @@ export function SuggestionsView({
                           <button
                             type="button"
                             onClick={() => dismissOne(r.id)}
-                            className="text-xs px-2.5 py-1 rounded-md border border-stone-200 hover:bg-stone-50 text-stone-700"
+                            className="text-xs px-2.5 py-1 rounded-md border border-border hover:bg-muted/40 text-foreground"
                           >
                             Verwerfen
                           </button>

@@ -56,18 +56,18 @@ export default async function DashboardPage() {
     <div className="space-y-6 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-navy-900">Übersicht</h1>
-          <p className="text-sm text-stone-500 mt-1">Tenant: <span className="font-mono">{tenantId}</span></p>
+          <h1 className="font-display text-3xl text-foreground">Übersicht</h1>
+          <p className="text-sm text-muted-foreground mt-1">Tenant: <span className="font-mono">{tenantId}</span></p>
         </div>
       </div>
 
       <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
         {kpis.map((k) => (
           <Link key={k.label} href={k.href}>
-            <Card className="shadow-soft hover:border-stone-300 transition-colors">
+            <Card className="shadow-soft hover:border-border transition-colors">
               <CardContent className="p-5">
-                <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500">{k.label}</div>
-                <div className={"font-display text-3xl mt-1.5 " + (k.accent ? "text-rose-600" : k.muted ? "text-stone-400" : "text-navy-900")}>{k.value}</div>
+                <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">{k.label}</div>
+                <div className={"font-display text-3xl mt-1.5 " + (k.accent ? "text-rose-600" : k.muted ? "text-muted-foreground" : "text-foreground")}>{k.value}</div>
               </CardContent>
             </Card>
           </Link>
@@ -76,24 +76,24 @@ export default async function DashboardPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card className="shadow-soft">
-          <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
-            <h2 className="font-display text-lg text-navy-900">Top Unterdeckungen</h2>
-            <Link href="/articles" className="text-xs text-navy-900 underline hover:text-navy-700">Alle Artikel</Link>
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <h2 className="font-display text-lg text-foreground">Top Unterdeckungen</h2>
+            <Link href="/articles" className="text-xs text-foreground underline hover:text-navy-700">Alle Artikel</Link>
           </div>
           <CardContent className="p-0">
             {belowMin.length === 0 ? (
-              <div className="px-5 py-8 text-center text-stone-500 text-sm">Keine Unterdeckung — alle Bestände über Mindestbestand.</div>
+              <div className="px-5 py-8 text-center text-muted-foreground text-sm">Keine Unterdeckung — alle Bestände über Mindestbestand.</div>
             ) : (
-              <ul className="divide-y divide-stone-100">
+              <ul className="divide-y divide-border">
                 {belowMin.slice(0, 6).map((a) => (
                   <li key={a.id} className="px-5 py-3 flex items-center justify-between text-sm">
                     <div className="min-w-0 flex-1">
-                      <div className="font-medium text-navy-900 truncate">{a.name}</div>
-                      <div className="text-stone-500 font-mono text-xs">{a.sku}</div>
+                      <div className="font-medium text-foreground truncate">{a.name}</div>
+                      <div className="text-muted-foreground font-mono text-xs">{a.sku}</div>
                     </div>
                     <div className="text-right">
                       <div className="font-medium text-rose-600">{a.stock} / {a.minStock}</div>
-                      <div className="text-stone-500 text-xs">offen {a.minStock - a.stock}</div>
+                      <div className="text-muted-foreground text-xs">offen {a.minStock - a.stock}</div>
                     </div>
                   </li>
                 ))}
@@ -103,23 +103,23 @@ export default async function DashboardPage() {
         </Card>
 
         <Card className="shadow-soft">
-          <div className="px-5 py-4 border-b border-stone-200 flex items-center justify-between">
-            <h2 className="font-display text-lg text-navy-900">Letzte Aktivitäten</h2>
+          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+            <h2 className="font-display text-lg text-foreground">Letzte Aktivitäten</h2>
           </div>
           <CardContent className="p-0">
             {recentAudit.length === 0 ? (
-              <div className="px-5 py-8 text-center text-stone-500 text-sm">Noch keine Aktivität.</div>
+              <div className="px-5 py-8 text-center text-muted-foreground text-sm">Noch keine Aktivität.</div>
             ) : (
-              <ul className="divide-y divide-stone-100">
+              <ul className="divide-y divide-border">
                 {recentAudit.map((e) => (
                   <li key={e.id} className="px-5 py-3 flex items-start gap-3 text-sm">
                     <span className="mt-1.5 w-2 h-2 rounded-full bg-gold-500 flex-none" />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-medium text-navy-900">{e.action}</span>
-                        <span className="text-stone-500 text-xs">{e.entity}</span>
+                        <span className="font-medium text-foreground">{e.action}</span>
+                        <span className="text-muted-foreground text-xs">{e.entity}</span>
                       </div>
-                      <div className="text-xs text-stone-500 mt-0.5">
+                      <div className="text-xs text-muted-foreground mt-0.5">
                         {new Date(e.createdAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" })} · {e.actorEmail}
                       </div>
                     </div>

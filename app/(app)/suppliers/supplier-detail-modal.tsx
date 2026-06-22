@@ -72,18 +72,18 @@ export function SupplierDetailModal({
             <DialogHeader className="sr-only">
               <DialogTitle>Lieferanten-Detail wird geladen</DialogTitle>
             </DialogHeader>
-            <div className="py-10 text-center text-stone-500">Lade…</div>
+            <div className="py-10 text-center text-muted-foreground">Lade…</div>
           </>
         ) : (
           <>
             <DialogHeader>
-              <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 font-mono">
+              <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">
                 {supplier.id}
               </div>
-              <DialogTitle className="font-display text-2xl text-navy-900">
+              <DialogTitle className="font-display text-2xl text-foreground">
                 {supplier.name}
               </DialogTitle>
-              <DialogDescription className="text-stone-500">
+              <DialogDescription className="text-muted-foreground">
                 {[supplier.contactName, supplier.city, supplier.email]
                   .filter(Boolean)
                   .join(" · ")}
@@ -121,8 +121,8 @@ export function SupplierDetailModal({
                         className={
                           "flex-1 rounded-xl border px-4 py-3 text-left " +
                           (supplier.channel === c
-                            ? "bg-navy-900 text-white border-navy-900"
-                            : "bg-white text-stone-500 border-stone-200")
+                            ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 border-navy-900"
+                            : "bg-card text-muted-foreground border-border")
                         }
                       >
                         <div className="font-medium">{c}</div>
@@ -137,19 +137,19 @@ export function SupplierDetailModal({
                     ))}
                   </div>
 
-                  <div className="border border-stone-200 rounded-xl p-4 bg-stone-50">
-                    <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-2">
+                  <div className="border border-border rounded-xl p-4 bg-muted/40">
+                    <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-2">
                       Empfänger-Konfiguration
                     </div>
-                    <pre className="text-xs font-mono whitespace-pre-wrap break-words text-stone-900">
+                    <pre className="text-xs font-mono whitespace-pre-wrap break-words text-foreground">
                       {JSON.stringify(supplier.channelConfig ?? {}, null, 2)}
                     </pre>
                   </div>
 
-                  <div className="text-xs text-stone-500">
+                  <div className="text-xs text-muted-foreground">
                     Die Tenant-seitige Absender-Identität (z. B. Mailadresse, EDI-Sender-ID) wird
                     unter
-                    <strong className="text-navy-900"> Einstellungen → Versand </strong>
+                    <strong className="text-foreground"> Einstellungen → Versand </strong>
                     konfiguriert.
                   </div>
                 </TabsContent>
@@ -202,7 +202,7 @@ export function SupplierDetailModal({
             )}
 
             {!editing && supplier && canManage && (
-              <div className="flex justify-end gap-2 pt-4 border-t border-stone-100">
+              <div className="flex justify-end gap-2 pt-4 border-t border-border">
                 <Button
                   variant="outline"
                   className="text-rose-600 border-rose-200 hover:bg-rose-50"
@@ -224,7 +224,7 @@ export function SupplierDetailModal({
                 </Button>
                 <Button
                   onClick={() => setEditing(true)}
-                  className="bg-navy-900 hover:bg-navy-700 text-white"
+                  className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
                 >
                   Bearbeiten
                 </Button>
@@ -256,7 +256,7 @@ function supplierToFormValues(s: Supplier): SupplierFormValues {
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
     <div className="flex gap-2 items-baseline">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 w-44 flex-shrink-0">
+      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground w-44 flex-shrink-0">
         {label}
       </div>
       <div className={mono ? "font-mono" : ""}>{value}</div>
@@ -276,14 +276,14 @@ type SupplierOrder = {
 };
 
 const STATUS_STYLES: Record<string, string> = {
-  DRAFT: "bg-stone-100 text-stone-700",
+  DRAFT: "bg-muted text-foreground",
   REVIEW: "bg-gold-50 text-gold-700",
   APPROVED: "bg-gold-50 text-gold-700",
   SENT: "bg-navy-100 text-navy-700",
   CONFIRMED: "bg-emerald-50 text-emerald-700",
   PARTIALLY_RECEIVED: "bg-emerald-50 text-emerald-700",
   RECEIVED: "bg-emerald-50 text-emerald-700",
-  CLOSED: "bg-stone-100 text-stone-500",
+  CLOSED: "bg-muted text-muted-foreground",
   CANCELLED: "bg-rose-50 text-rose-700",
 };
 
@@ -300,16 +300,16 @@ function SupplierOrdersPanel({ supplierId }: { supplierId: string }) {
     return () => { cancelled = true; };
   }, [supplierId]);
 
-  if (loading) return <div className="py-6 text-center text-stone-500 text-sm">Lade Bestellungen…</div>;
+  if (loading) return <div className="py-6 text-center text-muted-foreground text-sm">Lade Bestellungen…</div>;
   if (orders.length === 0) {
-    return <div className="py-6 text-center text-stone-500 text-sm">Noch keine Bestellungen für diesen Lieferanten.</div>;
+    return <div className="py-6 text-center text-muted-foreground text-sm">Noch keine Bestellungen für diesen Lieferanten.</div>;
   }
 
   return (
-    <div className="border border-stone-200 rounded-xl overflow-hidden">
+    <div className="border border-border rounded-xl overflow-hidden">
       <table className="w-full text-sm">
         <thead>
-          <tr className="bg-stone-50 text-[11px] tracking-[0.16em] uppercase text-stone-500">
+          <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
             <th className="text-left font-medium px-3 py-2">Nr.</th>
             <th className="text-left font-medium px-3 py-2">Status</th>
             <th className="text-left font-medium px-3 py-2">Pos.</th>
@@ -319,16 +319,16 @@ function SupplierOrdersPanel({ supplierId }: { supplierId: string }) {
         </thead>
         <tbody>
           {orders.map((o) => (
-            <tr key={o.id} className="border-t border-stone-100">
+            <tr key={o.id} className="border-t border-border">
               <td className="px-3 py-2 font-mono text-xs">{o.orderNo}</td>
               <td className="px-3 py-2">
-                <span className={"inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium " + (STATUS_STYLES[o.status] ?? "bg-stone-100 text-stone-700")}>
+                <span className={"inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium " + (STATUS_STYLES[o.status] ?? "bg-muted text-foreground")}>
                   <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />{o.status}
                 </span>
               </td>
               <td className="px-3 py-2 text-xs">{o._count?.items ?? "—"}</td>
               <td className="px-3 py-2 text-right font-medium">{Number(o.total).toFixed(2)} {o.currency}</td>
-              <td className="px-3 py-2 text-xs text-stone-500">{new Date(o.createdAt).toLocaleDateString("de-DE")}</td>
+              <td className="px-3 py-2 text-xs text-muted-foreground">{new Date(o.createdAt).toLocaleDateString("de-DE")}</td>
             </tr>
           ))}
         </tbody>
@@ -395,11 +395,11 @@ function ApiKeysPanel({
     await load();
   }
 
-  if (loading) return <div className="py-6 text-center text-stone-500 text-sm">Lade API-Keys…</div>;
+  if (loading) return <div className="py-6 text-center text-muted-foreground text-sm">Lade API-Keys…</div>;
 
   return (
     <div className="space-y-3">
-      <p className="text-xs text-stone-600">
+      <p className="text-xs text-muted-foreground">
         API-Keys werden vom Lieferanten im <code>X-API-Key</code>-Header der Public-API mitgesendet
         (<code>/api/public/v1/*</code>). Das volle Key-Secret wird nur einmal angezeigt.
       </p>
@@ -407,7 +407,7 @@ function ApiKeysPanel({
       {newKey && (
         <div className="border border-gold-400 rounded-xl p-3 bg-gold-50 space-y-2">
           <div className="text-[11px] tracking-[0.18em] uppercase text-gold-700">Neuer API-Key</div>
-          <pre className="text-xs font-mono bg-white border border-stone-200 rounded p-2 whitespace-pre-wrap break-all">
+          <pre className="text-xs font-mono bg-card border border-border rounded p-2 whitespace-pre-wrap break-all">
             {newKey.fullKey}
           </pre>
           <p className="text-xs text-rose-700">
@@ -420,12 +420,12 @@ function ApiKeysPanel({
       )}
 
       <div className="flex justify-between items-center">
-        <div className="text-sm text-stone-700">{keys.length} Key(s)</div>
+        <div className="text-sm text-foreground">{keys.length} Key(s)</div>
         {canManage && (
           <Button
             size="sm"
             onClick={() => setCreating(true)}
-            className="bg-navy-900 hover:bg-navy-700 text-white"
+            className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
           >
             + Neuer Key
           </Button>
@@ -433,13 +433,13 @@ function ApiKeysPanel({
       </div>
 
       {keys.length === 0 ? (
-        <div className="py-4 text-center text-stone-500 text-sm">Keine Keys angelegt.</div>
+        <div className="py-4 text-center text-muted-foreground text-sm">Keine Keys angelegt.</div>
       ) : (
         <ul className="space-y-2">
           {keys.map((k) => (
             <li
               key={k.id}
-              className="border border-stone-200 rounded-lg p-3 flex flex-wrap items-start justify-between gap-2"
+              className="border border-border rounded-lg p-3 flex flex-wrap items-start justify-between gap-2"
             >
               <div className="min-w-0 flex-1 space-y-1">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -449,19 +449,19 @@ function ApiKeysPanel({
                   ) : (
                     <Badge className="bg-emerald-50 text-emerald-700">aktiv</Badge>
                   )}
-                  {k.label && <span className="text-xs text-stone-500">{k.label}</span>}
+                  {k.label && <span className="text-xs text-muted-foreground">{k.label}</span>}
                 </div>
                 <div className="flex gap-1 flex-wrap">
                   {k.scopes.map((s) => (
                     <span
                       key={s}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-stone-100 text-stone-700"
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground"
                     >
                       {s}
                     </span>
                   ))}
                 </div>
-                <div className="text-xs text-stone-500">
+                <div className="text-xs text-muted-foreground">
                   Erstellt {new Date(k.createdAt).toLocaleDateString("de-DE")}
                   {k.lastUsedAt && (
                     <>
@@ -523,9 +523,9 @@ function CreateKeyDialog({
     >
       <Card className="w-full max-w-md shadow-soft" onClick={(e) => e.stopPropagation()}>
         <CardContent className="p-5 space-y-3">
-          <h3 className="font-display text-lg text-navy-900">Neuer API-Key</h3>
+          <h3 className="font-display text-lg text-foreground">Neuer API-Key</h3>
           <label className="block text-sm">
-            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">
+            <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
               Bezeichnung
             </div>
             <Input
@@ -535,7 +535,7 @@ function CreateKeyDialog({
             />
           </label>
           <div className="text-sm">
-            <div className="text-[11px] tracking-[0.18em] uppercase text-stone-500 mb-1">Scopes</div>
+            <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">Scopes</div>
             <div className="flex flex-wrap gap-2">
               {SCOPES.map((s) => (
                 <label
@@ -543,8 +543,8 @@ function CreateKeyDialog({
                   className={
                     "px-3 py-1.5 rounded-lg border text-xs cursor-pointer " +
                     (scopes.includes(s)
-                      ? "bg-navy-900 text-white border-navy-900"
-                      : "bg-white text-stone-700 border-stone-200")
+                      ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 border-navy-900"
+                      : "bg-card text-foreground border-border")
                   }
                 >
                   <input
@@ -565,7 +565,7 @@ function CreateKeyDialog({
             <Button
               onClick={submit}
               disabled={busy || scopes.length === 0}
-              className="bg-navy-900 hover:bg-navy-700 text-white"
+              className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
             >
               {busy ? "Erstelle…" : "Erstellen"}
             </Button>

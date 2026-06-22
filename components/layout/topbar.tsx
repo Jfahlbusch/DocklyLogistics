@@ -4,8 +4,13 @@ import { usePathname } from "next/navigation";
 import { Search, Bell } from "lucide-react";
 import { NAV_ITEMS } from "./nav-items";
 import { openSearch } from "@/components/search/open-search";
+import { ProfileMenu } from "./profile-menu";
 
-export function Topbar() {
+export function Topbar({
+  user,
+}: {
+  user: { name: string; email?: string; role: string; tenant: string };
+}) {
   const pathname = usePathname();
   const current = NAV_ITEMS.find((n) => pathname.startsWith(n.href));
   return (
@@ -32,6 +37,7 @@ export function Topbar() {
         <Bell size={20} strokeWidth={1.5} />
         <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
       </button>
+      <ProfileMenu user={user} />
     </header>
   );
 }

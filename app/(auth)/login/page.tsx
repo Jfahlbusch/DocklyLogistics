@@ -12,7 +12,7 @@ export default async function LoginPage({
   const error = params.error;
 
   return (
-    <main className="min-h-screen flex items-center justify-center bg-stone-50 p-6">
+    <main className="min-h-screen flex items-center justify-center bg-muted/40 p-6">
       <Card className="w-full max-w-md shadow-soft">
         <CardHeader className="space-y-2">
           <div className="flex items-center gap-3">
@@ -20,8 +20,8 @@ export default async function LoginPage({
               L
             </div>
             <div>
-              <CardTitle className="font-display text-2xl text-navy-900">DocklyLogistics</CardTitle>
-              <CardDescription className="text-xs tracking-[0.18em] uppercase text-stone-500">
+              <CardTitle className="font-display text-2xl text-foreground">DocklyLogistics</CardTitle>
+              <CardDescription className="text-xs tracking-[0.18em] uppercase text-muted-foreground">
                 Logistikverwaltung
               </CardDescription>
             </div>
@@ -33,12 +33,12 @@ export default async function LoginPage({
               Kein Zugriff für diesen Tenant. Bitte wende dich an deinen Administrator.
             </div>
           )}
-          <p className="text-sm text-stone-600">
+          <p className="text-sm text-muted-foreground">
             Anmeldung über Keycloak (BackOfficeDigital).
           </p>
           <form action={loginWithKeycloak}>
             <input type="hidden" name="callbackUrl" value={callbackUrl} />
-            <Button type="submit" className="w-full bg-navy-900 hover:bg-navy-700 text-white">
+            <Button type="submit" className="w-full bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900">
               Mit Keycloak anmelden
             </Button>
           </form>
