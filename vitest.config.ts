@@ -11,6 +11,12 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["lib/**/*.test.ts", "tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text-summary", "text"],
+      include: ["lib/**/*.ts", "app/api/**/*.ts"],
+      exclude: ["**/*.test.ts", "**/*.d.ts", "lib/api/openapi.ts", "lib/schemas/**"],
+    },
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, ".") },
