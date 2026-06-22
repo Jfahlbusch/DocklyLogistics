@@ -2,7 +2,8 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import nodemailer from "nodemailer";
 import type { DispatchInput, DispatchResult } from "./types";
-import { getScalewayTemConfig, sendViaScalewayTem } from "./scaleway-mail";
+import { getScalewayTemConfig, sendViaScalewayTem, isRetryableTemError } from "./scaleway-mail";
+import { withRetry } from "./retry";
 
 const MOCK_DIR = "/tmp/docklylogistics-mail";
 
@@ -44,17 +45,21 @@ export async function dispatchEmail(input: DispatchInput): Promise<DispatchResul
   const temCfg = getScalewayTemConfig();
   if (temCfg) {
     try {
-      const { messageId } = await sendViaScalewayTem(temCfg, {
-        from: { email: tenant.fromEmail, name: tenant.fromName },
-        to,
-        cc: supplier.cc,
-        replyTo: tenant.replyTo,
-        subject,
-        text,
-        attachments: [
-          { name: `${input.order.orderNo}.pdf`, type: "application/pdf", content: input.pdfBuffer },
-        ],
-      });
+      const { messageId } = await withRetry(
+        () =>
+          sendViaScalewayTem(temCfg, {
+            from: { email: tenant.fromEmail, name: tenant.fromName },
+            to,
+            cc: supplier.cc,
+            replyTo: tenant.replyTo,
+            subject,
+            text,
+            attachments: [
+              { name: `${input.order.orderNo}.pdf`, type: "application/pdf", content: input.pdfBuffer },
+            ],
+          }),
+        { attempts: 3, baseMs: 500, isRetryable: isRetryableTemError },
+      );
       return {
         channel: "EMAIL",
         ok: true,
@@ -146,13 +151,17 @@ export async function sendTestEmail(
   const temCfg = getScalewayTemConfig();
   if (temCfg) {
     try {
-      const { messageId } = await sendViaScalewayTem(temCfg, {
-        from: { email: tenant.fromEmail, name: tenant.fromName },
-        to: recipient,
-        replyTo: tenant.replyTo,
-        subject,
-        text,
-      });
+      const { messageId } = await withRetry(
+        () =>
+          sendViaScalewayTem(temCfg, {
+            from: { email: tenant.fromEmail, name: tenant.fromName },
+            to: recipient,
+            replyTo: tenant.replyTo,
+            subject,
+            text,
+          }),
+        { attempts: 3, baseMs: 500, isRetryable: isRetryableTemError },
+      );
       return { channel: "EMAIL", ok: true, message: `Test-Mail an ${recipient} versendet (Scaleway TEM).`, details: { to: recipient, messageId, provider: "scaleway-tem" } };
     } catch (e) {
       return { channel: "EMAIL", ok: false, message: `Scaleway-TEM-Test fehlgeschlagen: ${(e as Error).message}` };

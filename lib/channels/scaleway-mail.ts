@@ -1,5 +1,24 @@
 import { Buffer } from "node:buffer";
 
+export class ScalewayTemError extends Error {
+  constructor(
+    public readonly status: number,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ScalewayTemError";
+  }
+}
+
+/** TEM failures worth retrying: 5xx, 429 (rate limit), request timeout, or a
+ *  network error. 4xx (bad request, domain not verified, …) are permanent. */
+export function isRetryableTemError(e: unknown): boolean {
+  if (e instanceof ScalewayTemError) return e.status >= 500 || e.status === 429;
+  if (e instanceof DOMException && e.name === "AbortError") return true; // timeout
+  if (e instanceof TypeError) return true; // fetch network failure
+  return false;
+}
+
 /**
  * Scaleway Transactional Email (TEM) client.
  * API: POST https://api.scaleway.com/transactional-email/v1alpha1/regions/{region}/emails
@@ -74,7 +93,7 @@ export async function sendViaScalewayTem(
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
-    throw new Error(`Scaleway TEM ${res.status}: ${detail.slice(0, 300)}`);
+    throw new ScalewayTemError(res.status, `Scaleway TEM ${res.status}: ${detail.slice(0, 300)}`);
   }
 
   const json = (await res.json().catch(() => null)) as {
