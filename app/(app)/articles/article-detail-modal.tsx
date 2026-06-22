@@ -1,5 +1,7 @@
 "use client";
 
+import { DetailField as Field } from "@/components/ui/detail-field";
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
@@ -595,16 +597,6 @@ function Kpi({ label, value }: { label: string; value: string }) {
   );
 }
 
-function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
-  return (
-    <div className="flex gap-2 items-baseline">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground w-44 flex-shrink-0">
-        {label}
-      </div>
-      <div className={mono ? "font-mono" : ""}>{value}</div>
-    </div>
-  );
-}
 
 type StockRow = {
   id: string;
