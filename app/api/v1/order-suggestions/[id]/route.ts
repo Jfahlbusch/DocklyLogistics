@@ -11,7 +11,7 @@ import { OrderSuggestionUpdateSchema } from "@/lib/schemas/order-suggestion";
 type Ctx = { params: Promise<{ id: string }> };
 
 export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const { id } = await params;
   const body = OrderSuggestionUpdateSchema.parse(await req.json());
 

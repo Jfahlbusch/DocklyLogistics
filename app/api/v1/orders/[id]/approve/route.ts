@@ -10,7 +10,7 @@ import { ok, fail } from "@/lib/api/respond";
 type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const { id } = await params;
 
   const session = await auth();

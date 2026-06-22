@@ -19,7 +19,7 @@ function formatDec(n: unknown): string {
 }
 
 export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const { id } = await params;
 
   const session = await auth();

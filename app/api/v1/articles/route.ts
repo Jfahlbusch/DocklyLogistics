@@ -9,14 +9,14 @@ import { ok, created, fail } from "@/lib/api/respond";
 import { ArticleCreateSchema, ArticleListQuerySchema } from "@/lib/schemas/article";
 
 export const GET = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const query = ArticleListQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
   const { items, total } = await articleRepo.list({ tenantId: ctx.tenantId, ...query });
   return ok(items, { page: query.page, pageSize: query.pageSize, total });
 });
 
 export const POST = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const body = ArticleCreateSchema.parse(await req.json());
 
   const dup = await articleRepo.findBySku(ctx.tenantId, body.sku);

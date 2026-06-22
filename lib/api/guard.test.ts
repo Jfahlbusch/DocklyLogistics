@@ -36,23 +36,23 @@ describe("requireRoleFromHeaders", () => {
     return h;
   }
 
-  it("returns ctx when role >= required", () => {
-    const ctx = requireRoleFromHeaders(makeHeaders("MANAGER", "Demo"), "USER");
+  it("returns ctx when role >= required", async () => {
+    const ctx = await requireRoleFromHeaders(makeHeaders("MANAGER", "Demo"), "USER");
     expect(ctx).toEqual({ role: "MANAGER", tenantId: "Demo" });
   });
 
-  it("throws UnauthenticatedError when no role header", () => {
-    expect(() => requireRoleFromHeaders(makeHeaders(undefined, "Demo"), "VIEWER"))
-      .toThrow(UnauthenticatedError);
+  it("throws UnauthenticatedError when no role header (and no API key)", async () => {
+    await expect(requireRoleFromHeaders(makeHeaders(undefined, "Demo"), "VIEWER"))
+      .rejects.toThrow(UnauthenticatedError);
   });
 
-  it("throws ForbiddenError when role too low", () => {
-    expect(() => requireRoleFromHeaders(makeHeaders("VIEWER", "Demo"), "MANAGER"))
-      .toThrow(ForbiddenError);
+  it("throws ForbiddenError when role too low", async () => {
+    await expect(requireRoleFromHeaders(makeHeaders("VIEWER", "Demo"), "MANAGER"))
+      .rejects.toThrow(ForbiddenError);
   });
 
-  it("throws UnauthenticatedError when tenant header missing", () => {
-    expect(() => requireRoleFromHeaders(makeHeaders("USER", undefined), "USER"))
-      .toThrow(UnauthenticatedError);
+  it("throws UnauthenticatedError when tenant header missing (and no API key)", async () => {
+    await expect(requireRoleFromHeaders(makeHeaders("USER", undefined), "USER"))
+      .rejects.toThrow(UnauthenticatedError);
   });
 });

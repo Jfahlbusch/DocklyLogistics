@@ -12,7 +12,7 @@ import { StockMoveSchema } from "@/lib/schemas/stock";
 import { ulid } from "@/lib/utils/ulid";
 
 export const POST = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const body = StockMoveSchema.parse(await req.json());
 
   if (body.fromLocationId === body.toLocationId) return fail(422, "From and to location must differ");

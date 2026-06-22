@@ -10,7 +10,7 @@ import { ok, created } from "@/lib/api/respond";
 import { WebhookCreateSchema } from "@/lib/schemas/webhook";
 
 export const GET = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const items = await webhookRepo.list(ctx.tenantId);
   return ok(
     items.map((w) => ({
@@ -27,7 +27,7 @@ export const GET = handler(async (req: NextRequest) => {
 });
 
 export const POST = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const body = WebhookCreateSchema.parse(await req.json());
 
   const session = await auth();

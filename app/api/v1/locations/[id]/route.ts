@@ -11,7 +11,7 @@ import { StorageLocationUpdateSchema } from "@/lib/schemas/storage-location";
 type Ctx = { params: Promise<{ id: string }> };
 
 export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const { id } = await params;
   const l = await storageLocationRepo.findById(ctx.tenantId, id);
   if (!l) return fail(404, "Not Found");
@@ -19,7 +19,7 @@ export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
 });
 
 export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const { id } = await params;
   const body = StorageLocationUpdateSchema.parse(await req.json());
 
@@ -46,7 +46,7 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
 });
 
 export const DELETE = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const { id } = await params;
   const existing = await storageLocationRepo.findById(ctx.tenantId, id);
   if (!existing) return fail(404, "Not Found");

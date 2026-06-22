@@ -13,7 +13,7 @@ import { OrderReceiveSchema } from "@/lib/schemas/order";
 type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const { id } = await params;
   const body = OrderReceiveSchema.parse(await req.json());
 

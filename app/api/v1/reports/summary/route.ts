@@ -11,7 +11,7 @@ const Q = z.object({
 });
 
 export const GET = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const parsed = Q.safeParse(Object.fromEntries(req.nextUrl.searchParams));
   if (!parsed.success) return fail(422, "Invalid query", parsed.error.message);
 

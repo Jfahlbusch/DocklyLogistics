@@ -17,6 +17,15 @@ export default auth((req) => {
   }
 
   if (!req.auth) {
+    // Personal API-key requests (X-API-Key / Authorization: Bearer) authenticate at
+    // the route guard — middleware runs on the edge and can't do the DB lookup, so
+    // let them through instead of redirecting to /login.
+    if (
+      pathname.startsWith("/api/v1") &&
+      (req.headers.get("x-api-key") || req.headers.get("authorization"))
+    ) {
+      return NextResponse.next();
+    }
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);

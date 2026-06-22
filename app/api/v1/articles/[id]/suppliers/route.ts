@@ -13,7 +13,7 @@ import { ArticleSupplierCreateSchema } from "@/lib/schemas/supplier";
 type Ctx = { params: Promise<{ id: string }> };
 
 export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const { id } = await params;
   const article = await articleRepo.findById(ctx.tenantId, id);
   if (!article) return fail(404, "Article not found");
@@ -22,7 +22,7 @@ export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
 });
 
 export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const { id } = await params;
   const body = ArticleSupplierCreateSchema.parse(await req.json());
 

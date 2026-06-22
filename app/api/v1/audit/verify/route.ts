@@ -10,7 +10,7 @@ const QuerySchema = z.object({
 });
 
 export const GET = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const params = QuerySchema.safeParse(
     Object.fromEntries(req.nextUrl.searchParams),
   );

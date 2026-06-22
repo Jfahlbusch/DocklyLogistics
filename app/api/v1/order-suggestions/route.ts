@@ -14,7 +14,7 @@ import {
 } from "@/lib/schemas/order-suggestion";
 
 export const GET = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const query = OrderSuggestionListQuerySchema.parse(
     Object.fromEntries(req.nextUrl.searchParams),
   );
@@ -26,7 +26,7 @@ export const GET = handler(async (req: NextRequest) => {
 });
 
 export const POST = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const body = OrderSuggestionCreateSchema.parse(await req.json());
 
   const article = await articleRepo.findById(ctx.tenantId, body.articleId);

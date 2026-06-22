@@ -10,7 +10,7 @@ import { ok, fail } from "@/lib/api/respond";
 type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const { id } = await params;
   const existing = await orderSuggestionRepo.findById(ctx.tenantId, id);
   if (!existing) return fail(404, "Not Found");

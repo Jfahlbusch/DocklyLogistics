@@ -9,7 +9,7 @@ import { ok, fail } from "@/lib/api/respond";
 import { BulkConfirmSchema } from "@/lib/schemas/order-suggestion";
 
 export const POST = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const body = BulkConfirmSchema.parse(await req.json());
 
   const session = await auth();

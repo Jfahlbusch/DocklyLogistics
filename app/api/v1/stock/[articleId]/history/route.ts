@@ -9,7 +9,7 @@ import { StockHistoryQuerySchema } from "@/lib/schemas/stock";
 type Ctx = { params: Promise<{ articleId: string }> };
 
 export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const { articleId } = await params;
   const article = await articleRepo.findById(ctx.tenantId, articleId);
   if (!article) return fail(404, "Article not found");

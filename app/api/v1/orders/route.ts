@@ -10,14 +10,14 @@ import { ok, created } from "@/lib/api/respond";
 import { OrderCreateSchema, OrderListQuerySchema } from "@/lib/schemas/order";
 
 export const GET = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const query = OrderListQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
   const { items, total } = await orderRepo.list({ tenantId: ctx.tenantId, ...query });
   return ok(items, { page: query.page, pageSize: query.pageSize, total });
 });
 
 export const POST = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const body = OrderCreateSchema.parse(await req.json());
 
   const session = await auth();

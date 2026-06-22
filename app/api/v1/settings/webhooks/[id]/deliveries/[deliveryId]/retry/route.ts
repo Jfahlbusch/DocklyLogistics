@@ -16,7 +16,7 @@ type Ctx = { params: Promise<{ id: string; deliveryId: string }> };
  * picks up PENDING/FAILED-due, so a given-up delivery is otherwise dead). MANAGER.
  */
 export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const { id, deliveryId } = await params;
 
   const wh = await webhookRepo.findById(ctx.tenantId, id);

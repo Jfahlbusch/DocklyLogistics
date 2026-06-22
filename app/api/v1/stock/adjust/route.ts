@@ -11,7 +11,7 @@ import { ok, fail } from "@/lib/api/respond";
 import { StockAdjustSchema } from "@/lib/schemas/stock";
 
 export const POST = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const body = StockAdjustSchema.parse(await req.json());
 
   const article = await articleRepo.findById(ctx.tenantId, body.articleId);

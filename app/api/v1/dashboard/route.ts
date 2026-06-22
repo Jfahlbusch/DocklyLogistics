@@ -6,7 +6,7 @@ import { getDashboardData } from "@/lib/services/dashboard";
 
 /** GET /api/v1/dashboard — KPIs + Unterdeckungen + letzte Aktivität (tenant-scoped). */
 export const GET = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const data = await getDashboardData(ctx.tenantId);
   return ok(data);
 });

@@ -9,14 +9,14 @@ import { ok, created, fail } from "@/lib/api/respond";
 import { StorageLocationCreateSchema, StorageLocationListQuerySchema } from "@/lib/schemas/storage-location";
 
 export const GET = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const query = StorageLocationListQuerySchema.parse(Object.fromEntries(req.nextUrl.searchParams));
   const { items, total } = await storageLocationRepo.list({ tenantId: ctx.tenantId, ...query });
   return ok(items, { page: query.page, pageSize: query.pageSize, total });
 });
 
 export const POST = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const body = StorageLocationCreateSchema.parse(await req.json());
 
   const dup = await storageLocationRepo.findByCode(ctx.tenantId, body.code);

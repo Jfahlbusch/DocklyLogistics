@@ -10,7 +10,7 @@ import { noContent, fail } from "@/lib/api/respond";
 type Ctx = { params: Promise<{ id: string; keyId: string }> };
 
 export const DELETE = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const { id, keyId } = await params;
   const existing = await apiKeyRepo.findById(ctx.tenantId, keyId);
   if (!existing || existing.supplierId !== id) return fail(404, "Not Found");

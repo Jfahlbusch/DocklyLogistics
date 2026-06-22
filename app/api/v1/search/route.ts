@@ -41,7 +41,7 @@ function joinParts(...parts: Array<string | null | undefined>): string | undefin
 }
 
 export const GET = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const q = (req.nextUrl.searchParams.get("q") ?? "").trim();
 
   // Hard guard: never scan the DB on a single keystroke.

@@ -7,7 +7,7 @@ import { requireRoleFromHeaders, UnauthenticatedError } from "@/lib/api/guard";
 import { ok } from "@/lib/api/respond";
 
 export const POST = handler(async (req: NextRequest) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const session = await auth();
   if (!session?.user) throw new UnauthenticatedError();
   const actorEmail = session.user.email ?? "unknown";

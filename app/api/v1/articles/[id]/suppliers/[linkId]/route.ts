@@ -12,7 +12,7 @@ import { ArticleSupplierUpdateSchema } from "@/lib/schemas/supplier";
 type Ctx = { params: Promise<{ id: string; linkId: string }> };
 
 export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const { id, linkId } = await params;
   const body = ArticleSupplierUpdateSchema.parse(await req.json());
 
@@ -49,7 +49,7 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
 });
 
 export const DELETE = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const { id, linkId } = await params;
 
   const article = await articleRepo.findById(ctx.tenantId, id);

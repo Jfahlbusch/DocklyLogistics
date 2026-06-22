@@ -8,7 +8,7 @@ import { sendTestEmail } from "@/lib/channels/email";
 type Ctx = { params: Promise<{ id: string }> };
 
 export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const { id } = await params;
   const profile = await tenantChannelRepo.findById(ctx.tenantId, id);
   if (!profile) return fail(404, "Not Found");

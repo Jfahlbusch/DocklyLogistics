@@ -12,7 +12,7 @@ import { OrderUpdateSchema } from "@/lib/schemas/order";
 type Ctx = { params: Promise<{ id: string }> };
 
 export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const { id } = await params;
   const o = await orderRepo.findById(ctx.tenantId, id);
   if (!o) return fail(404, "Not Found");
@@ -20,7 +20,7 @@ export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
 });
 
 export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "USER");
+  const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const { id } = await params;
   const body = OrderUpdateSchema.parse(await req.json());
 

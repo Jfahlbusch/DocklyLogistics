@@ -13,7 +13,7 @@ import { ApiKeyCreateSchema } from "@/lib/schemas/api-key";
 type Ctx = { params: Promise<{ id: string }> };
 
 export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "VIEWER");
+  const ctx = await requireRoleFromHeaders(req.headers, "VIEWER");
   const { id } = await params;
   const supplier = await supplierRepo.findById(ctx.tenantId, id);
   if (!supplier) return fail(404, "Supplier not found");
@@ -27,7 +27,7 @@ export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
 });
 
 export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
-  const ctx = requireRoleFromHeaders(req.headers, "MANAGER");
+  const ctx = await requireRoleFromHeaders(req.headers, "MANAGER");
   const { id } = await params;
   const body = ApiKeyCreateSchema.parse(await req.json());
 
