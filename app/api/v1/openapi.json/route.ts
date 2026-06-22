@@ -13,6 +13,7 @@ import "@/lib/schemas/api-key";
 import "@/lib/schemas/webhook";
 import "@/lib/schemas/audit";
 import "@/lib/schemas/reports";
+import "@/lib/schemas/misc-routes";
 
 export const dynamic = "force-static";
 
