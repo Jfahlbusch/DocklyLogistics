@@ -205,9 +205,26 @@ export function SettingsView({
                   openapi.json
                 </a>
               </div>
-              <div className="text-xs text-muted-foreground mt-2">
-                Public-API (Lieferanten) folgt in Phase M5 unter{" "}
-                <span className="font-mono text-foreground">/api-docs/public</span>.
+              <div className="mt-5 border-t border-border pt-4">
+                <div className="text-sm font-medium text-foreground">Public-API (Lieferanten)</div>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Bestellabruf, -bestätigung und Webhook-Empfang für Lieferanten. Authentifizierung
+                  über <span className="font-mono">X-API-Key</span>.
+                </p>
+                <div className="flex flex-wrap gap-3 mt-3">
+                  <a
+                    href="/api-docs/public"
+                    className="inline-flex items-center px-4 py-2 rounded-lg bg-navy-900 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm font-medium hover:bg-navy-700"
+                  >
+                    Public Scalar UI öffnen
+                  </a>
+                  <a
+                    href="/api/public/v1/openapi.json"
+                    className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted/40 font-mono"
+                  >
+                    public openapi.json
+                  </a>
+                </div>
               </div>
             </CardContent>
           </Card>
