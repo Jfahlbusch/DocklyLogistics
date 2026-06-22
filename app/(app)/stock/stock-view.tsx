@@ -17,6 +17,7 @@ import {
   defaultLocationValues,
   type LocationFormValues,
 } from "./location-form";
+import { InventoryModal } from "./inventory-modal";
 
 type Location = {
   id: string;
@@ -61,6 +62,7 @@ export function StockView({
   const [formBusy, setFormBusy] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
   const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
+  const [inventory, setInventory] = useState(false);
 
   useEffect(() => {
     if (!editingId) {
@@ -129,8 +131,7 @@ export function StockView({
           )}
           <Button
             className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm"
-            disabled
-            title="Inventur-Workflow kommt in M3"
+            onClick={() => setInventory(true)}
           >
             Inventur starten
           </Button>
@@ -355,6 +356,17 @@ export function StockView({
           )}
         </DialogContent>
       </Dialog>
+
+      {inventory && (
+        <InventoryModal
+          locations={locations}
+          onClose={() => setInventory(false)}
+          onPosted={(msg) => {
+            setFlash({ ok: true, text: msg });
+            startTransition(() => router.refresh());
+          }}
+        />
+      )}
     </div>
   );
 }
