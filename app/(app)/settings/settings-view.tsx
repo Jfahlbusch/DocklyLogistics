@@ -14,6 +14,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { WebhooksTab, type WebhookRow } from "./webhooks-tab";
+import { ApiKeysTab } from "./api-keys-tab";
 import { ChannelForm, defaultChannelValues, type ChannelFormValues } from "./channel-form";
 
 type ChannelProfile = {
@@ -112,6 +113,7 @@ export function SettingsView({
           <TabsTrigger value="tenant">Tenant</TabsTrigger>
           <TabsTrigger value="api-docs">API-Dokumentation</TabsTrigger>
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
+          <TabsTrigger value="api-keys">API-Keys</TabsTrigger>
         </TabsList>
 
         <TabsContent value="versand" className="mt-4 space-y-4">
@@ -232,6 +234,10 @@ export function SettingsView({
 
         <TabsContent value="webhooks" className="mt-4">
           <WebhooksTab webhooks={webhooks} canManage={canManage} />
+        </TabsContent>
+
+        <TabsContent value="api-keys" className="mt-4">
+          <ApiKeysTab role={role} />
         </TabsContent>
       </Tabs>
 
