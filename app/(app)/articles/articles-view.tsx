@@ -13,6 +13,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { ArticleDetailModal } from "./article-detail-modal";
+import { useOpenParam } from "@/lib/search/use-open-param";
 import { ArticleForm, defaultArticleValues, type ArticleFormValues } from "./article-form";
 
 type Row = {
@@ -49,6 +50,7 @@ export function ArticlesView({
   const sp = useSearchParams();
   const [, startTransition] = useTransition();
   const [selected, setSelected] = useState<string | null>(null);
+  const closeDetail = useOpenParam(setSelected);
   const [searchValue, setSearchValue] = useState(q);
   const [creating, setCreating] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
@@ -175,7 +177,7 @@ export function ArticlesView({
       <ArticleDetailModal
         articleId={selected}
         role={rows[0]?.role}
-        onClose={() => setSelected(null)}
+        onClose={closeDetail}
       />
 
       <Dialog

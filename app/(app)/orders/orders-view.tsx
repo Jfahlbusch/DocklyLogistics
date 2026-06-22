@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OrderDetailModal } from "./order-detail-modal";
+import { useOpenParam } from "@/lib/search/use-open-param";
 
 type Row = {
   id: string;
@@ -49,6 +50,7 @@ export function OrdersView({
   const router = useRouter();
   const sp = useSearchParams();
   const [selected, setSelected] = useState<string | null>(null);
+  const closeDetail = useOpenParam(setSelected);
   const [searchValue, setSearchValue] = useState(filters.q);
 
   function setParam(key: string, value: string) {
@@ -136,7 +138,7 @@ export function OrdersView({
         </div>
       </Card>
 
-      <OrderDetailModal orderId={selected} onClose={() => setSelected(null)} />
+      <OrderDetailModal orderId={selected} onClose={closeDetail} />
     </div>
   );
 }

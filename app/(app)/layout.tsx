@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { CommandPalette } from "@/components/search/command-palette";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const session = await auth();
@@ -20,6 +21,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Topbar />
         <section className="p-5 md:p-8">{children}</section>
       </main>
+      <CommandPalette />
     </div>
   );
 }

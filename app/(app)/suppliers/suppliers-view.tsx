@@ -13,6 +13,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { SupplierDetailModal } from "./supplier-detail-modal";
+import { useOpenParam } from "@/lib/search/use-open-param";
 import { SupplierForm, defaultSupplierValues } from "./supplier-form";
 
 type SupplierCard = {
@@ -51,6 +52,7 @@ export function SuppliersView({
   const sp = useSearchParams();
   const [, startTransition] = useTransition();
   const [selected, setSelected] = useState<string | null>(null);
+  const closeDetail = useOpenParam(setSelected);
   const [searchValue, setSearchValue] = useState(q);
   const [creating, setCreating] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
@@ -189,7 +191,7 @@ export function SuppliersView({
       <SupplierDetailModal
         supplierId={selected}
         canManage={canManage}
-        onClose={() => setSelected(null)}
+        onClose={closeDetail}
         onDeleted={(name) => {
           setSelected(null);
           setFlash({ ok: true, text: `Lieferant "${name}" gelöscht` });
