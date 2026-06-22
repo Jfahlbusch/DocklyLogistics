@@ -372,6 +372,27 @@ model SupplierApiKey {
   @@index([prefix])
 }
 
+/// Personal API key for a user. The key's permissions are a snapshot of the
+/// user's role at creation time (role lives in Keycloak claims, not User.role),
+/// scoped to the user's tenant. Revoke via revokedAt.
+model UserApiKey {
+  id         String    @id @default(cuid())
+  tenantId   String
+  userId     String
+  userEmail  String
+  label      String?
+  prefix     String    @unique
+  hash       String
+  role       UserRole
+  lastUsedAt DateTime?
+  revokedAt  DateTime?
+  expiresAt  DateTime?
+  createdAt  DateTime  @default(now())
+
+  @@index([tenantId, userId])
+  @@index([prefix])
+}
+
 model Webhook {
   id              String   @id @default(cuid())
   tenantId        String
