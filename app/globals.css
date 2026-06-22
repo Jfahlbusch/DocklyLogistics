@@ -5,31 +5,40 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  /* Colors – Refined Minimal */
-  --color-navy-50: #F4F6FA;
-  --color-navy-100: #E7ECF3;
-  --color-navy-200: #C5D0E0;
-  --color-navy-500: #3E5C82;
-  --color-navy-700: #1E3A60;
-  --color-navy-900: #0F2A44;
+  /* ── Marke: Dark Teal #041E24 (navy-*) + Amber #FCB900 (gold-*) ──
+     Übernommen von DocklyInsurance. Die App referenziert durchgängig
+     `navy-*`/`gold-*` als Marken-/Akzentfarben; durch Umdefinition der
+     Token-Werte re-skinnt sich die gesamte Oberfläche. */
+  --color-navy-50: #F0F6F7;
+  --color-navy-100: #D9E9EB;
+  --color-navy-200: #B0D0D5;
+  --color-navy-500: #1E5A63;
+  --color-navy-700: #0A3640;
+  --color-navy-900: #041E24;
 
-  --color-gold-50: #FBF7EC;
-  --color-gold-100: #F4E9CC;
-  --color-gold-400: #D6B55E;
-  --color-gold-500: #C9A24B;
-  --color-gold-700: #A18234;
+  --color-gold-50: #FFF8E1;
+  --color-gold-100: #FFECB3;
+  --color-gold-400: #FDCB3D;
+  --color-gold-500: #FCB900;
+  --color-gold-700: #D9A000;
 
-  /* Fonts */
-  --font-display: var(--font-playfair), Georgia, serif;
-  --font-sans: var(--font-dm-sans), system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  /* Status (DocklyInsurance) */
+  --color-success: #1A7A4A;
+  --color-warning: #C47A1A;
+  --color-danger: #B8312F;
+  --color-info: #0693E3;
+
+  /* Fonts (unverändert: Playfair Display + DM Sans) */
+  --font-display: var(--font-playfair), "Playfair Display", Georgia, serif;
+  --font-sans: var(--font-dm-sans), "DM Sans", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
 
   /* Layout */
-  --radius: 14px;
-  --container-app: 1440px;
+  --radius: 10px;
+  --container-app: 1400px;
 
-  /* Shadow */
-  --shadow-soft: 0 1px 2px rgba(15,42,68,0.04), 0 4px 16px rgba(15,42,68,0.06);
+  /* Schatten – sehr dezent, mit 1px-Ring statt harter Border (DocklyInsurance) */
+  --shadow-soft: 0 2px 8px rgba(4,30,36,0.06), 0 0 0 1px rgba(4,30,36,0.04);
 }
 
 @layer base {
@@ -37,9 +46,9 @@
     @apply bg-background text-foreground;
     font-family: var(--font-sans);
   }
-  h1, h2, h3 {
+  h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
-    color: var(--color-navy-900);
+    color: var(--color-foreground);
   }
   * {
     @apply border-border outline-ring/50;
@@ -50,7 +59,7 @@
 }
 
 @theme inline {
-  --font-heading: var(--font-sans);
+  --font-heading: var(--font-display);
   --font-sans: var(--font-sans);
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
@@ -92,70 +101,101 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+/* ── Semantische Tokens (DocklyInsurance): Light ── */
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.147 0.004 49.25);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.147 0.004 49.25);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.147 0.004 49.25);
-  --primary: oklch(0.216 0.006 56.043);
-  --primary-foreground: oklch(0.985 0.001 106.423);
-  --secondary: oklch(0.97 0.001 106.424);
-  --secondary-foreground: oklch(0.216 0.006 56.043);
-  --muted: oklch(0.97 0.001 106.424);
-  --muted-foreground: oklch(0.553 0.013 58.071);
-  --accent: oklch(0.97 0.001 106.424);
-  --accent-foreground: oklch(0.216 0.006 56.043);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.923 0.003 48.717);
-  --input: oklch(0.923 0.003 48.717);
-  --ring: oklch(0.709 0.01 56.259);
-  --chart-1: oklch(0.869 0.005 56.366);
-  --chart-2: oklch(0.553 0.013 58.071);
-  --chart-3: oklch(0.444 0.011 73.639);
-  --chart-4: oklch(0.374 0.01 67.558);
-  --chart-5: oklch(0.268 0.007 34.298);
-  --sidebar: oklch(0.985 0.001 106.423);
-  --sidebar-foreground: oklch(0.147 0.004 49.25);
-  --sidebar-primary: oklch(0.216 0.006 56.043);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.97 0.001 106.424);
-  --sidebar-accent-foreground: oklch(0.216 0.006 56.043);
-  --sidebar-border: oklch(0.923 0.003 48.717);
-  --sidebar-ring: oklch(0.709 0.01 56.259);
+  --background: hsl(50 20% 98%);
+  --foreground: hsl(189 74% 8%);
+  --card: hsl(0 0% 100%);
+  --card-foreground: hsl(189 74% 8%);
+  --popover: hsl(0 0% 100%);
+  --popover-foreground: hsl(189 74% 8%);
+  --primary: hsl(189 74% 8%);
+  --primary-foreground: hsl(44 100% 49%);
+  --secondary: hsl(220 14% 96%);
+  --secondary-foreground: hsl(189 74% 8%);
+  --muted: hsl(220 14% 96%);
+  --muted-foreground: hsl(220 9% 46%);
+  --accent: hsl(44 100% 49%);
+  --accent-foreground: hsl(189 74% 8%);
+  --destructive: hsl(1 59% 45%);
+  --border: hsl(220 13% 91%);
+  --input: hsl(220 13% 91%);
+  --ring: hsl(189 74% 8%);
+  --chart-1: hsl(189 74% 18%);
+  --chart-2: hsl(44 100% 49%);
+  --chart-3: hsl(189 45% 35%);
+  --chart-4: hsl(30 75% 50%);
+  --chart-5: hsl(200 96% 46%);
+  --sidebar: hsl(189 74% 8%);
+  --sidebar-foreground: hsl(0 0% 100%);
+  --sidebar-primary: hsl(44 100% 49%);
+  --sidebar-primary-foreground: hsl(189 74% 8%);
+  --sidebar-accent: hsl(0 0% 100% / 0.10);
+  --sidebar-accent-foreground: hsl(0 0% 100%);
+  --sidebar-border: hsl(0 0% 100% / 0.10);
+  --sidebar-ring: hsl(44 100% 49%);
+  color-scheme: light;
 }
 
+/* ── Semantische Tokens (DocklyInsurance): Dark ── */
 .dark {
-  --background: oklch(0.147 0.004 49.25);
-  --foreground: oklch(0.985 0.001 106.423);
-  --card: oklch(0.216 0.006 56.043);
-  --card-foreground: oklch(0.985 0.001 106.423);
-  --popover: oklch(0.216 0.006 56.043);
-  --popover-foreground: oklch(0.985 0.001 106.423);
-  --primary: oklch(0.923 0.003 48.717);
-  --primary-foreground: oklch(0.216 0.006 56.043);
-  --secondary: oklch(0.268 0.007 34.298);
-  --secondary-foreground: oklch(0.985 0.001 106.423);
-  --muted: oklch(0.268 0.007 34.298);
-  --muted-foreground: oklch(0.709 0.01 56.259);
-  --accent: oklch(0.268 0.007 34.298);
-  --accent-foreground: oklch(0.985 0.001 106.423);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.553 0.013 58.071);
-  --chart-1: oklch(0.869 0.005 56.366);
-  --chart-2: oklch(0.553 0.013 58.071);
-  --chart-3: oklch(0.444 0.011 73.639);
-  --chart-4: oklch(0.374 0.01 67.558);
-  --chart-5: oklch(0.268 0.007 34.298);
-  --sidebar: oklch(0.216 0.006 56.043);
-  --sidebar-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-accent: oklch(0.268 0.007 34.298);
-  --sidebar-accent-foreground: oklch(0.985 0.001 106.423);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.553 0.013 58.071);
+  --background: hsl(189 47% 6%);
+  --foreground: hsl(48 33% 94%);
+  --card: hsl(189 42% 9%);
+  --card-foreground: hsl(48 33% 94%);
+  --popover: hsl(189 42% 9%);
+  --popover-foreground: hsl(48 33% 94%);
+  --primary: hsl(44 100% 52%);
+  --primary-foreground: hsl(189 74% 8%);
+  --secondary: hsl(189 30% 16%);
+  --secondary-foreground: hsl(48 33% 94%);
+  --muted: hsl(189 28% 14%);
+  --muted-foreground: hsl(210 14% 66%);
+  --accent: hsl(44 100% 52%);
+  --accent-foreground: hsl(189 74% 8%);
+  --destructive: hsl(1 65% 56%);
+  --border: hsl(189 22% 20%);
+  --input: hsl(189 22% 20%);
+  --ring: hsl(44 100% 52%);
+  --chart-1: hsl(44 100% 52%);
+  --chart-2: hsl(189 45% 55%);
+  --chart-3: hsl(30 80% 58%);
+  --chart-4: hsl(151 50% 46%);
+  --chart-5: hsl(200 90% 60%);
+  --sidebar: hsl(189 40% 11%);
+  --sidebar-foreground: hsl(48 33% 94%);
+  --sidebar-primary: hsl(44 100% 52%);
+  --sidebar-primary-foreground: hsl(189 74% 8%);
+  --sidebar-accent: hsl(0 0% 100% / 0.10);
+  --sidebar-accent-foreground: hsl(48 33% 94%);
+  --sidebar-border: hsl(0 0% 100% / 0.10);
+  --sidebar-ring: hsl(44 100% 52%);
+  color-scheme: dark;
 }
+
+/* ── Sidebar-Oberfläche: Teal-Gradient (DocklyInsurance) ── */
+.app-sidebar {
+  background: linear-gradient(180deg, #041E24 0%, #0A3640 100%);
+}
+.dark .app-sidebar {
+  background:
+    radial-gradient(140% 60% at 50% 0%, hsl(44 100% 52% / 0.10) 0%, hsl(44 100% 52% / 0.04) 22%, transparent 55%),
+    linear-gradient(180deg, hsl(189 40% 11%) 0%, hsl(189 34% 15%) 100%);
+  border-right: 1px solid hsl(0 0% 100% / 0.10);
+  box-shadow: 1px 0 0 0 hsl(0 0% 100% / 0.04), 4px 0 24px -8px hsl(189 60% 2% / 0.55);
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Custom scrollbar (DocklyInsurance) */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: hsl(var(--muted-foreground) / 0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground) / 0.5); }
