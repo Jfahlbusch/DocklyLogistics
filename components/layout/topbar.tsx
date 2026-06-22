@@ -1,10 +1,11 @@
 "use client";
 
 import { usePathname } from "next/navigation";
-import { Search, Bell } from "lucide-react";
+import { Search } from "lucide-react";
 import { NAV_ITEMS } from "./nav-items";
 import { openSearch } from "@/components/search/open-search";
 import { ProfileMenu } from "./profile-menu";
+import { NotificationBell } from "./notification-bell";
 
 export function Topbar({
   user,
@@ -33,10 +34,7 @@ export function Topbar({
           ⌘K
         </kbd>
       </button>
-      <button className="relative rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground">
-        <Bell size={20} strokeWidth={1.5} />
-        <span className="absolute right-1.5 top-1.5 h-1.5 w-1.5 rounded-full bg-accent" />
-      </button>
+      <NotificationBell />
       <ProfileMenu user={user} />
     </header>
   );

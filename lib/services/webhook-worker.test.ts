@@ -10,6 +10,7 @@ vi.mock("@/lib/db/repos/webhook", () => ({
 }));
 vi.mock("@/lib/crypto/aes", () => ({ decryptSecret: vi.fn(() => "secret") }));
 vi.mock("./webhook-sign", () => ({ signWebhook: vi.fn(() => ({ timestamp: "t", signature: "sig" })) }));
+vi.mock("@/lib/db/repos/notification", () => ({ notificationRepo: { create: vi.fn(async () => {}) } }));
 
 import { runWebhookWorker } from "./webhook-worker";
 import { deliveryRepo } from "@/lib/db/repos/webhook";

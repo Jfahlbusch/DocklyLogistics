@@ -1,6 +1,7 @@
 import { deliveryRepo } from "@/lib/db/repos/webhook";
 import { decryptSecret } from "@/lib/crypto/aes";
 import { signWebhook } from "./webhook-sign";
+import { notificationRepo } from "@/lib/db/repos/notification";
 
 const MAX_ATTEMPTS = 8;
 const HTTP_TIMEOUT_MS = 10_000;
@@ -16,6 +17,18 @@ export async function runWebhookWorker(limit: number = 10): Promise<WorkerResult
   const due = await deliveryRepo.fetchDue(limit);
   let succeeded = 0, failed = 0, givenUp = 0;
 
+  // On permanent give-up, raise a tenant notification (surfaced in the header bell).
+  const notifyFailed = (event: string, tenantId: string, detail: string) =>
+    notificationRepo
+      .create({
+        tenantId,
+        type: "webhook.failed",
+        title: `Webhook fehlgeschlagen: ${event}`,
+        body: detail.slice(0, 300),
+        link: "/settings",
+      })
+      .catch(() => {});
+
   for (const d of due) {
     const wh = d.webhook;
     let secret: string;
@@ -24,6 +37,7 @@ export async function runWebhookWorker(limit: number = 10): Promise<WorkerResult
     } catch (e) {
       // Cannot decrypt — give up immediately to avoid infinite retries
       await deliveryRepo.markGivenUp(d.id, null, `decrypt-failed: ${(e as Error).message}`);
+      await notifyFailed(d.event, d.tenantId, `decrypt-failed: ${(e as Error).message}`);
       givenUp++;
       continue;
     }
@@ -59,6 +73,7 @@ export async function runWebhookWorker(limit: number = 10): Promise<WorkerResult
         error = `HTTP ${res.status}: ${respBody.slice(0, 200)}`;
         if (d.attempts + 1 >= MAX_ATTEMPTS) {
           await deliveryRepo.markGivenUp(d.id, statusCode, error);
+          await notifyFailed(d.event, d.tenantId, error);
           givenUp++;
         } else {
           await deliveryRepo.markFailedRetryLater(d.id, d.attempts, statusCode, error);
@@ -69,6 +84,7 @@ export async function runWebhookWorker(limit: number = 10): Promise<WorkerResult
       error = (e as Error).message;
       if (d.attempts + 1 >= MAX_ATTEMPTS) {
         await deliveryRepo.markGivenUp(d.id, statusCode, error);
+        await notifyFailed(d.event, d.tenantId, error);
         givenUp++;
       } else {
         await deliveryRepo.markFailedRetryLater(d.id, d.attempts, statusCode, error);

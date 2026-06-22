@@ -393,6 +393,21 @@ model UserApiKey {
   @@index([prefix])
 }
 
+/// Tenant-wide in-app notification (ops events: webhook failures, …). Shared per
+/// tenant; readAt marks it read for the team. Surfaced in the header bell.
+model Notification {
+  id        String    @id @default(cuid())
+  tenantId  String
+  type      String
+  title     String
+  body      String?
+  link      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([tenantId, readAt, createdAt])
+}
+
 model Webhook {
   id              String   @id @default(cuid())
   tenantId        String
