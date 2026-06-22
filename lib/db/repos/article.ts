@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db/client";
 import type { Prisma } from "@prisma/client";
 import type { ArticleCreate, ArticleUpdate } from "@/lib/schemas/article";
+import { stockRepo } from "./stock";
 
 type ListArgs = {
   tenantId: string;
@@ -31,6 +32,32 @@ export const articleRepo = {
         : {}),
     };
 
+    if (belowMin) {
+      // "Below minimum" = total stock across all locations < minStock (minStock > 0).
+      // Aggregate over the filtered candidate set, then paginate the actual matches —
+      // count and page both reflect the real shortfall, not just "has a minStock".
+      const candidates = await prisma.article.findMany({
+        where: { ...where, minStock: { gt: 0 } },
+        select: { id: true, minStock: true },
+        orderBy: { name: "asc" },
+      });
+      const totals = await stockRepo.totalsByArticle(
+        tenantId,
+        candidates.map((c) => c.id),
+      );
+      const belowIds = candidates
+        .filter((c) => (totals.get(c.id) ?? 0) < c.minStock)
+        .map((c) => c.id);
+
+      const items = await prisma.article.findMany({
+        where: { tenantId, id: { in: belowIds } },
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { name: "asc" },
+      });
+      return { items, total: belowIds.length };
+    }
+
     const [items, total] = await Promise.all([
       prisma.article.findMany({
         where,
@@ -41,12 +68,7 @@ export const articleRepo = {
       prisma.article.count({ where }),
     ]);
 
-    // belowMin filter requires aggregated stock data which doesn't exist yet (M3).
-    // For M2: filter on minStock > 0 as a placeholder, ignoring actual stock.
-    // This will be replaced in M3 with a proper join on StockBalance.
-    const filtered = belowMin ? items.filter((a) => a.minStock > 0) : items;
-
-    return { items: filtered, total };
+    return { items, total };
   },
 
   async findById(tenantId: string, id: string) {
