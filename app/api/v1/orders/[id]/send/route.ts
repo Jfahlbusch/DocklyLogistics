@@ -36,11 +36,32 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
     },
   });
   if (!order) return fail(404, "Not Found");
+  // Idempotent: a retry after a successful send must NOT re-dispatch.
+  if (order.status === "SENT") {
+    return ok({ order, dispatch: { ok: true, message: "Bereits versendet (idempotent)." }, alreadySent: true });
+  }
   if (order.status !== "APPROVED") return fail(409, `Order is not in APPROVED status (current: ${order.status})`);
 
   // Tenant-channel config (sender identity)
   const tenantCfg = await tenantChannelRepo.findDefault(ctx.tenantId, order.supplier.channel);
   if (!tenantCfg) return fail(422, `Kein Versandprofil für Kanal ${order.supplier.channel} im Tenant konfiguriert`);
+
+  // Atomically claim the send: only the request that flips sentAt (while still
+  // APPROVED) may dispatch. A duplicate/concurrent request gets count 0 and aborts
+  // BEFORE dispatching — this is what prevents a double send on retry. On any
+  // failure before finalizing we release the claim so the order stays retryable.
+  const claim = await prisma.order.updateMany({
+    where: { id, tenantId: ctx.tenantId, status: "APPROVED", sentAt: null },
+    data: { sentAt: new Date() },
+  });
+  if (claim.count === 0) {
+    return fail(409, "Bestellung wird bereits versendet oder wurde versendet.");
+  }
+  const releaseClaim = () =>
+    prisma.order.updateMany({
+      where: { id, tenantId: ctx.tenantId, status: "APPROVED" },
+      data: { sentAt: null },
+    });
 
   // Build PDF data
   const senderCfg = (tenantCfg.config ?? {}) as { fromEmail?: string; fromName?: string; signature?: string };
@@ -73,6 +94,7 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
   try {
     pdfBuffer = await renderOrderPdfBuffer(pdfData);
   } catch (e) {
+    await releaseClaim();
     return fail(500, "PDF generation failed", (e as Error).message);
   }
 
@@ -81,6 +103,7 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
   // Dispatch via channel
   const result = await dispatchOrder({ order, tenantCfg, pdfBuffer });
   if (!result.ok) {
+    await releaseClaim();
     return fail(422, "Channel dispatch failed", result.message);
   }
 

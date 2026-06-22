@@ -1,7 +1,6 @@
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { prisma } from "@/lib/db/client";
-import { stockRepo } from "@/lib/db/repos/stock";
+import { getDashboardData } from "@/lib/services/dashboard";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 
@@ -12,47 +11,15 @@ export default async function DashboardPage() {
   if (!session?.role || !session.tenant) redirect("/login");
 
   const tenantId = session.tenant;
-
-  // KPI 1: Articles below min stock
-  const articles = await prisma.article.findMany({
-    where: { tenantId, active: true, minStock: { gt: 0 } },
-    select: { id: true, sku: true, name: true, minStock: true, orderUnit: true },
-  });
-  const totals = await stockRepo.totalsByArticle(tenantId, articles.map((a) => a.id));
-  const belowMin = articles
-    .map((a) => ({ ...a, stock: totals.get(a.id) ?? 0 }))
-    .filter((a) => a.stock < a.minStock)
-    .sort((a, b) => (a.stock - a.minStock) - (b.stock - b.minStock));
-
-  // KPI 2: Open orders (everything not in CLOSED/CANCELLED)
-  const openOrders = await prisma.order.count({
-    where: { tenantId, status: { notIn: ["CLOSED", "CANCELLED"] } },
-  });
-
-  // KPI 3: Receipts today (StockMovement with reason=RECEIPT and refType=ORDER)
-  const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
-  const receiptsToday = await prisma.stockMovement.count({
-    where: { tenantId, reason: "RECEIPT", refType: "ORDER", createdAt: { gte: todayStart } },
-  });
-
-  // KPI 4: Webhook deliveries permanently failed (given up after retries) in the last 24h.
-  const dayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
-  const webhookErrors = await prisma.webhookDelivery.count({
-    where: { tenantId, givenUpAt: { gte: dayAgo } },
-  });
-
-  // Recent audit activity
-  const recentAudit = await prisma.auditLog.findMany({
-    where: { tenantId },
-    orderBy: { createdAt: "desc" },
-    take: 8,
-  });
+  const data = await getDashboardData(tenantId);
+  const belowMin = data.belowMinItems;
+  const recentAudit = data.recentActivity;
 
   const kpis = [
-    { label: "Unter Mindestbestand", value: String(belowMin.length), href: "/articles", accent: belowMin.length > 0 },
-    { label: "Offene Bestellungen", value: String(openOrders), href: "/orders" },
-    { label: "Wareneingänge heute", value: String(receiptsToday), href: "/orders?status=PARTIALLY_RECEIVED" },
-    { label: "Webhook-Fehler (24h)", value: String(webhookErrors), href: "/settings", accent: webhookErrors > 0, muted: webhookErrors === 0 },
+    { label: "Unter Mindestbestand", value: String(data.kpis.belowMin), href: "/articles", accent: data.kpis.belowMin > 0 },
+    { label: "Offene Bestellungen", value: String(data.kpis.openOrders), href: "/orders" },
+    { label: "Wareneingänge heute", value: String(data.kpis.receiptsToday), href: "/orders?status=PARTIALLY_RECEIVED" },
+    { label: "Webhook-Fehler (24h)", value: String(data.kpis.webhookErrors24h), href: "/settings", accent: data.kpis.webhookErrors24h > 0, muted: data.kpis.webhookErrors24h === 0 },
   ];
 
   return (
