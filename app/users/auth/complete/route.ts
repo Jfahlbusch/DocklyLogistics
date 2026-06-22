@@ -14,12 +14,22 @@ export const dynamic = "force-dynamic";
  * Nur autorisierte Nutzer (Rolle gesetzt = Claims enthalten den Tenant) provisionieren
  * einen Tenant. Wer keinen Zugriff hat, landet wieder beim Login.
  */
-export async function GET(req: Request) {
+/**
+ * Relative redirect. In a route handler `req.url` is the container-internal
+ * http://0.0.0.0:3000 address (behind Caddy) — building an absolute URL from it
+ * leaks that host into the browser. A relative `Location` is resolved by the
+ * browser against the public origin it actually requested.
+ */
+function redirectTo(path: string): NextResponse {
+  return new NextResponse(null, { status: 303, headers: { Location: path } });
+}
+
+export async function GET() {
   const session = await auth();
   const tenant = session?.tenant;
 
   if (!session?.role || !tenant) {
-    return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
+    return redirectTo("/login?error=unauthorized");
   }
 
   // Auto-provision the tenant on first login (idempotent).
@@ -29,5 +39,5 @@ export async function GET(req: Request) {
     create: { id: tenant, name: tenant },
   });
 
-  return NextResponse.redirect(new URL("/dashboard", req.url));
+  return redirectTo("/dashboard");
 }

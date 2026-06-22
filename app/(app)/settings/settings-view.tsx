@@ -38,11 +38,13 @@ export function SettingsView({
   role,
   channels,
   webhooks,
+  keycloak,
 }: {
   tenant: string;
   role: string;
   channels: ChannelProfile[];
   webhooks: WebhookRow[];
+  keycloak: { clientId: string; realm: string; url: string };
 }) {
   const canManage = role === "MANAGER" || role === "GLOBAL_ADMIN";
   const router = useRouter();
@@ -175,9 +177,9 @@ export function SettingsView({
           <Card className="shadow-soft">
             <CardContent className="p-5 space-y-2 text-sm">
               <Field label="Tenant-ID" value={tenant} mono />
-              <Field label="Keycloak-Client" value="docklylogistic" mono />
-              <Field label="Keycloak-Realm" value="backofficedigitaldev" mono />
-              <Field label="Keycloak-URL" value="https://login.backofficedigital.de/auth" mono />
+              <Field label="Keycloak-Client" value={keycloak.clientId} mono />
+              <Field label="Keycloak-Realm" value={keycloak.realm} mono />
+              <Field label="Keycloak-URL" value={keycloak.url} mono />
             </CardContent>
           </Card>
         </TabsContent>

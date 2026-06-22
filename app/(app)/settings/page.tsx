@@ -20,6 +20,11 @@ export default async function SettingsPage() {
     <SettingsView
       tenant={tenantId}
       role={session.role}
+      keycloak={{
+        clientId: process.env.KEYCLOAK_CLIENT_ID ?? "—",
+        realm: process.env.KEYCLOAK_REALM ?? "—",
+        url: process.env.KEYCLOAK_URL ?? "—",
+      }}
       channels={channels.map((c) => ({
         id: c.id,
         channel: c.channel,
