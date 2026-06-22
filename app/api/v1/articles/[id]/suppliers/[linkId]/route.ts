@@ -19,7 +19,7 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
   const article = await articleRepo.findById(ctx.tenantId, id);
   if (!article) return fail(404, "Article not found");
 
-  const link = await articleSupplierRepo.findById(linkId);
+  const link = await articleSupplierRepo.findById(ctx.tenantId, linkId);
   if (!link || link.articleId !== id) return fail(404, "Link not found");
 
   const session = await auth();
@@ -28,7 +28,7 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
   const actorId = (session.user as { id?: string }).id ?? actorEmail;
 
   const updated = await prisma.$transaction(async (tx) => {
-    const u = await articleSupplierRepo.update(tx, id, linkId, {
+    const u = await articleSupplierRepo.update(tx, ctx.tenantId, id, linkId, {
       purchasePrice: body.purchasePrice,
       currency: body.currency,
       isPrimary: body.isPrimary,
@@ -55,7 +55,7 @@ export const DELETE = handler(async (req: NextRequest, { params }: Ctx) => {
   const article = await articleRepo.findById(ctx.tenantId, id);
   if (!article) return fail(404, "Article not found");
 
-  const link = await articleSupplierRepo.findById(linkId);
+  const link = await articleSupplierRepo.findById(ctx.tenantId, linkId);
   if (!link || link.articleId !== id) return fail(404, "Link not found");
 
   const session = await auth();
@@ -64,7 +64,7 @@ export const DELETE = handler(async (req: NextRequest, { params }: Ctx) => {
   const actorId = (session.user as { id?: string }).id ?? actorEmail;
 
   await prisma.$transaction(async (tx) => {
-    await articleSupplierRepo.remove(tx, linkId);
+    await articleSupplierRepo.remove(tx, ctx.tenantId, linkId);
     await appendAudit(tx, {
       tenantId: ctx.tenantId, entity: "ArticleSupplier", entityId: linkId, action: "DELETE",
       actorId, actorEmail,

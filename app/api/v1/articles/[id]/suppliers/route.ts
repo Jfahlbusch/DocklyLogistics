@@ -17,7 +17,7 @@ export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
   const { id } = await params;
   const article = await articleRepo.findById(ctx.tenantId, id);
   if (!article) return fail(404, "Article not found");
-  const links = await articleSupplierRepo.listForArticle(id);
+  const links = await articleSupplierRepo.listForArticle(ctx.tenantId, id);
   return ok(links);
 });
 
@@ -32,7 +32,7 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
   const supplier = await supplierRepo.findById(ctx.tenantId, body.supplierId);
   if (!supplier) return fail(404, "Supplier not found");
 
-  const existing = await articleSupplierRepo.findLink(id, body.supplierId);
+  const existing = await articleSupplierRepo.findLink(ctx.tenantId, id, body.supplierId);
   if (existing) return fail(409, "Link already exists");
 
   const session = await auth();
@@ -41,7 +41,7 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
   const actorId = (session.user as { id?: string }).id ?? actorEmail;
 
   const link = await prisma.$transaction(async (tx) => {
-    const l = await articleSupplierRepo.create(tx, id, body);
+    const l = await articleSupplierRepo.create(tx, ctx.tenantId, id, body);
     await appendAudit(tx, {
       tenantId: ctx.tenantId, entity: "ArticleSupplier", entityId: l.id, action: "CREATE",
       actorId, actorEmail,

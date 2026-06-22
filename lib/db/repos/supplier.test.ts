@@ -75,7 +75,7 @@ describe("articleSupplierRepo isPrimary enforcement", () => {
     });
 
     await prisma.$transaction(async (tx) => {
-      await articleSupplierRepo.create(tx, articleId, {
+      await articleSupplierRepo.create(tx, TENANT_ID, articleId, {
         supplierId: supplierAId, purchasePrice: 10, currency: "EUR",
         isPrimary: true, leadTimeDays: 3, minOrderQty: 1,
       });
@@ -83,13 +83,13 @@ describe("articleSupplierRepo isPrimary enforcement", () => {
 
     // Now set B as primary — A should be flipped to non-primary
     await prisma.$transaction(async (tx) => {
-      await articleSupplierRepo.create(tx, articleId, {
+      await articleSupplierRepo.create(tx, TENANT_ID, articleId, {
         supplierId: supplierBId, purchasePrice: 11, currency: "EUR",
         isPrimary: true, leadTimeDays: 3, minOrderQty: 1,
       });
     });
 
-    const links = await articleSupplierRepo.listForArticle(articleId);
+    const links = await articleSupplierRepo.listForArticle(TENANT_ID, articleId);
     const primaryCount = links.filter((l) => l.isPrimary).length;
     expect(primaryCount).toBe(1);
     const primary = links.find((l) => l.isPrimary);
