@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
+import { Logo } from "@/components/layout/logo";
 import { loginWithKeycloak } from "./actions";
 
 export default async function LoginPage({
@@ -15,16 +16,11 @@ export default async function LoginPage({
     <main className="min-h-screen flex items-center justify-center bg-muted/40 p-6">
       <Card className="w-full max-w-md shadow-soft">
         <CardHeader className="space-y-2">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-navy-900 flex items-center justify-center text-gold-500 font-display text-xl">
-              L
-            </div>
-            <div>
-              <CardTitle className="font-display text-2xl text-foreground">DocklyLogistics</CardTitle>
-              <CardDescription className="text-xs tracking-[0.18em] uppercase text-muted-foreground">
-                Logistikverwaltung
-              </CardDescription>
-            </div>
+          <div className="flex flex-col gap-2">
+            <Logo variant="auto" />
+            <CardDescription className="text-xs tracking-[0.18em] uppercase text-muted-foreground">
+              Logistikverwaltung
+            </CardDescription>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
