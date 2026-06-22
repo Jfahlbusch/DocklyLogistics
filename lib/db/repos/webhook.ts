@@ -98,4 +98,24 @@ export const deliveryRepo = {
       data: { status: "GIVEN_UP", attempts: { increment: 1 }, lastStatusCode: statusCode, lastError: error.slice(0, 1000), givenUpAt: new Date() },
     });
   },
+
+  /**
+   * Manually re-queue a FAILED or GIVEN_UP delivery: reset to PENDING with a fresh
+   * retry budget so the worker picks it up again. Tenant- and webhook-scoped via
+   * updateMany (returns the batch count; 0 = not found or not in a retryable state).
+   */
+  async requeue(
+    tx: Prisma.TransactionClient,
+    args: { tenantId: string; webhookId: string; deliveryId: string },
+  ) {
+    return tx.webhookDelivery.updateMany({
+      where: {
+        id: args.deliveryId,
+        tenantId: args.tenantId,
+        webhookId: args.webhookId,
+        status: { in: ["FAILED", "GIVEN_UP"] },
+      },
+      data: { status: "PENDING", attempts: 0, nextAttemptAt: new Date(), givenUpAt: null, lastError: null },
+    });
+  },
 };

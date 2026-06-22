@@ -283,6 +283,7 @@ export function WebhooksTab({
 
       {deliveryView && (
         <DeliveryDialog
+          webhookId={deliveryView.webhookId}
           rows={deliveryView.rows}
           onClose={() => setDeliveryView(null)}
         />
@@ -419,12 +420,38 @@ function CreateWebhookDialog({
 }
 
 function DeliveryDialog({
-  rows,
+  webhookId,
+  rows: initialRows,
   onClose,
 }: {
+  webhookId: string;
   rows: DeliveryRow[];
   onClose: () => void;
 }) {
+  const [rows, setRows] = useState<DeliveryRow[]>(initialRows);
+  const [retrying, setRetrying] = useState<string | null>(null);
+
+  async function retry(deliveryId: string) {
+    setRetrying(deliveryId);
+    try {
+      const r = await fetch(
+        `/api/v1/settings/webhooks/${webhookId}/deliveries/${deliveryId}/retry`,
+        { method: "POST" },
+      );
+      if (r.ok) {
+        setRows((prev) =>
+          prev.map((d) =>
+            d.id === deliveryId
+              ? { ...d, status: "PENDING", attempts: 0, lastError: null, givenUpAt: null }
+              : d,
+          ),
+        );
+      }
+    } finally {
+      setRetrying(null);
+    }
+  }
+
   return (
     <div
       className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
@@ -451,6 +478,7 @@ function DeliveryDialog({
                   <th className="text-left font-medium px-3 py-2">Versuch</th>
                   <th className="text-left font-medium px-3 py-2">HTTP</th>
                   <th className="text-left font-medium px-3 py-2">Wann</th>
+                  <th className="text-right font-medium px-3 py-2">Aktion</th>
                 </tr>
               </thead>
               <tbody>
@@ -478,6 +506,20 @@ function DeliveryDialog({
                         dateStyle: "short",
                         timeStyle: "short",
                       })}
+                    </td>
+                    <td className="px-3 py-2 text-right">
+                      {d.status === "FAILED" || d.status === "GIVEN_UP" ? (
+                        <Button
+                          variant="outline"
+                          className="text-xs px-2 py-1"
+                          disabled={retrying === d.id}
+                          onClick={() => retry(d.id)}
+                        >
+                          {retrying === d.id ? "…" : "Erneut senden"}
+                        </Button>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">—</span>
+                      )}
                     </td>
                   </tr>
                 ))}
