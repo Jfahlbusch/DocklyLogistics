@@ -113,7 +113,7 @@ registry.registerPath({
   responses: { 204: { description: "Gelöscht" }, 404: { description: "Nicht gefunden" } },
 });
 registry.registerPath({
-  method: "post", path: "/settings/channels/{id}/test", summary: "Test-Versand", tags: ["Settings"],
+  method: "post", path: "/settings/channels/{id}/test", summary: "Test-Versand (EMAIL: echte Mail · API: Ping an callbackUrl · EDI: offen)", tags: ["Settings"],
   request: { params: z.object({ id: z.string().cuid() }) },
-  responses: { 200: { description: "Test erfolgreich (Mock in M2)" }, 404: { description: "Nicht gefunden" } },
+  responses: { 200: { description: "Test ausgeführt" }, 422: { description: "Test fehlgeschlagen" }, 404: { description: "Nicht gefunden" } },
 });

@@ -5,6 +5,56 @@ type ApiSupplierCfg = {
   auth?: { type: "bearer" | "apiKey"; token: string; header?: string };
 };
 
+/** Tenant-level API channel config (TenantChannelConfig.config for channel API). */
+type ApiChannelTestCfg = {
+  callbackUrl?: string;
+  defaultHeaders?: Record<string, string>;
+  defaultClientId?: string;
+};
+
+export type ApiTestResult = { ok: boolean; message: string; details?: Record<string, unknown> };
+
+/**
+ * Connectivity test for an API channel profile: POST a ping payload to the
+ * configured `callbackUrl` and report the HTTP status. Single attempt (no
+ * retry) — a test should surface the immediate result, not paper over it.
+ */
+export async function sendTestApi(rawCfg: Record<string, unknown>, nowIso: string): Promise<ApiTestResult> {
+  const cfg = rawCfg as ApiChannelTestCfg;
+  if (!cfg.callbackUrl) {
+    return { ok: false, message: "Keine callbackUrl im API-Profil hinterlegt — nichts zu testen." };
+  }
+  const payload = {
+    test: true,
+    event: "channel.test",
+    message: "DocklyLogistics API-Kanal Test-Ping",
+    clientId: cfg.defaultClientId,
+    sentAt: nowIso,
+  };
+  const headers: Record<string, string> = { "Content-Type": "application/json", ...(cfg.defaultHeaders ?? {}) };
+
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10_000);
+  try {
+    const res = await fetch(cfg.callbackUrl, {
+      method: "POST",
+      headers,
+      body: JSON.stringify(payload),
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    const body = await res.text().catch(() => "");
+    return {
+      ok: res.ok,
+      message: res.ok ? `API-Endpunkt erreichbar (${res.status}).` : `API-Endpunkt antwortete ${res.status}.`,
+      details: { status: res.status, url: cfg.callbackUrl, body: body.slice(0, 200) },
+    };
+  } catch (e) {
+    clearTimeout(timeout);
+    return { ok: false, message: `API-Test fehlgeschlagen: ${(e as Error).message}`, details: { url: cfg.callbackUrl } };
+  }
+}
+
 export async function dispatchApi(input: DispatchInput): Promise<DispatchResult> {
   const cfg = (input.order.supplier.channelConfig ?? {}) as ApiSupplierCfg;
   if (!cfg.url) return { channel: "API", ok: false, message: "Empfänger-URL fehlt (Supplier.channelConfig.url)." };

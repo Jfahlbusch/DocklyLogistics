@@ -79,6 +79,6 @@ registry.registerPath({ method: "post", path: "/orders/{id}/receive", summary: "
 registry.registerPath({ method: "get", path: "/orders/{id}/events", summary: "Event-Timeline", tags: ["Orders"],
   request: { params: z.object({ id: z.string().cuid() }) },
   responses: { 200: { description: "OK" } } });
-registry.registerPath({ method: "get", path: "/orders/{id}/pdf", summary: "PDF-Bestellschein (M4: noch leeres Stub)", tags: ["Orders"],
+registry.registerPath({ method: "get", path: "/orders/{id}/pdf", summary: "PDF-Bestellschein (gerendert via @react-pdf)", tags: ["Orders"],
   request: { params: z.object({ id: z.string().cuid() }) },
   responses: { 200: { description: "PDF Bytes" } } });

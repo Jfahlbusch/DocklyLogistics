@@ -4,6 +4,7 @@ import { handler } from "@/lib/api/handler";
 import { requireRoleFromHeaders } from "@/lib/api/guard";
 import { ok, fail } from "@/lib/api/respond";
 import { sendTestEmail } from "@/lib/channels/email";
+import { sendTestApi } from "@/lib/channels/api";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -27,9 +28,22 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
     });
   }
 
-  // API/EDI: a real test send is not implemented yet.
+  // API: connectivity ping (POST) to the configured callbackUrl.
+  if (profile.channel === "API") {
+    const result = await sendTestApi(profile.config as Record<string, unknown>, new Date().toISOString());
+    if (!result.ok) return fail(422, "Test-Versand fehlgeschlagen", result.message);
+    return ok({
+      message: result.message,
+      channel: "API",
+      label: profile.label,
+      tested_at: new Date().toISOString(),
+      details: result.details,
+    });
+  }
+
+  // EDI: a real test send (SFTP handshake) is not implemented yet.
   return ok({
-    message: `Test-Versand für Kanal '${profile.channel}' ist noch nicht implementiert (aktuell nur EMAIL).`,
+    message: `Test-Versand für Kanal '${profile.channel}' ist noch nicht implementiert (aktuell EMAIL + API).`,
     channel: profile.channel,
     label: profile.label,
     tested_at: new Date().toISOString(),
