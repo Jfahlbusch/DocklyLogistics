@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { OrderDetailModal } from "./order-detail-modal";
 import { useOpenParam } from "@/lib/search/use-open-param";
+import { StatusPill } from "@/components/ui/status-pill";
 
 type Row = {
   id: string;
@@ -118,14 +119,10 @@ export function OrdersView({
                   <td className="px-4 py-3 font-mono text-xs">{r.orderNo}</td>
                   <td className="px-4 py-3 font-medium text-foreground">{r.supplierName}</td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${CHANNEL_STYLES[r.channel] ?? "bg-muted text-foreground"}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />{r.channel}
-                    </span>
+                    <StatusPill style={CHANNEL_STYLES[r.channel]}>{r.channel}</StatusPill>
                   </td>
                   <td className="px-4 py-3">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${STATUS_STYLES[r.status] ?? "bg-muted text-foreground"}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />{r.status}
-                    </span>
+                    <StatusPill style={STATUS_STYLES[r.status]}>{r.status}</StatusPill>
                   </td>
                   <td className="px-4 py-3">{r.itemCount}</td>
                   <td className="px-4 py-3 font-medium">€ {Number(r.total).toFixed(2)}</td>

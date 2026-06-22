@@ -6,6 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ReceiveModal } from "./receive-modal";
+import { StatusPill } from "@/components/ui/status-pill";
 
 type Article = { sku: string; name: string; orderUnit: string; baseUnit: string; packFactor: number; defaultLocationId: string | null };
 type OrderItem = {
@@ -126,9 +127,7 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
                     <DialogDescription className="text-muted-foreground">{order.supplier.city ?? "—"} · {order.supplier.email ?? "—"}</DialogDescription>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${STATUS_STYLES[order.status] ?? "bg-muted text-foreground"}`}>
-                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />{order.status}
-                    </span>
+                    <StatusPill style={STATUS_STYLES[order.status]}>{order.status}</StatusPill>
                     <Badge variant="outline" className="text-xs">{order.supplier.channel}</Badge>
                   </div>
                 </div>

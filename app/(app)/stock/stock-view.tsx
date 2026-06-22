@@ -4,6 +4,7 @@ import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { StatusPill } from "@/components/ui/status-pill";
 import {
   Dialog,
   DialogContent,
@@ -191,12 +192,7 @@ export function StockView({
                       <td className="px-4 py-3 font-mono text-xs">{l.code}</td>
                       <td className="px-4 py-3 text-foreground">{l.name}</td>
                       <td className="px-4 py-3">
-                        <span
-                          className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${ZONE_STYLES[l.zone] ?? "bg-muted text-foreground"}`}
-                        >
-                          <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                          {l.zone}
-                        </span>
+                        <StatusPill style={ZONE_STYLES[l.zone]}>{l.zone}</StatusPill>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex items-center gap-2">

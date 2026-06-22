@@ -15,6 +15,7 @@ import {
 import { SupplierDetailModal } from "./supplier-detail-modal";
 import { useOpenParam } from "@/lib/search/use-open-param";
 import { SupplierForm, defaultSupplierValues } from "./supplier-form";
+import { StatusPill } from "@/components/ui/status-pill";
 
 type SupplierCard = {
   id: string;
@@ -167,12 +168,7 @@ export function SuppliersView({
                     <div className="text-muted-foreground text-sm mt-0.5 truncate">{s.email}</div>
                   </div>
                   <div className="text-right flex-shrink-0">
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-medium ${CHANNEL_STYLES[s.channel]}`}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />
-                      {s.channel}
-                    </span>
+                    <StatusPill style={CHANNEL_STYLES[s.channel]}>{s.channel}</StatusPill>
                     <div className="text-[11px] text-muted-foreground mt-2">
                       {s.openOrders} offene Bestellungen
                     </div>
