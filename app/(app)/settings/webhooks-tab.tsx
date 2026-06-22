@@ -1,5 +1,7 @@
 "use client";
 
+import { FlashBanner } from "@/components/ui/flash-banner";
+
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -121,18 +123,7 @@ export function WebhooksTab({
         im Header. Retries: exponentielles Backoff, max. 8 Versuche.
       </p>
 
-      {message && (
-        <div
-          className={
-            "text-sm px-3 py-2 rounded-lg border " +
-            (message.ok
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700")
-          }
-        >
-          {message.text}
-        </div>
-      )}
+      <FlashBanner flash={message} />
 
       {newSecret && (
         <Card className="shadow-soft border-gold-400">

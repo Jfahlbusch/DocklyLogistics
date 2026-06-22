@@ -1,5 +1,7 @@
 "use client";
 
+import { FlashBanner } from "@/components/ui/flash-banner";
+
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -84,18 +86,7 @@ export function ArticlesView({
         )}
       </div>
 
-      {createMessage && (
-        <div
-          className={
-            "text-sm px-3 py-2 rounded-lg border " +
-            (createMessage.ok
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700")
-          }
-        >
-          {createMessage.text}
-        </div>
-      )}
+      <FlashBanner flash={createMessage} />
 
       <Card className="shadow-soft">
         <form

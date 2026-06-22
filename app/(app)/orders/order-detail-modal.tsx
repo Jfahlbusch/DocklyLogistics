@@ -1,5 +1,7 @@
 "use client";
 
+import { FlashBanner } from "@/components/ui/flash-banner";
+
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
@@ -133,13 +135,7 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
                 </div>
               </DialogHeader>
 
-              {message && (
-                <div className={"text-sm px-3 py-2 rounded-lg border " + (message.ok
-                  ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                  : "border-rose-200 bg-rose-50 text-rose-700")}>
-                  {message.text}
-                </div>
-              )}
+              <FlashBanner flash={message} />
 
               {/* Summary KPIs */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-2">

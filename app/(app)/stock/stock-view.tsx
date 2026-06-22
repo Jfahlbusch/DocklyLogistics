@@ -1,5 +1,7 @@
 "use client";
 
+import { FlashBanner } from "@/components/ui/flash-banner";
+
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
@@ -138,18 +140,7 @@ export function StockView({
         </div>
       </div>
 
-      {flash && (
-        <div
-          className={
-            "text-sm px-3 py-2 rounded-lg border " +
-            (flash.ok
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700")
-          }
-        >
-          {flash.text}
-        </div>
-      )}
+      <FlashBanner flash={flash} />
 
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
         {/* Lagerplätze */}

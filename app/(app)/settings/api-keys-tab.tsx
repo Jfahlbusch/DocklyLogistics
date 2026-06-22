@@ -1,5 +1,7 @@
 "use client";
 
+import { FlashBanner } from "@/components/ui/flash-banner";
+
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -106,18 +108,7 @@ export function ApiKeysTab({ role }: { role: string }) {
         </Button>
       </div>
 
-      {flash && (
-        <div
-          className={
-            "text-sm px-3 py-2 rounded-lg border " +
-            (flash.ok
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700")
-          }
-        >
-          {flash.text}
-        </div>
-      )}
+      <FlashBanner flash={flash} />
 
       {newKey && (
         <div className="rounded-lg border border-gold-400 bg-gold-50 p-4 space-y-2">

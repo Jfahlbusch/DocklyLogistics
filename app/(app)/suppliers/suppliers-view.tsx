@@ -1,5 +1,7 @@
 "use client";
 
+import { FlashBanner } from "@/components/ui/flash-banner";
+
 import { useState, useTransition } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
@@ -94,18 +96,7 @@ export function SuppliersView({
         )}
       </div>
 
-      {flash && (
-        <div
-          className={
-            "text-sm px-3 py-2 rounded-lg border " +
-            (flash.ok
-              ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-              : "border-rose-200 bg-rose-50 text-rose-700")
-          }
-        >
-          {flash.text}
-        </div>
-      )}
+      <FlashBanner flash={flash} />
 
       <Card className="shadow-soft">
         <form
