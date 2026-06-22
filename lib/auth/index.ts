@@ -30,14 +30,28 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         const accessTokenClaims = decodeJwtPayload(account.access_token) ?? {};
         const profileClaims = (profile ?? {}) as Record<string, unknown>;
         token.claims = { ...profileClaims, ...accessTokenClaims };
+
+        // Resolve the target tenant from the SSO origin cookie (set by
+        // /users/auth/sso), falling back to the deployment's default tenant.
+        // Dynamic import keeps next/headers out of the edge middleware bundle.
+        try {
+          const { cookies } = await import("next/headers");
+          const originTenant = (await cookies()).get("dl_tenant")?.value;
+          if (originTenant) token.tenant = originTenant;
+        } catch {
+          // cookies() not available in this context — fall back below.
+        }
+        if (!token.tenant) token.tenant = process.env.NEXT_PUBLIC_APP_TENANT;
+
         if (process.env.NODE_ENV === "development") {
-          console.log("[auth/jwt] resolved claims:", JSON.stringify(token.claims, null, 2));
+          console.log("[auth/jwt] tenant:", token.tenant, "claims:", JSON.stringify(token.claims, null, 2));
         }
       }
       return token;
     },
     async session({ session, token }) {
-      const tenant = process.env.NEXT_PUBLIC_APP_TENANT!;
+      const tenant =
+        (typeof token.tenant === "string" && token.tenant) || process.env.NEXT_PUBLIC_APP_TENANT!;
       const claims = (token.claims ?? {}) as Parameters<typeof deriveRole>[0];
       try {
         const role: UserRole = deriveRole(claims, tenant);
