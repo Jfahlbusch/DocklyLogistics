@@ -10,7 +10,7 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "node",
-    include: ["lib/**/*.test.ts", "tests/unit/**/*.test.ts"],
+    include: ["lib/**/*.test.ts", "tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
   },
   resolve: {
     alias: { "@": path.resolve(__dirname, ".") },
