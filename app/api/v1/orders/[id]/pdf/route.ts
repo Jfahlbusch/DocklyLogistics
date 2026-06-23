@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
 import { renderOrderPdfBuffer, type OrderPdfData } from "@/lib/pdf/order-pdf";
 import { tenantChannelRepo } from "@/lib/db/repos/tenant-channel";
+import { tenantPdfSettingsRepo } from "@/lib/db/repos/tenant-pdf-settings";
 import { handler } from "@/lib/api/handler";
 import { requireRoleFromHeaders } from "@/lib/api/guard";
 import { fail } from "@/lib/api/respond";
@@ -23,6 +24,7 @@ export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
 
   const tenantCfg = await tenantChannelRepo.findDefault(ctx.tenantId, order.supplier.channel);
   const senderCfg = (tenantCfg?.config ?? {}) as { fromEmail?: string; fromName?: string; signature?: string };
+  const branding = await tenantPdfSettingsRepo.get(ctx.tenantId);
 
   const data: OrderPdfData = {
     orderNo: order.orderNo,
@@ -47,6 +49,7 @@ export const GET = handler(async (req: NextRequest, { params }: Ctx) => {
       lineTotal: formatDec(it.lineTotal),
     })),
     hashShort: order.pdfHash ? order.pdfHash.slice(0, 12) : "—",
+    branding,
   };
 
   const buffer = await renderOrderPdfBuffer(data);

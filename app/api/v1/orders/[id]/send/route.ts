@@ -4,6 +4,7 @@ import { prisma } from "@/lib/db/client";
 import { orderService, OrderStatusError } from "@/lib/services/order-service";
 import { tenantChannelRepo } from "@/lib/db/repos/tenant-channel";
 import { renderOrderPdfBuffer, type OrderPdfData } from "@/lib/pdf/order-pdf";
+import { tenantPdfSettingsRepo } from "@/lib/db/repos/tenant-pdf-settings";
 import { dispatchOrder } from "@/lib/channels";
 import { appendAudit } from "@/lib/audit/append";
 import { emitEvent } from "@/lib/services/webhook-emit";
@@ -65,6 +66,7 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
 
   // Build PDF data
   const senderCfg = (tenantCfg.config ?? {}) as { fromEmail?: string; fromName?: string; signature?: string };
+  const branding = await tenantPdfSettingsRepo.get(ctx.tenantId);
   const pdfData: OrderPdfData = {
     orderNo: order.orderNo,
     createdAt: order.createdAt,
@@ -88,6 +90,7 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
       lineTotal: formatDec(it.lineTotal),
     })),
     hashShort: "M6-pending",
+    branding,
   };
 
   let pdfBuffer: Buffer;

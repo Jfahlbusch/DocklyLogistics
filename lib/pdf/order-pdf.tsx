@@ -25,6 +25,8 @@ const styles = StyleSheet.create({
   brand: { flexDirection: "row", alignItems: "center", gap: 12 },
   brandSquare: { width: 36, height: 36, backgroundColor: NAVY, color: GOLD, fontSize: 22, fontFamily: "Helvetica-Bold", textAlign: "center", paddingTop: 6, borderRadius: 4 },
   brandMark: { width: 38, height: 32 },
+  brandLogo: { width: 150, height: 40, objectFit: "contain" },
+  brandHeaderLine: { fontSize: 8, color: STONE_500, marginTop: 1 },
   brandTitle: { fontSize: 16, color: NAVY, fontFamily: "Helvetica-Bold", marginBottom: 2 },
   brandSub: { fontSize: 8, color: STONE_500, letterSpacing: 2, textTransform: "uppercase" },
   metaBox: { textAlign: "right" },
@@ -53,6 +55,7 @@ const styles = StyleSheet.create({
   notesTitle: { fontSize: 8, color: STONE_500, letterSpacing: 1.5, textTransform: "uppercase", marginBottom: 4 },
   footer: { position: "absolute", bottom: 32, left: 48, right: 48, borderTopWidth: 1, borderTopColor: STONE_200, paddingTop: 8, flexDirection: "row", justifyContent: "space-between" },
   footerText: { fontSize: 8, color: STONE_500 },
+  footerLeft: { flexDirection: "column", flex: 1, paddingRight: 12 },
 });
 
 export type OrderPdfData = {
@@ -84,9 +87,21 @@ export type OrderPdfData = {
     lineTotal: string;
   }>;
   hashShort: string;
+  /** Per-tenant branding (Briefkopf/Brieffuß), edited graphically in settings. */
+  branding?: {
+    logoDataUri?: string | null;
+    headerText?: string | null;
+    footerText?: string | null;
+  };
 };
 
 export function OrderPdf({ data }: { data: OrderPdfData }) {
+  const customLogo = data.branding?.logoDataUri || null;
+  const logo = customLogo ?? MARK_DATA_URI;
+  const headerLines = data.branding?.headerText ? data.branding.headerText.split("\n") : [];
+  const footerLines = data.branding?.footerText
+    ? data.branding.footerText.split("\n")
+    : [`DocklyLogistics — Bestellschein ${data.orderNo}`];
   return (
     <Document>
       <Page size="A4" style={styles.page}>
@@ -95,15 +110,18 @@ export function OrderPdf({ data }: { data: OrderPdfData }) {
 
         <View style={styles.header}>
           <View style={styles.brand}>
-            {MARK_DATA_URI ? (
+            {logo ? (
               // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt prop
-              <Image src={MARK_DATA_URI} style={styles.brandMark} />
+              <Image src={logo} style={customLogo ? styles.brandLogo : styles.brandMark} />
             ) : (
               <Text style={styles.brandSquare}>D</Text>
             )}
             <View>
               <Text style={styles.brandTitle}>{data.sender.fromName ?? "DocklyLogistics"}</Text>
               <Text style={styles.brandSub}>Bestellschein</Text>
+              {headerLines.map((line, i) => (
+                <Text key={i} style={styles.brandHeaderLine}>{line}</Text>
+              ))}
             </View>
           </View>
           <View style={styles.metaBox}>
@@ -175,7 +193,11 @@ export function OrderPdf({ data }: { data: OrderPdfData }) {
         )}
 
         <View style={styles.footer} fixed>
-          <Text style={styles.footerText}>DocklyLogistics — Bestellschein {data.orderNo}</Text>
+          <View style={styles.footerLeft}>
+            {footerLines.map((line, i) => (
+              <Text key={i} style={styles.footerText}>{line}</Text>
+            ))}
+          </View>
           <Text style={styles.footerText}>Hash: {data.hashShort}</Text>
         </View>
       </Page>

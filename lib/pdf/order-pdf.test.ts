@@ -23,6 +23,27 @@ describe("renderOrderPdfBuffer", () => {
     });
     expect(buf.length).toBeGreaterThan(2000);
     expect(buf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
+  });
+
+  it("renders with per-tenant branding (logo + header + footer)", async () => {
+    const buf = await renderOrderPdfBuffer({
+      orderNo: "BST-2026-0002",
+      createdAt: new Date("2026-06-23T10:00:00Z"),
+      currency: "EUR",
+      notes: null,
+      total: "99,00",
+      sender: { fromName: "Mandant GmbH" },
+      supplier: { name: "Lieferant" },
+      items: [{ sku: "X", name: "Artikel", qtyOrderUnit: 1, orderUnit: "STK", unitPrice: "99,00", lineTotal: "99,00" }],
+      hashShort: "branded",
+      branding: {
+        logoDataUri:
+          "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAC0lEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==",
+        headerText: "Musterstraße 1\n12345 Musterstadt",
+        footerText: "Bank: DE12 3456 · USt-IdNr.: DE999999999",
+      },
+    });
+    expect(buf.subarray(0, 5).toString("latin1")).toBe("%PDF-");
     if (process.env.WRITE_PDF) writeFileSync(process.env.WRITE_PDF, buf);
   });
 });

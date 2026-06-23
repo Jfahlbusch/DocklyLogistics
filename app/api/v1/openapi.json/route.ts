@@ -14,6 +14,7 @@ import "@/lib/schemas/webhook";
 import "@/lib/schemas/audit";
 import "@/lib/schemas/reports";
 import "@/lib/schemas/misc-routes";
+import "@/lib/schemas/pdf-settings";
 
 export const dynamic = "force-static";
 

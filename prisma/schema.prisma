@@ -25,6 +25,16 @@ model Tenant {
   @@index([name])
 }
 
+// Per-tenant branding for the order-slip PDF (Briefkopf/Brieffuß) — edited
+// graphically under Settings, not by hand. One row per tenant.
+model TenantPdfSettings {
+  tenantId    String   @id
+  logoDataUri String?  @db.Text // Briefkopf-Logo als data:-URI (Upload)
+  headerText  String?           // Briefkopf-Zusatz (z.B. Adresse, Slogan)
+  footerText  String?           // Brieffuß (z.B. Bankdaten, USt-IdNr.)
+  updatedAt   DateTime @updatedAt
+}
+
 model User {
   id                      String    @id @default(cuid())
   email                   String
