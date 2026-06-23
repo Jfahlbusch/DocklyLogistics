@@ -9,9 +9,10 @@ import { cn } from "@/lib/utils";
 
 type Props = {
   user: { name: string; role: string; tenant: string };
+  allowedNav?: string[];
 };
 
-export function Sidebar({ user }: Props) {
+export function Sidebar({ user, allowedNav }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -37,7 +38,7 @@ export function Sidebar({ user }: Props) {
       )}
     >
       <Brand collapsed={collapsed} />
-      <NavLinks collapsed={collapsed} />
+      <NavLinks collapsed={collapsed} allowedNav={allowedNav} />
       <SidebarUser user={user} collapsed={collapsed} />
       <button
         type="button"

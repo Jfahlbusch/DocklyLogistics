@@ -6,11 +6,20 @@ import { NAV_ITEMS } from "./nav-items";
 import { cn } from "@/lib/utils";
 
 /** The teal sidebar navigation list. Shared by the desktop Sidebar and the mobile drawer. */
-export function NavLinks({ onNavigate, collapsed }: { onNavigate?: () => void; collapsed?: boolean }) {
+export function NavLinks({
+  onNavigate,
+  collapsed,
+  allowedNav,
+}: {
+  onNavigate?: () => void;
+  collapsed?: boolean;
+  allowedNav?: string[];
+}) {
   const pathname = usePathname();
+  const items = allowedNav ? NAV_ITEMS.filter((i) => allowedNav.includes(i.id)) : NAV_ITEMS;
   return (
     <nav className="flex-1 overflow-y-auto px-3 py-4">
-      {NAV_ITEMS.map((item) => {
+      {items.map((item) => {
         const Icon = item.icon;
         const active = pathname.startsWith(item.href);
         return (

@@ -8,7 +8,13 @@ import { NavLinks } from "./nav-links";
 import { SidebarUser } from "./sidebar-user";
 
 /** Hamburger + full-screen off-canvas drawer that replaces the sidebar below md. */
-export function MobileNav({ user }: { user: { name: string; role: string; tenant: string } }) {
+export function MobileNav({
+  user,
+  allowedNav,
+}: {
+  user: { name: string; role: string; tenant: string };
+  allowedNav?: string[];
+}) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
   return (
@@ -46,7 +52,7 @@ export function MobileNav({ user }: { user: { name: string; role: string; tenant
           </button>
         </div>
 
-        <NavLinks onNavigate={close} />
+        <NavLinks onNavigate={close} allowedNav={allowedNav} />
         <SidebarUser user={user} />
       </SheetContent>
     </Sheet>
