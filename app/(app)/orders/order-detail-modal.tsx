@@ -111,7 +111,7 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
   return (
     <>
       <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="max-w-4xl sm:max-w-4xl">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-4xl">
           {loading || !order ? (
             <>
               <DialogHeader className="sr-only">

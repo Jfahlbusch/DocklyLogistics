@@ -52,7 +52,7 @@ export function LocationForm({ initial, isCreate, busy, errorMessage, onSubmit, 
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Code" required>
           <Input
             value={v.code}
@@ -75,7 +75,7 @@ export function LocationForm({ initial, isCreate, busy, errorMessage, onSubmit, 
           />
         </Field>
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Zone">
           <Input
             value={v.zone ?? ""}

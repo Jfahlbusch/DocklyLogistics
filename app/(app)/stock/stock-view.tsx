@@ -283,7 +283,7 @@ export function StockView({
           }
         }}
       >
-        <DialogContent className="max-w-2xl sm:max-w-2xl">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl text-foreground">
               {isCreate ? "Neuer Lagerplatz" : "Lagerplatz bearbeiten"}

@@ -258,7 +258,7 @@ export function AuditView({
                   {expanded.has(r.id) && (
                     <tr className="border-t border-border bg-muted/40">
                       <td colSpan={6} className="px-4 py-3 text-xs">
-                        <div className="grid grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div>
                             <div className="text-[10px] tracking-[0.16em] uppercase text-muted-foreground mb-1">
                               Vorher

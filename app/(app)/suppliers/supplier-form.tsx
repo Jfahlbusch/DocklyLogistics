@@ -85,7 +85,7 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
           maxLength={200}
         />
       </Field>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Kontaktperson">
           <Input
             value={v.contactName ?? ""}
@@ -102,7 +102,7 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
           />
         </Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Telefon">
           <Input
             value={v.phone ?? ""}
@@ -141,7 +141,7 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
           />
         </Field>
       </div>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Kanal" required>
           <select
             value={v.channel}

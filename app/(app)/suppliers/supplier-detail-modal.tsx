@@ -68,7 +68,7 @@ export function SupplierDetailModal({
 
   return (
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl sm:max-w-3xl">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl">
         {loading || !supplier ? (
           <>
             <DialogHeader className="sr-only">

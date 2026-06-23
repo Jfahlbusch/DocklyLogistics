@@ -198,7 +198,7 @@ export function ArticleDetailModal({
   return (
     <>
     <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl sm:max-w-3xl">
+      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl">
         {loading || !article ? (
           <>
             <DialogHeader className="sr-only">
@@ -530,7 +530,7 @@ export function ArticleDetailModal({
           }
         }}
       >
-        <DialogContent className="max-w-xl sm:max-w-xl">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-xl">
           <DialogHeader>
             <DialogTitle className="font-display text-xl text-foreground">
               {linkDialog.mode === "create" ? "Lieferant zuordnen" : "Zuordnung bearbeiten"}
@@ -643,7 +643,7 @@ function StockPanel({ articleId, minStock, baseUnit }: { articleId: string; minS
 
   return (
     <>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Kpi label="Gesamtbestand" value={`${total} ${baseUnit}`} />
         <Kpi label="Mindestbestand" value={`${minStock} ${baseUnit}`} />
         <div className={"border rounded-xl px-4 py-3 " + (shortfall > 0 ? "border-rose-200 bg-rose-50" : "border-emerald-200 bg-emerald-50")}>

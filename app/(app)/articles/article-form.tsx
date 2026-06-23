@@ -95,7 +95,7 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, o
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="SKU" required>
           <Input
             value={v.sku}
@@ -137,7 +137,7 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, o
         />
       </Field>
 
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Kategorie">
           <Input
             value={v.category ?? ""}
@@ -158,7 +158,7 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, o
         </Field>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Basiseinheit" required>
           <Select
             value={v.baseUnit}
@@ -185,7 +185,7 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, o
         </Field>
       </div>
 
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <Field label="Barcode-Quelle">
           <Select
             value={v.barcodeSource}

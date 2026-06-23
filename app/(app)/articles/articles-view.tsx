@@ -180,7 +180,7 @@ export function ArticlesView({
           }
         }}
       >
-        <DialogContent className="max-w-2xl sm:max-w-2xl">
+        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl">
           <DialogHeader>
             <DialogTitle className="font-display text-2xl text-foreground">Neuer Artikel</DialogTitle>
             <DialogDescription>Pflichtfelder sind mit * markiert.</DialogDescription>
