@@ -64,8 +64,12 @@ export function defaultEnabled(role: UserRole, featureKey: string): boolean {
   return RANK[role] >= RANK[f.minRole];
 }
 
-/** Roles whose feature set is configurable. GLOBAL_ADMIN always has everything. */
-export const CONFIGURABLE_ROLES: UserRole[] = ["MANAGER", "USER", "VIEWER"];
+/**
+ * Roles whose default feature set is configurable (per the spec: Manager + User).
+ * GLOBAL_ADMIN always has everything; VIEWER keeps its built-in defaults. Per-user
+ * overrides still work for users of any role.
+ */
+export const CONFIGURABLE_ROLES: UserRole[] = ["MANAGER", "USER"];
 
 /** Features grouped for display, preserving registry order within each group. */
 export function featuresByGroup(): { group: string; items: FeatureDef[] }[] {
