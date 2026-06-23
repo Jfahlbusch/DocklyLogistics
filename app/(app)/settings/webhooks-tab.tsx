@@ -461,7 +461,8 @@ function DeliveryDialog({
               Noch keine Auslieferungen.
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -518,6 +519,50 @@ function DeliveryDialog({
               </tbody>
             </table>
             </div>
+
+            {/* Mobile: cards instead of a horizontally-scrolling table */}
+            <div className="divide-y divide-border md:hidden">
+              {rows.map((d) => (
+                <div
+                  key={d.id}
+                  className="flex items-start justify-between gap-2 px-3 py-2.5 text-sm"
+                >
+                  <div className="min-w-0">
+                    <div className="font-mono text-xs text-foreground">{d.event}</div>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span
+                        className={
+                          "inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-medium " +
+                          (STATUS_STYLES[d.status] ?? "bg-muted text-foreground")
+                        }
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+                        {d.status}
+                      </span>
+                      <span className="text-xs text-muted-foreground">Versuch {d.attempts}</span>
+                      <span className="text-xs text-muted-foreground">· HTTP {d.lastStatusCode ?? "—"}</span>
+                    </div>
+                    <div className="mt-0.5 text-xs text-muted-foreground">
+                      {new Date(d.createdAt).toLocaleString("de-DE", {
+                        dateStyle: "short",
+                        timeStyle: "short",
+                      })}
+                    </div>
+                  </div>
+                  {(d.status === "FAILED" || d.status === "GIVEN_UP") && (
+                    <Button
+                      variant="outline"
+                      className="shrink-0 px-2 py-1 text-xs"
+                      disabled={retrying === d.id}
+                      onClick={() => retry(d.id)}
+                    >
+                      {retrying === d.id ? "…" : "Erneut senden"}
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+            </>
           )}
           <div className="flex justify-end pt-2">
             <Button variant="outline" onClick={onClose}>

@@ -145,7 +145,8 @@ export function ApiKeysTab({ role }: { role: string }) {
               Noch keine API-Keys.
             </div>
           ) : (
-            <div className="overflow-x-auto">
+            <>
+            <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -179,6 +180,36 @@ export function ApiKeysTab({ role }: { role: string }) {
               </tbody>
             </table>
             </div>
+
+            {/* Mobile: cards instead of a horizontally-scrolling table */}
+            <div className="divide-y divide-border md:hidden">
+              {keys.map((k) => (
+                <div
+                  key={k.id}
+                  className="flex items-start justify-between gap-2 px-4 py-3 text-sm"
+                >
+                  <div className="min-w-0">
+                    <div className="font-medium text-foreground">{k.label || "—"}</div>
+                    <div className="font-mono text-xs text-muted-foreground">{k.prefix}…</div>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <span className="inline-flex items-center rounded-full bg-navy-100 px-2.5 py-0.5 text-[11px] font-medium text-navy-700">
+                        {k.role}
+                      </span>
+                      <span className="text-xs text-muted-foreground">Genutzt {fmt(k.lastUsedAt)}</span>
+                      <span className="text-xs text-muted-foreground">· Ablauf {fmt(k.expiresAt)}</span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="shrink-0 px-2 py-1 text-xs text-danger"
+                    onClick={() => revoke(k)}
+                  >
+                    Widerrufen
+                  </Button>
+                </div>
+              ))}
+            </div>
+            </>
           )}
         </CardContent>
       </Card>
