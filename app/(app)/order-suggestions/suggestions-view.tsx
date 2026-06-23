@@ -158,7 +158,7 @@ export function SuggestionsView({
     <div className="space-y-4 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-foreground">Bestellvorschläge</h1>
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">Bestellvorschläge</h1>
           <p className="text-sm text-muted-foreground mt-1">
             {total} Vorschläge · Bulk-Confirm gruppiert je Lieferant und erzeugt direkt Bestellungen im Status REVIEW.
           </p>

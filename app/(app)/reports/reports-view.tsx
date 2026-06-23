@@ -81,7 +81,7 @@ export function ReportsView({
     <div className="space-y-6 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-foreground">Reports</h1>
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">Reports</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Zeitraum: seit {new Date(yearStart).toLocaleDateString("de-DE")}
           </p>
@@ -219,7 +219,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
     <Card className="shadow-soft">
       <CardContent className="p-5">
         <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">{label}</div>
-        <div className="font-display text-3xl text-foreground mt-1.5">{value}</div>
+        <div className="font-display text-2xl sm:text-3xl text-foreground mt-1.5">{value}</div>
       </CardContent>
     </Card>
   );

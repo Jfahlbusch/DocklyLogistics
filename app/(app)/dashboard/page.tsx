@@ -26,7 +26,7 @@ export default async function DashboardPage() {
     <div className="space-y-6 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div>
-          <h1 className="font-display text-3xl text-foreground">Übersicht</h1>
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">Übersicht</h1>
           <p className="text-sm text-muted-foreground mt-1">Tenant: <span className="font-mono">{tenantId}</span></p>
         </div>
       </div>
@@ -37,7 +37,7 @@ export default async function DashboardPage() {
             <Card className="shadow-soft hover:border-border transition-colors">
               <CardContent className="p-5">
                 <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">{k.label}</div>
-                <div className={"font-display text-3xl mt-1.5 " + (k.accent ? "text-rose-600" : k.muted ? "text-muted-foreground" : "text-foreground")}>{k.value}</div>
+                <div className={"font-display text-2xl sm:text-3xl mt-1.5 " + (k.accent ? "text-rose-600" : k.muted ? "text-muted-foreground" : "text-foreground")}>{k.value}</div>
               </CardContent>
             </Card>
           </Link>

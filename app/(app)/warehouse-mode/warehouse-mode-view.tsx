@@ -276,7 +276,7 @@ export function WarehouseModeView({
           <div className="text-[11px] tracking-[0.18em] uppercase text-gold-700 font-medium">
             Lagermodus
           </div>
-          <h1 className="font-display text-3xl text-foreground">Scanner</h1>
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">Scanner</h1>
         </div>
         <div className="flex gap-2 items-center">
           {scanning && (
