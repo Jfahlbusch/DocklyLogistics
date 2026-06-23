@@ -36,6 +36,14 @@ export function Topbar({
           ⌘K
         </kbd>
       </button>
+      <button
+        type="button"
+        onClick={openSearch}
+        aria-label="Suche öffnen"
+        className="rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+      >
+        <Search size={20} strokeWidth={1.5} />
+      </button>
       <NotificationBell />
       <ProfileMenu user={user} />
     </header>
