@@ -299,6 +299,7 @@ function SupplierOrdersPanel({ supplierId }: { supplierId: string }) {
 
   return (
     <div className="border border-border rounded-xl overflow-hidden">
+      <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
           <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -325,6 +326,7 @@ function SupplierOrdersPanel({ supplierId }: { supplierId: string }) {
           ))}
         </tbody>
       </table>
+      </div>
     </div>
   );
 }

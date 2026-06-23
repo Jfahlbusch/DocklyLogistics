@@ -145,6 +145,7 @@ export function ApiKeysTab({ role }: { role: string }) {
               Noch keine API-Keys.
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -177,6 +178,7 @@ export function ApiKeysTab({ role }: { role: string }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
         </CardContent>
       </Card>

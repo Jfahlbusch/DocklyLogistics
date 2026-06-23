@@ -277,6 +277,7 @@ export function ArticleDetailModal({
                     Noch keine Lieferanten zugeordnet.
                   </div>
                 ) : (
+                  <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground bg-muted/40">
@@ -347,6 +348,7 @@ export function ArticleDetailModal({
                       ))}
                     </tbody>
                   </table>
+                  </div>
                 )}
               </TabsContent>
 

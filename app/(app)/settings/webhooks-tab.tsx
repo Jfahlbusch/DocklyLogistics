@@ -461,6 +461,7 @@ function DeliveryDialog({
               Noch keine Auslieferungen.
             </div>
           ) : (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -516,6 +517,7 @@ function DeliveryDialog({
                 ))}
               </tbody>
             </table>
+            </div>
           )}
           <div className="flex justify-end pt-2">
             <Button variant="outline" onClick={onClose}>

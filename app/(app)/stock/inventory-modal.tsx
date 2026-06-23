@@ -94,6 +94,7 @@ export function InventoryModal({
               Keine Bestände an diesem Lagerplatz.
             </div>
           ) : rows.length > 0 ? (
+            <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
@@ -127,6 +128,7 @@ export function InventoryModal({
                 ))}
               </tbody>
             </table>
+            </div>
           ) : null}
 
           {error && <div className="text-sm text-danger">{error}</div>}
