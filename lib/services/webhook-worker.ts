@@ -2,6 +2,7 @@ import { deliveryRepo } from "@/lib/db/repos/webhook";
 import { decryptSecret } from "@/lib/crypto/aes";
 import { signWebhook } from "./webhook-sign";
 import { notificationRepo } from "@/lib/db/repos/notification";
+import { isBlockedUrl } from "@/lib/net/ssrf-guard";
 
 const MAX_ATTEMPTS = 8;
 const HTTP_TIMEOUT_MS = 10_000;
@@ -38,6 +39,13 @@ export async function runWebhookWorker(limit: number = 10): Promise<WorkerResult
       // Cannot decrypt — give up immediately to avoid infinite retries
       await deliveryRepo.markGivenUp(d.id, null, `decrypt-failed: ${(e as Error).message}`);
       await notifyFailed(d.event, d.tenantId, `decrypt-failed: ${(e as Error).message}`);
+      givenUp++;
+      continue;
+    }
+
+    if (isBlockedUrl(wh.url)) {
+      await deliveryRepo.markGivenUp(d.id, null, "blocked-url (SSRF-Schutz: internes/ungültiges Ziel)");
+      await notifyFailed(d.event, d.tenantId, "Webhook-Ziel ist intern/ungültig (SSRF-Schutz)");
       givenUp++;
       continue;
     }

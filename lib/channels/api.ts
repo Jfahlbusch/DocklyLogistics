@@ -1,5 +1,6 @@
 import type { DispatchInput, DispatchResult } from "./types";
 import { withRetry } from "./retry";
+import { isBlockedUrl } from "@/lib/net/ssrf-guard";
 
 type ApiSupplierCfg = {
   url?: string;
@@ -24,6 +25,9 @@ export async function sendTestApi(rawCfg: Record<string, unknown>, nowIso: strin
   const cfg = rawCfg as ApiChannelTestCfg;
   if (!cfg.callbackUrl) {
     return { ok: false, message: "Keine callbackUrl im API-Profil hinterlegt — nichts zu testen." };
+  }
+  if (isBlockedUrl(cfg.callbackUrl)) {
+    return { ok: false, message: "callbackUrl zeigt auf ein internes/ungültiges Ziel (SSRF-Schutz)." };
   }
   const payload = {
     test: true,
@@ -74,6 +78,7 @@ const API_TIMEOUT_MS = 10_000;
 export async function dispatchApi(input: DispatchInput): Promise<DispatchResult> {
   const cfg = (input.order.supplier.channelConfig ?? {}) as ApiSupplierCfg;
   if (!cfg.url) return { channel: "API", ok: false, message: "Empfänger-URL fehlt (Supplier.channelConfig.url)." };
+  if (isBlockedUrl(cfg.url)) return { channel: "API", ok: false, message: "Empfänger-URL zeigt auf ein internes/ungültiges Ziel (SSRF-Schutz)." };
   const url = cfg.url;
 
   const payload = {
