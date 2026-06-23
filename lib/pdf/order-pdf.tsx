@@ -1,8 +1,19 @@
 import React from "react";
-import { Document, Page, Text, View, StyleSheet, pdf } from "@react-pdf/renderer";
+import { readFileSync } from "fs";
+import { join } from "path";
+import { Document, Page, Text, View, Image, StyleSheet, pdf } from "@react-pdf/renderer";
 
-const NAVY = "#0F2A44";
-const GOLD = "#C9A24B";
+// Brand mark, embedded once at module load (public/ ships in the standalone image at /app/public).
+let MARK_DATA_URI: string | null = null;
+try {
+  MARK_DATA_URI = `data:image/png;base64,${readFileSync(join(process.cwd(), "public/brand/dockly-mark.png")).toString("base64")}`;
+} catch {
+  MARK_DATA_URI = null;
+}
+
+// DocklyLogistics brand palette — matches the app theme tokens (navy-900 teal + gold-500 amber).
+const NAVY = "#041E24";
+const GOLD = "#FCB900";
 const STONE_500 = "#78716C";
 const STONE_200 = "#E7E5E4";
 
@@ -12,8 +23,9 @@ const styles = StyleSheet.create({
   brandBarGold: { backgroundColor: GOLD, height: 2 },
   header: { flexDirection: "row", justifyContent: "space-between", marginTop: 24, marginBottom: 32 },
   brand: { flexDirection: "row", alignItems: "center", gap: 12 },
-  brandSquare: { width: 36, height: 36, backgroundColor: NAVY, color: GOLD, fontSize: 24, fontFamily: "Times-Bold", textAlign: "center", paddingTop: 4 },
-  brandTitle: { fontSize: 16, color: NAVY, fontFamily: "Times-Bold", marginBottom: 2 },
+  brandSquare: { width: 36, height: 36, backgroundColor: NAVY, color: GOLD, fontSize: 22, fontFamily: "Helvetica-Bold", textAlign: "center", paddingTop: 6, borderRadius: 4 },
+  brandMark: { width: 38, height: 32 },
+  brandTitle: { fontSize: 16, color: NAVY, fontFamily: "Helvetica-Bold", marginBottom: 2 },
   brandSub: { fontSize: 8, color: STONE_500, letterSpacing: 2, textTransform: "uppercase" },
   metaBox: { textAlign: "right" },
   metaLabel: { fontSize: 8, color: STONE_500, letterSpacing: 1.5, textTransform: "uppercase" },
@@ -83,7 +95,12 @@ export function OrderPdf({ data }: { data: OrderPdfData }) {
 
         <View style={styles.header}>
           <View style={styles.brand}>
-            <Text style={styles.brandSquare}>D</Text>
+            {MARK_DATA_URI ? (
+              // eslint-disable-next-line jsx-a11y/alt-text -- @react-pdf Image has no alt prop
+              <Image src={MARK_DATA_URI} style={styles.brandMark} />
+            ) : (
+              <Text style={styles.brandSquare}>D</Text>
+            )}
             <View>
               <Text style={styles.brandTitle}>{data.sender.fromName ?? "DocklyLogistics"}</Text>
               <Text style={styles.brandSub}>Bestellschein</Text>
