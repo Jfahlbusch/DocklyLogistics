@@ -96,7 +96,7 @@ export function OrdersView({
           <Button type="submit" variant="outline" className="text-sm">Suchen</Button>
         </form>
 
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -132,6 +132,36 @@ export function OrdersView({
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: cards instead of a horizontally-scrolling table */}
+        <div className="divide-y divide-border md:hidden">
+          {rows.length === 0 && (
+            <div className="py-10 text-center text-muted-foreground">Keine Bestellungen.</div>
+          )}
+          {rows.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => setSelected(r.id)}
+              className="flex w-full flex-col gap-1.5 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+            >
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-mono text-xs text-foreground">{r.orderNo}</span>
+                <span className="shrink-0 font-medium">€ {Number(r.total).toFixed(2)}</span>
+              </div>
+              <div className="font-medium text-foreground">{r.supplierName}</div>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <StatusPill style={CHANNEL_STYLES[r.channel]}>{r.channel}</StatusPill>
+                <StatusPill style={STATUS_STYLES[r.status]}>{r.status}</StatusPill>
+                <span className="text-xs text-muted-foreground">{r.itemCount} Pos.</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                Erstellt {new Date(r.createdAt).toLocaleDateString("de-DE")}
+                {r.sentAt && ` · Versendet ${new Date(r.sentAt).toLocaleDateString("de-DE")}`}
+              </div>
+            </button>
+          ))}
         </div>
       </Card>
 

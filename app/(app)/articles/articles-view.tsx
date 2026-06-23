@@ -110,7 +110,7 @@ export function ArticlesView({
           </Button>
         </form>
 
-        <div className="overflow-x-auto">
+        <div className="hidden overflow-x-auto md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -162,6 +162,38 @@ export function ArticlesView({
               })}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobile: cards instead of a horizontally-scrolling table */}
+        <div className="divide-y divide-border md:hidden">
+          {rows.length === 0 && (
+            <div className="py-10 text-center text-muted-foreground">Keine Artikel gefunden.</div>
+          )}
+          {rows.map((r) => {
+            const belowMin = r.stock < r.minStock && r.minStock > 0;
+            return (
+              <button
+                key={r.id}
+                type="button"
+                onClick={() => setSelected(r.id)}
+                className="flex w-full flex-col gap-1 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+              >
+                <div className="flex items-baseline justify-between gap-2">
+                  <span className="font-medium text-foreground">{r.name}</span>
+                  <span className={"shrink-0 tabular-nums " + (belowMin ? "font-medium text-rose-600" : "text-foreground")}>
+                    {r.stock} {r.orderUnit}
+                  </span>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                  <span className="font-mono">{r.sku}</span>
+                  <span>Min {r.minStock}</span>
+                  <span>{r.locationCode}</span>
+                  {r.ek !== null && <span>EK € {Number(r.ek).toFixed(2)}</span>}
+                  <span>{r.primarySupplierName}</span>
+                </div>
+              </button>
+            );
+          })}
         </div>
       </Card>
 
