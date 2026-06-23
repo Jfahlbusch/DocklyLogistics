@@ -29,5 +29,6 @@ Vor neuer UI/Logik prüfen, ob es den Baustein schon gibt:
 ## Pflichten bei jeder Änderung
 - Neue Route/Repo/Service/Channel → **Test** dazu (`*.test.ts` daneben). DB-Tests räumen ihren Tenant auf.
 - Verhalten/Optik nie unbemerkt ändern. Bugfix und Refactoring getrennt committen.
+- **Mobil:** Neue Daten-`<table>` braucht eine Karten-Variante — Tabelle `hidden overflow-x-auto md:block`, darunter eine `md:hidden` Karten-Liste, die dieselben Handler/Daten nutzt (Muster: articles-/orders-/suggestions-/api-keys-View). Ausgenommen: schmale Tabellen im responsiven Grid und die Detail-Modals.
 - Schema-Änderung → Prisma-Migration; Prod-Deploy fährt `migrate deploy` vor dem Image-Swap.
 - Offene Funde/Architekturbewertung stehen in `CODE_REVIEW.md`.
