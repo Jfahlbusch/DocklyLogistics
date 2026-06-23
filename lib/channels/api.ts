@@ -1,4 +1,5 @@
 import type { DispatchInput, DispatchResult } from "./types";
+import { withRetry } from "./retry";
 
 type ApiSupplierCfg = {
   url?: string;
@@ -55,9 +56,25 @@ export async function sendTestApi(rawCfg: Record<string, unknown>, nowIso: strin
   }
 }
 
+/** A failed HTTP attempt, tagged with whether retrying could plausibly help. */
+class ApiDispatchError extends Error {
+  constructor(
+    message: string,
+    readonly status: number | null,
+    readonly retryable: boolean,
+    readonly body?: string,
+  ) {
+    super(message);
+    this.name = "ApiDispatchError";
+  }
+}
+
+const API_TIMEOUT_MS = 10_000;
+
 export async function dispatchApi(input: DispatchInput): Promise<DispatchResult> {
   const cfg = (input.order.supplier.channelConfig ?? {}) as ApiSupplierCfg;
   if (!cfg.url) return { channel: "API", ok: false, message: "Empfänger-URL fehlt (Supplier.channelConfig.url)." };
+  const url = cfg.url;
 
   const payload = {
     orderNo: input.order.orderNo,
@@ -74,24 +91,53 @@ export async function dispatchApi(input: DispatchInput): Promise<DispatchResult>
       lineTotal: Number(it.lineTotal),
     })),
   };
+  const body = JSON.stringify(payload);
 
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  // Stable idempotency key for the whole dispatch — identical across retries so the
+  // receiver can dedupe a delivery that a transient timeout forced us to re-send.
+  const idempotencyKey = input.order.id;
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    "Idempotency-Key": idempotencyKey,
+  };
   if (cfg.auth?.type === "bearer") headers["Authorization"] = `Bearer ${cfg.auth.token}`;
   else if (cfg.auth?.type === "apiKey") headers[cfg.auth.header ?? "X-API-Key"] = cfg.auth.token;
 
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 10_000);
-
   try {
-    const res = await fetch(cfg.url, { method: "POST", headers, body: JSON.stringify(payload), signal: controller.signal });
-    clearTimeout(timeout);
-    if (!res.ok) {
-      const body = await res.text().catch(() => "");
-      return { channel: "API", ok: false, message: `Lieferanten-API antwortete ${res.status}`, details: { status: res.status, body: body.slice(0, 200) } };
-    }
-    return { channel: "API", ok: true, message: `API-Versand an ${cfg.url} (${res.status}).`, details: { status: res.status, url: cfg.url } };
+    const status = await withRetry(
+      async () => {
+        const controller = new AbortController();
+        const timeout = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+        try {
+          const res = await fetch(url, { method: "POST", headers, body, signal: controller.signal });
+          if (!res.ok) {
+            const respBody = await res.text().catch(() => "");
+            // 5xx/429 are transient → retry; 4xx is a client error → give up immediately.
+            const retryable = res.status >= 500 || res.status === 429;
+            throw new ApiDispatchError(`Lieferanten-API antwortete ${res.status}`, res.status, retryable, respBody.slice(0, 200));
+          }
+          return res.status;
+        } finally {
+          clearTimeout(timeout);
+        }
+      },
+      {
+        attempts: 3,
+        baseMs: 500,
+        // Network/abort errors aren't ApiDispatchError → treat as transient → retry.
+        isRetryable: (e) => (e instanceof ApiDispatchError ? e.retryable : true),
+      },
+    );
+    return {
+      channel: "API",
+      ok: true,
+      message: `API-Versand an ${url} (${status}).`,
+      details: { status, url, idempotencyKey },
+    };
   } catch (e) {
-    clearTimeout(timeout);
-    return { channel: "API", ok: false, message: `API-Versand fehlgeschlagen: ${(e as Error).message}` };
+    if (e instanceof ApiDispatchError) {
+      return { channel: "API", ok: false, message: e.message, details: { status: e.status, body: e.body, idempotencyKey } };
+    }
+    return { channel: "API", ok: false, message: `API-Versand fehlgeschlagen: ${(e as Error).message}`, details: { idempotencyKey } };
   }
 }
