@@ -98,3 +98,59 @@ registry.registerPath({
   request: { params: z.object({ id: z.string().cuid(), deliveryId: z.string().cuid() }) },
   responses: { 200: { description: "Erneut eingereiht" }, 409: { description: "Nicht im Status FAILED/GIVEN_UP" } },
 });
+
+registry.registerPath({
+  method: "get",
+  path: "/users",
+  summary: "Benutzer des Tenants (Manager+)",
+  tags: ["Benutzer"],
+  responses: { 200: { description: "Liste {id,email,name,role,lastLoginAt}" } },
+});
+registry.registerPath({
+  method: "get",
+  path: "/settings/role-features",
+  summary: "Funktions-Vorgaben je Rolle + Registry",
+  tags: ["Benutzer"],
+  responses: { 200: { description: "{ features, roles: { MANAGER, USER } }" } },
+});
+registry.registerPath({
+  method: "put",
+  path: "/settings/role-features",
+  summary: "Rollen-Vorgaben speichern",
+  tags: ["Benutzer"],
+  request: {
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ role: z.enum(["MANAGER", "USER"]), features: z.record(z.string(), z.boolean()) }),
+        },
+      },
+    },
+  },
+  responses: { 200: { description: "Gespeichert" } },
+});
+registry.registerPath({
+  method: "get",
+  path: "/users/{id}/features",
+  summary: "Effektive Funktionen + Overrides eines Users",
+  tags: ["Benutzer"],
+  request: { params: z.object({ id: z.string().cuid() }) },
+  responses: { 200: { description: "{ effective, overrides, roleDefault }" }, 404: { description: "Nicht gefunden" } },
+});
+registry.registerPath({
+  method: "put",
+  path: "/users/{id}/features",
+  summary: "Individuelle Funktions-Overrides setzen (true/false/null=Rolle)",
+  tags: ["Benutzer"],
+  request: {
+    params: z.object({ id: z.string().cuid() }),
+    body: {
+      content: {
+        "application/json": {
+          schema: z.object({ overrides: z.record(z.string(), z.union([z.boolean(), z.null()])) }),
+        },
+      },
+    },
+  },
+  responses: { 200: { description: "Gespeichert" }, 404: { description: "Nicht gefunden" } },
+});

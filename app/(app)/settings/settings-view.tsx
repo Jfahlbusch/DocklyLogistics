@@ -18,6 +18,7 @@ import {
 import { WebhooksTab, type WebhookRow } from "./webhooks-tab";
 import { ApiKeysTab } from "./api-keys-tab";
 import { PdfTab } from "./pdf-tab";
+import { UsersTab } from "./users-tab";
 import { ChannelForm, defaultChannelValues, type ChannelFormValues } from "./channel-form";
 
 type ChannelProfile = {
@@ -107,6 +108,7 @@ export function SettingsView({
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
           <TabsTrigger value="api-keys">API-Keys</TabsTrigger>
           <TabsTrigger value="bestellschein">Bestellschein</TabsTrigger>
+          {canManage && <TabsTrigger value="benutzer">Benutzer &amp; Rechte</TabsTrigger>}
         </TabsList>
 
         <TabsContent value="versand" className="mt-4 space-y-4">
@@ -236,6 +238,12 @@ export function SettingsView({
         <TabsContent value="bestellschein" className="mt-4">
           <PdfTab canManage={canManage} />
         </TabsContent>
+
+        {canManage && (
+          <TabsContent value="benutzer" className="mt-4">
+            <UsersTab canManage={canManage} />
+          </TabsContent>
+        )}
       </Tabs>
 
       <Dialog
