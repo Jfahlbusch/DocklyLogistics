@@ -6,6 +6,7 @@ import { NAV_ITEMS } from "./nav-items";
 import { openSearch } from "@/components/search/open-search";
 import { ProfileMenu } from "./profile-menu";
 import { NotificationBell } from "./notification-bell";
+import { MobileNav } from "./mobile-nav";
 
 export function Topbar({
   user,
@@ -15,10 +16,11 @@ export function Topbar({
   const pathname = usePathname();
   const current = NAV_ITEMS.find((n) => pathname.startsWith(n.href));
   return (
-    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-4 border-b border-border bg-background/85 px-4 shadow-sm backdrop-blur lg:px-6">
-      <div className="text-sm text-muted-foreground">
-        <span className="text-muted-foreground/50">DocklyLogistics</span>
-        <span className="mx-2 text-muted-foreground/40">/</span>
+    <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/85 px-4 shadow-sm backdrop-blur sm:gap-4 lg:px-6">
+      <MobileNav user={user} />
+      <div className="min-w-0 truncate text-sm text-muted-foreground">
+        <span className="hidden text-muted-foreground/50 sm:inline">DocklyLogistics</span>
+        <span className="mx-2 hidden text-muted-foreground/40 sm:inline">/</span>
         <b className="font-medium text-foreground">{current?.label ?? "Übersicht"}</b>
       </div>
       <div className="flex-1" />
