@@ -20,7 +20,7 @@ export function NavLinks({ onNavigate, collapsed }: { onNavigate?: () => void; c
             onClick={onNavigate}
             title={collapsed ? item.label : undefined}
             className={cn(
-              "group flex items-center gap-3 rounded-md border-l-2 py-2.5 text-sm transition-colors",
+              "group flex items-center gap-3 rounded-md border-l-2 py-3.5 text-base transition-colors lg:py-2.5 lg:text-sm",
               collapsed ? "justify-center px-0" : "px-4",
               active
                 ? "border-gold-500 bg-white/10 font-medium text-white"
@@ -28,7 +28,7 @@ export function NavLinks({ onNavigate, collapsed }: { onNavigate?: () => void; c
             )}
           >
             <Icon
-              size={18}
+              size={20}
               strokeWidth={1.5}
               className={cn("shrink-0", active ? "text-gold-400" : item.accent ? "text-gold-500" : "text-white/60")}
             />
