@@ -35,6 +35,31 @@ model TenantPdfSettings {
   updatedAt   DateTime @updatedAt
 }
 
+// Feature permissions resolved against lib/features.ts. enabled true=grant,
+// false=deny; an absent row falls back to the feature's built-in default.
+// Per-role defaults (MANAGER/USER/VIEWER) + per-user overrides.
+model RoleFeature {
+  tenantId   String
+  role       UserRole
+  featureKey String
+  enabled    Boolean
+  updatedAt  DateTime @updatedAt
+
+  @@id([tenantId, role, featureKey])
+  @@index([tenantId, role])
+}
+
+model UserFeatureOverride {
+  tenantId   String
+  userId     String
+  featureKey String
+  enabled    Boolean
+  updatedAt  DateTime @updatedAt
+
+  @@id([tenantId, userId, featureKey])
+  @@index([tenantId, userId])
+}
+
 model User {
   id                      String    @id @default(cuid())
   email                   String
