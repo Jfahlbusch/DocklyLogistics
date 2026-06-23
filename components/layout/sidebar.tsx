@@ -13,9 +13,11 @@ type Props = {
 
 export function Sidebar({ user }: Props) {
   const [collapsed, setCollapsed] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
     setCollapsed(localStorage.getItem("sidebar-collapsed") === "1");
+    setMounted(true);
   }, []);
 
   function toggle() {
@@ -29,7 +31,8 @@ export function Sidebar({ user }: Props) {
   return (
     <aside
       className={cn(
-        "app-sidebar hidden flex-shrink-0 transition-[width] duration-200 md:flex md:flex-col",
+        "app-sidebar hidden flex-shrink-0 md:flex md:flex-col",
+        mounted && "transition-[width] duration-200",
         collapsed ? "w-[68px]" : "w-[260px]",
       )}
     >
