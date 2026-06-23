@@ -224,7 +224,8 @@ export function SuggestionsView({
             Keine Vorschläge.
           </CardContent>
         ) : (
-          <div className="overflow-x-auto">
+          <>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -356,6 +357,108 @@ export function SuggestionsView({
               </tbody>
             </table>
           </div>
+
+          {/* Mobile: cards instead of a horizontally-scrolling table */}
+          <div className="divide-y divide-border md:hidden">
+            {rows.map((r) => {
+              const isRowPending = r.status === "PENDING";
+              const edit = draftEdits[r.id] ?? {};
+              const effectiveQty = edit.qtyOrderUnit ?? r.qtyOrderUnit;
+              const effectiveSupplierId =
+                edit.supplierId !== undefined ? edit.supplierId : r.supplier?.id ?? null;
+              const hasEdit = Object.keys(edit).length > 0;
+              return (
+                <div key={r.id} className="flex items-start gap-2.5 px-4 py-3 text-sm">
+                  {canConfirm && isRowPending && (
+                    <input
+                      type="checkbox"
+                      checked={selected.has(r.id)}
+                      onChange={() => toggleSelection(r.id)}
+                      className="mt-1 h-4 w-4"
+                    />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-medium text-foreground">{r.article.name}</div>
+                        <div className="font-mono text-xs text-muted-foreground">
+                          {r.article.sku} · {r.article.orderUnit} ({r.article.packFactor} Stk)
+                        </div>
+                      </div>
+                      <span
+                        className={
+                          "inline-flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[11px] font-medium " +
+                          (STATUS_STYLES[r.status] ?? "bg-muted text-foreground")
+                        }
+                      >
+                        <span className="h-1.5 w-1.5 rounded-full bg-current opacity-70" />
+                        {r.status}
+                      </span>
+                    </div>
+                    <div className="mt-1 text-xs text-muted-foreground">
+                      {REASON_LABELS[r.reason] ?? r.reason} ·{" "}
+                      {new Date(r.createdAt).toLocaleDateString("de-DE")}
+                    </div>
+                    <div className="mt-2 flex flex-wrap items-center gap-2">
+                      {isRowPending && canConfirm ? (
+                        <>
+                          <select
+                            value={effectiveSupplierId ?? ""}
+                            onChange={(e) => editDraft(r.id, { supplierId: e.target.value || null })}
+                            className="rounded-md border border-border bg-card px-2 py-1.5 text-sm"
+                          >
+                            <option value="">— kein Lieferant —</option>
+                            {suppliers.map((s) => (
+                              <option key={s.id} value={s.id}>
+                                {s.name} ({s.channel})
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            type="number"
+                            min={1}
+                            value={effectiveQty}
+                            onChange={(e) =>
+                              editDraft(r.id, { qtyOrderUnit: Math.max(1, Number(e.target.value)) })
+                            }
+                            className="w-20 rounded-md border border-border bg-card px-2 py-1.5 text-right text-sm"
+                          />
+                          <span className="text-xs text-muted-foreground">{r.article.orderUnit}</span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          {r.supplier?.name ?? "—"} · {r.qtyOrderUnit} {r.article.orderUnit}
+                        </span>
+                      )}
+                    </div>
+                    {(hasEdit || (isRowPending && canConfirm)) && (
+                      <div className="mt-2 flex gap-2">
+                        {hasEdit && (
+                          <button
+                            type="button"
+                            onClick={() => savePatch(r.id)}
+                            className="rounded-md bg-navy-900 px-2.5 py-1 text-xs text-white dark:bg-gold-500 dark:text-navy-900"
+                          >
+                            Speichern
+                          </button>
+                        )}
+                        {isRowPending && canConfirm && (
+                          <button
+                            type="button"
+                            onClick={() => dismissOne(r.id)}
+                            className="rounded-md border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted/40"
+                          >
+                            Verwerfen
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          </>
         )}
       </Card>
     </div>
