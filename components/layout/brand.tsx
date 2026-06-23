@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function Brand({ collapsed }: { collapsed?: boolean }) {
   return (
-    <div className={cn("flex h-16 items-center border-b border-white/10", collapsed ? "justify-center px-2" : "px-5")}>
+    <div className={cn("flex items-center border-b border-white/10", collapsed ? "justify-center px-2 py-5" : "px-6 py-6")}>
       {collapsed ? (
         <Image
           src="/brand/dockly-mark-neg.png"
