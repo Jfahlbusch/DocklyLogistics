@@ -18,7 +18,7 @@ export function NavLinks({
   const pathname = usePathname();
   const items = allowedNav ? NAV_ITEMS.filter((i) => allowedNav.includes(i.id)) : NAV_ITEMS;
   return (
-    <nav className="flex-1 overflow-y-auto px-3 py-4">
+    <nav className="min-h-0 flex-1 overflow-y-auto px-3 py-4">
       {items.map((item) => {
         const Icon = item.icon;
         const active = pathname.startsWith(item.href);

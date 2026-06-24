@@ -28,11 +28,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
   const allowedNav = NAV_ITEMS.filter((n) => features[n.id] !== false).map((n) => n.id);
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex h-dvh overflow-hidden">
       <Sidebar user={user} allowedNav={allowedNav} />
-      <main className="flex-1 min-w-0">
+      <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar user={user} allowedNav={allowedNav} />
-        <section className="p-5 md:p-8">{children}</section>
+        <section className="min-h-0 flex-1 overflow-y-auto p-5 md:p-8">{children}</section>
       </main>
       <CommandPalette />
     </div>
