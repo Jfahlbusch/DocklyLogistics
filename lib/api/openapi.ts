@@ -13,16 +13,29 @@ export function buildOpenApi() {
     info: {
       title: "DocklyLogistics API",
       version: "1.0.0",
-      description: "Interne API für die DocklyLogistics WebApp.",
+      description:
+        "Interne API der DocklyLogistics WebApp.\n\n" +
+        "**Externe Zugriffe** authentifizieren sich mit einem persönlichen API-Key " +
+        "(in der App unter Einstellungen → API-Keys erzeugen). Den Key als " +
+        "`X-API-Key: dlg_live_….<secret>` senden — alternativ " +
+        "`Authorization: Bearer dlg_live_….<secret>`. Der Key erbt Rolle und Tenant " +
+        "seines Erstellers. Die WebApp selbst nutzt stattdessen die Login-Session.",
     },
     servers: [{ url: "/api/v1", description: "Internal API" }],
-    security: [{ bearer: [] }],
+    security: [{ ApiKeyAuth: [] }, { bearerAuth: [] }],
   });
 }
 
-// Register a common Bearer security scheme — used by all internal endpoints.
-registry.registerComponent("securitySchemes", "bearer", {
+// External clients authenticate with a personal API key (Settings → API-Keys), sent
+// either as `X-API-Key` or `Authorization: Bearer …` (the key is NOT a JWT). The UI
+// itself uses the NextAuth session, so these schemes document the programmatic path.
+registry.registerComponent("securitySchemes", "ApiKeyAuth", {
+  type: "apiKey",
+  in: "header",
+  name: "X-API-Key",
+});
+registry.registerComponent("securitySchemes", "bearerAuth", {
   type: "http",
   scheme: "bearer",
-  bearerFormat: "JWT",
+  bearerFormat: "API key (dlg_live_….<secret>)",
 });

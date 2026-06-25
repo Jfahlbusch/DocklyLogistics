@@ -1,7 +1,12 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
-const PUBLIC_PATHS = ["/login", "/api/auth", "/api/public", "/api/internal", "/users/auth", "/_next", "/favicon.ico", "/icon", "/brand"];
+// "/api-docs" (Scalar viewer) and "/api/v1/openapi.json" (the generated spec) are
+// intentionally public so external developers can read the API reference without a
+// login. This exposes only the API *shape* — every data endpoint still requires a
+// session or a personal X-API-Key. Both entries are exact leaf paths under
+// startsWith(), so they do NOT open the rest of /api/v1.
+const PUBLIC_PATHS = ["/login", "/api/auth", "/api/public", "/api/internal", "/users/auth", "/api-docs", "/api/v1/openapi.json", "/_next", "/favicon.ico", "/icon", "/brand"];
 
 // PWA-related static files that must be reachable without authentication.
 const PUBLIC_FILES = ["/manifest.webmanifest", "/sw.js", "/icon-192.svg", "/icon-512.svg"];
