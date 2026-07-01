@@ -15,13 +15,14 @@ async function enableOrderEventTrigger() {
 
 async function cleanup() {
   await disableOrderEventTrigger();
-  // orderNo is globally @unique — we need to wipe orders from all tenants
-  // so the per-tenant+year counter starts at 0001 in tests. The seed re-creates
-  // demo orders via `pnpm seed`.
-  await prisma.orderEvent.deleteMany({});
+  // Scoped to THIS test tenant: the orderNo counter counts per tenant+year
+  // (nextOrderNo filters on tenantId), so wiping our own orders is enough for
+  // the 0001 expectation — and parallel test files keep their orders. A global
+  // deleteMany({}) here used to race the edi-service tests.
+  await prisma.orderEvent.deleteMany({ where: { order: { tenantId: TENANT_ID } } });
   await enableOrderEventTrigger();
-  await prisma.orderItem.deleteMany({});
-  await prisma.order.deleteMany({});
+  await prisma.orderItem.deleteMany({ where: { order: { tenantId: TENANT_ID } } });
+  await prisma.order.deleteMany({ where: { tenantId: TENANT_ID } });
   await prisma.articleSupplier.deleteMany({ where: { article: { tenantId: TENANT_ID } } });
   await prisma.supplier.deleteMany({ where: { tenantId: TENANT_ID } });
   await prisma.article.deleteMany({ where: { tenantId: TENANT_ID } });
@@ -41,10 +42,10 @@ afterAll(async () => { await cleanup(); await prisma.$disconnect(); });
 
 beforeEach(async () => {
   await disableOrderEventTrigger();
-  await prisma.orderEvent.deleteMany({});
+  await prisma.orderEvent.deleteMany({ where: { order: { tenantId: TENANT_ID } } });
   await enableOrderEventTrigger();
-  await prisma.orderItem.deleteMany({});
-  await prisma.order.deleteMany({});
+  await prisma.orderItem.deleteMany({ where: { order: { tenantId: TENANT_ID } } });
+  await prisma.order.deleteMany({ where: { tenantId: TENANT_ID } });
 });
 
 describe("orderService.create", () => {
