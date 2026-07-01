@@ -6,7 +6,7 @@ import { NextResponse } from "next/server";
 // login. This exposes only the API *shape* — every data endpoint still requires a
 // session or a personal X-API-Key. Both entries are exact leaf paths under
 // startsWith(), so they do NOT open the rest of /api/v1.
-const PUBLIC_PATHS = ["/login", "/api/auth", "/api/public", "/api/internal", "/users/auth", "/api-docs", "/api/v1/openapi.json", "/_next", "/favicon.ico", "/icon", "/brand"];
+const PUBLIC_PATHS = ["/login", "/api/auth", "/api/public", "/api/edi", "/api/internal", "/users/auth", "/api-docs", "/api/v1/openapi.json", "/_next", "/favicon.ico", "/icon", "/brand"];
 
 // PWA-related static files that must be reachable without authentication.
 const PUBLIC_FILES = ["/manifest.webmanifest", "/sw.js", "/icon-192.svg", "/icon-512.svg"];

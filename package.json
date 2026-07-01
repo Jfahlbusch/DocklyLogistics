@@ -59,6 +59,7 @@
     "@vitest/coverage-v8": "^4.1.9",
     "@vitest/ui": "^4.1.6",
     "dotenv": "^17.4.2",
+    "esbuild": "^0.28.1",
     "eslint": "^9",
     "eslint-config-next": "15.5.18",
     "jsdom": "^29.1.1",

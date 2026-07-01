@@ -19,6 +19,7 @@ import { WebhooksTab, type WebhookRow } from "./webhooks-tab";
 import { ApiKeysTab } from "./api-keys-tab";
 import { PdfTab } from "./pdf-tab";
 import { UsersTab } from "./users-tab";
+import { EdiTab } from "./edi-tab";
 import { ChannelForm, defaultChannelValues, type ChannelFormValues } from "./channel-form";
 
 type ChannelProfile = {
@@ -35,7 +36,7 @@ const CHANNEL_TITLES = { EMAIL: "E-Mail", API: "REST-API", EDI: "EDIFACT" };
 const CHANNEL_DESC = {
   EMAIL: "Versand per E-Mail mit PDF-Bestellschein",
   API: "JSON-HTTP-POST an Lieferanten-Endpoint",
-  EDI: "EDIFACT ORDERS D.96A über SFTP",
+  EDI: "EDIFACT ORDERS D.96A an das Partner-Postfach (HTTPS oder Datei)",
 };
 
 export function SettingsView({
@@ -108,6 +109,7 @@ export function SettingsView({
           <TabsTrigger value="webhooks">Webhooks</TabsTrigger>
           <TabsTrigger value="api-keys">API-Keys</TabsTrigger>
           <TabsTrigger value="bestellschein">Bestellschein</TabsTrigger>
+          <TabsTrigger value="edi">EDI</TabsTrigger>
           {canManage && <TabsTrigger value="benutzer">Benutzer &amp; Rechte</TabsTrigger>}
         </TabsList>
 
@@ -237,6 +239,10 @@ export function SettingsView({
 
         <TabsContent value="bestellschein" className="mt-4">
           <PdfTab canManage={canManage} />
+        </TabsContent>
+
+        <TabsContent value="edi" className="mt-4">
+          <EdiTab canManage={canManage} />
         </TabsContent>
 
         {canManage && (

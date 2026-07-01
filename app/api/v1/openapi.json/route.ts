@@ -15,6 +15,7 @@ import "@/lib/schemas/audit";
 import "@/lib/schemas/reports";
 import "@/lib/schemas/misc-routes";
 import "@/lib/schemas/pdf-settings";
+import "@/lib/schemas/edi";
 
 export const dynamic = "force-static";
 

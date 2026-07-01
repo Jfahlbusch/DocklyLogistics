@@ -1,6 +1,6 @@
 import {
   Home, Package, Truck, Box, ScanLine, ListChecks, ShoppingCart,
-  BarChart3, ShieldCheck, Settings,
+  ArrowLeftRight, BarChart3, ShieldCheck, Settings,
   type LucideIcon,
 } from "lucide-react";
 
@@ -20,6 +20,7 @@ export const NAV_ITEMS: NavItem[] = [
   { id: "warehouse",   label: "Lagermodus",          href: "/warehouse-mode",     icon: ScanLine, accent: true },
   { id: "suggestions", label: "Bestellvorschläge",   href: "/order-suggestions",  icon: ListChecks },
   { id: "orders",      label: "Bestellungen",        href: "/orders",             icon: ShoppingCart },
+  { id: "edi",         label: "EDI",                 href: "/edi",                icon: ArrowLeftRight },
   { id: "reports",     label: "Reports",             href: "/reports",            icon: BarChart3 },
   { id: "audit",       label: "Audit",               href: "/audit",              icon: ShieldCheck },
   { id: "settings",    label: "Einstellungen",       href: "/settings",           icon: Settings },

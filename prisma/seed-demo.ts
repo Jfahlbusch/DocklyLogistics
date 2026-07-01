@@ -20,6 +20,8 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any -- Seed-Skript: pragmatische Coercion von Strings auf Prisma-Enums/Decimal/Json */
 import { PrismaClient } from "@prisma/client";
+import crypto from "node:crypto";
+import { generateOrdersEdifact } from "../lib/edi/generate-orders";
 import {
   DEMO_TENANT_SLUG,
   demoLocations,
@@ -231,6 +233,143 @@ async function main() {
         link: "/dashboard",
       },
     });
+  }
+
+  // 8) EDI: Versandprofil (Identität), Postfach + Beispiel-Nachrichten
+  const DEMO_GLN = "4098765000004";
+  const PARTNER_GLN = "4033300000006"; // ZuckerWelt (EDI-Lieferant)
+
+  const haveEdiProfile = await prisma.tenantChannelConfig.count({ where: { tenantId, channel: "EDI" } });
+  if (haveEdiProfile === 0) {
+    await prisma.tenantChannelConfig.create({
+      data: {
+        tenantId, channel: "EDI", active: true, isDefault: true, label: "EDIFACT Standard",
+        config: { senderId: DEMO_GLN, senderQualifier: "14", edifactVersion: "D.96A" },
+      },
+    });
+    console.log("EDI-Versandprofil angelegt");
+  }
+
+  await prisma.tenantEdiSettings.upsert({
+    where: { tenantId },
+    update: {},
+    create: { tenantId, inboundToken: `edi_${crypto.randomBytes(20).toString("hex")}` },
+  });
+
+  // ZuckerWelt bekommt eine echte Partner-GLN (EDI-Ausgang funktionsfähig, Datei-Transport)
+  await prisma.supplier.updateMany({
+    where: { tenantId, name: "ZuckerWelt Handels GmbH" },
+    data: { channelConfig: { partnerId: PARTNER_GLN, partnerQualifier: "14" } },
+  });
+
+  const haveEdiMsgs = await prisma.ediMessage.count({ where: { tenantId, createdBy: "demo-seed" } });
+  if (haveEdiMsgs === 0) {
+    const zw = await prisma.supplier.findFirst({ where: { tenantId, name: "ZuckerWelt Handels GmbH" } });
+    const order4 = await prisma.order.findFirst({
+      where: { tenantId, orderNo: "DEMO-2026-0004" },
+      include: { items: { include: { article: true } } },
+    });
+    let n = 0;
+
+    if (zw && order4) {
+      // OUT: die real versendete ORDERS zur EDI-Bestellung (echtes EDIFACT)
+      const gen = generateOrdersEdifact({
+        orderNo: order4.orderNo,
+        currency: order4.currency,
+        orderDate: order4.createdAt,
+        sender: { id: DEMO_GLN, qualifier: "14" },
+        recipient: { id: PARTNER_GLN, qualifier: "14" },
+        items: order4.items.map((it) => ({
+          sku: it.article.sku, name: it.article.name, ean: it.article.eanGtin,
+          qtyOrderUnit: it.qtyOrderUnit, orderUnit: it.article.orderUnit, unitPrice: Number(it.unitPrice),
+        })),
+      });
+      await prisma.ediMessage.create({
+        data: {
+          tenantId, direction: "OUT", type: "ORDERS", status: "SENT", transport: "http",
+          supplierId: zw.id, orderId: order4.id, interchangeRef: gen.interchangeRef,
+          documentNo: order4.orderNo, payload: gen.payload, createdBy: "demo-seed",
+          createdAt: order4.createdAt,
+        },
+      });
+      n++;
+
+      // IN: die ORDRSP-Bestätigung des Lieferanten dazu
+      const ordrsp =
+        "UNA:+.? '\n" +
+        `UNB+UNOC:3+${PARTNER_GLN}:14+${DEMO_GLN}:14+260625:1112+ICZW881'\n` +
+        "UNH+MEZW881+ORDRSP:D:96A:UN'\n" +
+        "BGM+231+AB-77123+29'\n" +
+        `RFF+ON:${order4.orderNo}'\n` +
+        "UNT+4+MEZW881'\n" +
+        "UNZ+1+ICZW881'";
+      await prisma.ediMessage.create({
+        data: {
+          tenantId, direction: "IN", type: "ORDRSP", status: "PROCESSED", transport: "inbound",
+          supplierId: zw.id, orderId: order4.id, interchangeRef: "ICZW881",
+          documentNo: "AB-77123", payload: ordrsp, createdBy: "demo-seed",
+          parsed: { type: "ORDRSP", documentNo: "AB-77123", orderReference: order4.orderNo, responseCode: "29", senderId: PARTNER_GLN },
+          createdAt: daysAgo(6),
+        },
+      });
+      n++;
+    }
+
+    // IN: eine eingehende Kundenbestellung (ORDERS) mit Artikel-Match per EAN
+    const mehl = await prisma.article.findFirst({ where: { tenantId, sku: "MEHL-W550-25" } });
+    const zucker = await prisma.article.findFirst({ where: { tenantId, sku: "ZUCK-W-25" } });
+    if (mehl && zucker) {
+      const KUNDE_GLN = "4111111000005";
+      const genIn = generateOrdersEdifact({
+        orderNo: "KD-2026-0458",
+        currency: "EUR",
+        orderDate: daysAgo(1),
+        sender: { id: KUNDE_GLN, qualifier: "14" },
+        recipient: { id: DEMO_GLN, qualifier: "14" },
+        items: [
+          { sku: mehl.sku, name: mehl.name, ean: mehl.eanGtin, qtyOrderUnit: 6, orderUnit: mehl.orderUnit, unitPrice: 19.5 },
+          { sku: zucker.sku, name: zucker.name, ean: zucker.eanGtin, qtyOrderUnit: 4, orderUnit: zucker.orderUnit, unitPrice: 24.0 },
+        ],
+      });
+      await prisma.ediMessage.create({
+        data: {
+          tenantId, direction: "IN", type: "ORDERS", status: "PROCESSED", transport: "inbound",
+          interchangeRef: genIn.interchangeRef, documentNo: "KD-2026-0458",
+          payload: genIn.payload, createdBy: "demo-seed",
+          parsed: {
+            type: "ORDERS", documentNo: "KD-2026-0458", buyerId: KUNDE_GLN, supplierId: DEMO_GLN,
+            currency: "EUR", orderDate: "20260630", matchedLines: 2,
+            lines: [
+              { lineNo: 1, ean: mehl.eanGtin, sku: mehl.sku, name: mehl.name, qty: 6, unit: "SA", price: 19.5, articleId: mehl.id, articleName: mehl.name },
+              { lineNo: 2, ean: zucker.eanGtin, sku: zucker.sku, name: zucker.name, qty: 4, unit: "SA", price: 24.0, articleId: zucker.id, articleName: zucker.name },
+            ],
+          },
+          createdAt: daysAgo(1),
+        },
+      });
+      n++;
+    }
+
+    // IN: eine nicht unterstützte INVOIC → FAILED (zeigt Fehlerpfad im Monitor)
+    const invoic =
+      "UNA:+.? '\n" +
+      `UNB+UNOC:3+${PARTNER_GLN}:14+${DEMO_GLN}:14+260701:0705+ICZW905'\n` +
+      "UNH+MEZW905+INVOIC:D:96A:UN'\n" +
+      "BGM+380+RE-2026-4411'\n" +
+      "UNT+3+MEZW905'\n" +
+      "UNZ+1+ICZW905'";
+    await prisma.ediMessage.create({
+      data: {
+        tenantId, direction: "IN", type: "INVOIC", status: "FAILED", transport: "inbound",
+        interchangeRef: "ICZW905", documentNo: "RE-2026-4411", payload: invoic, createdBy: "demo-seed",
+        error: "Nachrichtentyp INVOIC wird nicht unterstützt (nur ORDERS/ORDRSP)",
+        createdAt: daysAgo(0),
+      },
+    });
+    n++;
+    console.log(`EDI-Nachrichten: ${n}`);
+  } else {
+    console.log(`EDI-Nachrichten: übersprungen (${haveEdiMsgs} bereits vorhanden)`);
   }
 
   console.log("✓ Demo-Seed abgeschlossen.");

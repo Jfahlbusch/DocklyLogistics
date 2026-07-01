@@ -37,6 +37,9 @@ export const FEATURES: FeatureDef[] = [
   { key: "orders.create", label: "Bestellung anlegen", group: "Bestellungen", minRole: "USER" },
   { key: "orders.send", label: "Bestellung senden", group: "Bestellungen", minRole: "MANAGER" },
 
+  { key: "edi", label: "EDI-Nachrichten ansehen (Monitor)", group: "EDI", minRole: "USER", navId: "edi" },
+  { key: "edi.manage", label: "EDI verwalten (erneut verarbeiten, Postfach-Einstellungen)", group: "EDI", minRole: "MANAGER" },
+
   { key: "reports", label: "Reports ansehen", group: "Auswertung", minRole: "VIEWER", navId: "reports" },
   { key: "audit", label: "Audit-Log ansehen", group: "Auswertung", minRole: "MANAGER", navId: "audit" },
 

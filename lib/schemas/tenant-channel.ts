@@ -26,16 +26,18 @@ export const ApiChannelConfigSchema = z.object({
 }).openapi("ApiChannelConfig");
 
 export const EdiChannelConfigSchema = z.object({
-  senderId: z.string().min(1),
-  senderQualifier: z.string().min(1).max(10),
+  senderId: z.string().min(1),          // eigene Kennung/GLN des Tenants
+  senderQualifier: z.string().min(1).max(10), // z.B. "14" = GLN
   edifactVersion: z.literal("D.96A"),
+  // Transport je Lieferant (Supplier.channelConfig: partnerId/url); SFTP hier
+  // ist ein Alt-Feld aus M4 und wird nicht mehr verlangt.
   sftp: z.object({
     host: z.string().min(1),
     port: z.number().int().min(1).max(65535).default(22),
     user: z.string().min(1),
     keyOrPassword: z.string().min(1),
     remotePath: z.string().min(1),
-  }),
+  }).optional(),
   encoding: z.enum(["UTF-8", "ISO-8859-1"]).optional(),
 }).openapi("EdiChannelConfig");
 

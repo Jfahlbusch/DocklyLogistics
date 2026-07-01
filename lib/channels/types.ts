@@ -2,7 +2,7 @@ import type { Order, OrderItem, Supplier, Article, TenantChannelConfig } from "@
 
 export type OrderWithRelations = Order & {
   supplier: Supplier;
-  items: Array<OrderItem & { article: Pick<Article, "sku" | "name" | "orderUnit" | "baseUnit"> }>;
+  items: Array<OrderItem & { article: Pick<Article, "sku" | "name" | "orderUnit" | "baseUnit" | "eanGtin"> }>;
 };
 
 export type DispatchInput = {

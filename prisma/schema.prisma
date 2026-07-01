@@ -494,3 +494,40 @@ model AuditSeal {
   @@unique([tenantId, sealDate])
   @@index([tenantId, sealDate])
 }
+
+/// Per-tenant EDI settings: the inbound mailbox (partners POST EDIFACT to
+/// /api/edi/inbound/{inboundToken}) and processing flags. The tenant's own
+/// EDI identity (GLN/qualifier) lives in TenantChannelConfig(channel=EDI).
+model TenantEdiSettings {
+  tenantId      String   @id
+  inboundToken  String   @unique
+  inboundActive Boolean  @default(true)
+  autoConfirm   Boolean  @default(true) // inbound ORDRSP auto-confirms the referenced order
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+/// EDI message archive/monitor — every EDIFACT interchange in or out.
+/// Loose references (no FK) to supplier/order, like AuditLog.
+model EdiMessage {
+  id             String   @id @default(cuid())
+  tenantId       String
+  direction      String   // IN | OUT
+  type           String   // ORDERS | ORDRSP | UNKNOWN
+  status         String   // RECEIVED | PROCESSED | FAILED | SENT | SEND_FAILED
+  transport      String?  // http | file | inbound
+  supplierId     String?
+  orderId        String?
+  interchangeRef String?
+  documentNo     String?  // BGM document number (e.g. order no)
+  payload        String   @db.Text
+  parsed         Json?
+  error          String?
+  createdBy      String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([tenantId, createdAt])
+  @@index([tenantId, direction, status])
+  @@index([tenantId, orderId])
+}
