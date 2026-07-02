@@ -13,7 +13,10 @@ export const GET = handler(async (req: NextRequest) => {
   const all = await featurePermissionRepo.getAllRoleFeatures(ctx.tenantId);
   const roles: Record<string, Record<string, boolean>> = {};
   for (const role of CONFIGURABLE_ROLES) roles[role] = resolveRoleFeatures(role, all[role] ?? {});
-  return ok({ features: FEATURES, roles });
+  // GLOBAL_ADMIN-only features (e.g. the operator area) are not configurable
+  // per role/user inside a tenant — hide them from the manager-facing matrix.
+  const configurable = FEATURES.filter((f) => f.minRole !== "GLOBAL_ADMIN");
+  return ok({ features: configurable, roles });
 });
 
 const PutSchema = z.object({

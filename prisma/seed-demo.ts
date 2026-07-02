@@ -372,6 +372,41 @@ async function main() {
     console.log(`EDI-Nachrichten: übersprungen (${haveEdiMsgs} bereits vorhanden)`);
   }
 
+  // 9) Funktionsprofile (Betreiber-Ebene) — demo bekommt Vollzugriff
+  const profiles: Array<{ name: string; description: string; features: Record<string, boolean> }> = [
+    { name: "Vollzugriff", description: "Alle Funktionen verfügbar (Standard-Vollausbau)", features: {} },
+    {
+      name: "Lager & Bestellwesen",
+      description: "Kernbetrieb ohne EDI, Webhooks und Auswertung",
+      features: { edi: false, "edi.manage": false, "settings.webhooks": false, reports: false, audit: false },
+    },
+    {
+      name: "Nur Ansehen",
+      description: "Reine Einsicht — keine Anlage-, Buchungs- oder Versandfunktionen",
+      features: {
+        "articles.manage": false, "articles.suppliers": false, "suppliers.manage": false,
+        "stock.inventory": false, "stock.locations": false, warehouse: false,
+        "suggestions.confirm": false, "orders.create": false, "orders.send": false,
+        edi: false, "edi.manage": false,
+        settings: false, "settings.channels": false, "settings.webhooks": false,
+        "settings.pdf": false, "settings.users": false,
+      },
+    },
+  ];
+  for (const pr of profiles) {
+    await prisma.featureProfile.upsert({
+      where: { name: pr.name },
+      update: { description: pr.description, features: pr.features },
+      create: { name: pr.name, description: pr.description, features: pr.features },
+    });
+  }
+  const voll = await prisma.featureProfile.findUnique({ where: { name: "Vollzugriff" } });
+  const tenantRow = await prisma.tenant.findUnique({ where: { id: tenantId } });
+  if (voll && tenantRow && !tenantRow.featureProfileId) {
+    await prisma.tenant.update({ where: { id: tenantId }, data: { featureProfileId: voll.id } });
+  }
+  console.log(`Funktionsprofile: ${profiles.length}`);
+
   console.log("✓ Demo-Seed abgeschlossen.");
 }
 

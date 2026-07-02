@@ -15,12 +15,14 @@ enum UserRole {
 }
 
 model Tenant {
-  id        String   @id @default(cuid())
-  name      String   @unique
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id               String   @id @default(cuid())
+  name             String   @unique
+  featureProfileId String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 
-  users User[]
+  users          User[]
+  featureProfile FeatureProfile? @relation(fields: [featureProfileId], references: [id], onDelete: SetNull)
 
   @@index([name])
 }
@@ -530,4 +532,31 @@ model EdiMessage {
   @@index([tenantId, createdAt])
   @@index([tenantId, direction, status])
   @@index([tenantId, orderId])
+}
+
+/// Operator-level feature set (GLOBAL_ADMIN only): a named template of
+/// featureKey→enabled that can be assigned to tenants. Resolution per tenant:
+/// TenantFeature override ?? profile.features[key] ?? true (everything on).
+model FeatureProfile {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  features    Json     // Record<featureKey, boolean>
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  tenants Tenant[]
+}
+
+/// Per-tenant feature override set by the operator (GLOBAL_ADMIN). A `false`
+/// here hard-disables the feature for every user of the tenant, regardless of
+/// role defaults or user overrides.
+model TenantFeature {
+  tenantId   String
+  featureKey String
+  enabled    Boolean
+  updatedAt  DateTime @updatedAt
+
+  @@id([tenantId, featureKey])
+  @@index([tenantId])
 }

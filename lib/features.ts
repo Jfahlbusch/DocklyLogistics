@@ -49,6 +49,8 @@ export const FEATURES: FeatureDef[] = [
   { key: "settings.apikeys", label: "API-Keys", group: "Einstellungen", minRole: "USER" },
   { key: "settings.pdf", label: "Bestellschein-Branding", group: "Einstellungen", minRole: "MANAGER" },
   { key: "settings.users", label: "Benutzer & Berechtigungen", group: "Einstellungen", minRole: "MANAGER" },
+
+  { key: "admin", label: "Tenant-Verwaltung (Betreiber)", group: "Administration", minRole: "GLOBAL_ADMIN", navId: "admin" },
 ];
 
 export const FEATURE_KEYS = FEATURES.map((f) => f.key);
