@@ -6,7 +6,11 @@ import { isBlockedUrl } from "@/lib/net/ssrf-guard";
 import { generateOrdersEdifact } from "@/lib/edi/generate-orders";
 import { ediMessageRepo } from "@/lib/db/repos/edi-message";
 import { tenantEdiSettingsRepo } from "@/lib/db/repos/tenant-edi-settings";
+import { ediPartnerMailboxRepo } from "@/lib/db/repos/edi-partner-mailbox";
 import { ediService } from "@/lib/services/edi-service";
+import { as2Service } from "@/lib/services/as2-service";
+import { signPayload, encryptMime, parseMdn } from "@/lib/edi/as2";
+import crypto from "node:crypto";
 
 /**
  * EDI channel: emit a real EDIFACT ORDERS D.96A, archive it as EdiMessage(OUT)
@@ -172,6 +176,107 @@ export async function dispatchEdi(input: DispatchInput): Promise<DispatchResult>
       unitPrice: Number(it.unitPrice),
     })),
   });
+
+  // AS2 wins when the supplier has an AS2-capable partner mailbox AND we have
+  // an identity — certificate-based, signed+encrypted, MDN-confirmed.
+  const as2Mailbox = await ediPartnerMailboxRepo.findAs2ForSupplier(o.tenantId, o.supplierId);
+  const as2Identity = as2Mailbox ? await as2Service.getSigningIdentity(o.tenantId) : null;
+
+  if (as2Mailbox && as2Identity) {
+    const record = await ediMessageRepo.create({
+      tenantId: o.tenantId,
+      direction: "OUT",
+      type: "ORDERS",
+      status: "PENDING",
+      transport: "as2",
+      supplierId: o.supplierId,
+      orderId: o.id,
+      interchangeRef: generated.interchangeRef,
+      documentNo: o.orderNo,
+      payload: generated.payload,
+      createdBy: o.createdBy,
+    });
+    const as2Url = as2Mailbox.as2Url!;
+    if (isBlockedUrl(as2Url)) {
+      await ediMessageRepo.update(record.id, {
+        status: "SEND_FAILED",
+        error: "AS2-URL zeigt auf ein internes/ungültiges Ziel (SSRF-Schutz).",
+      });
+      return {
+        channel: "EDI", ok: false,
+        message: "AS2-URL zeigt auf ein internes/ungültiges Ziel (SSRF-Schutz).",
+        details: { ediMessageId: record.id },
+      };
+    }
+    try {
+      const signed = signPayload(generated.payload, "application/edifact", as2Identity);
+      const enc = encryptMime(signed.body, signed.contentType, as2Mailbox.as2CertificatePem!);
+      const messageId = `<as2-${o.id}-${crypto.randomBytes(6).toString("hex")}@docklylogistics>`;
+
+      const res = await withRetry(
+        async () => {
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), EDI_TIMEOUT_MS);
+          try {
+            const r = await fetch(as2Url, {
+              method: "POST",
+              headers: {
+                "Content-Type": enc.contentType,
+                "AS2-Version": "1.2",
+                "AS2-From": as2Identity.as2Id,
+                "AS2-To": as2Mailbox.as2Id!,
+                "Message-ID": messageId,
+                "MIME-Version": "1.0",
+                "Disposition-Notification-To": as2Identity.as2Id,
+                "Idempotency-Key": o.id,
+              },
+              body: enc.body,
+              signal: controller.signal,
+            });
+            if (!r.ok) {
+              const retryable = r.status >= 500 || r.status === 429;
+              throw new EdiDispatchError(`Partner antwortete HTTP ${r.status}`, retryable, r.status);
+            }
+            return { body: await r.text(), contentType: r.headers.get("content-type") ?? "" };
+          } catch (e) {
+            if (e instanceof EdiDispatchError) throw e;
+            throw new EdiDispatchError(`AS2-Übertragung fehlgeschlagen: ${(e as Error).message}`, true);
+          } finally {
+            clearTimeout(timeout);
+          }
+        },
+        { attempts: 3, baseMs: 500, isRetryable: (e) => e instanceof EdiDispatchError && e.retryable },
+      );
+
+      // Validate the synchronous MDN: partner signature + disposition + MIC.
+      const mdn = parseMdn(res.body, res.contentType, as2Mailbox.as2CertificatePem);
+      if (!mdn.processed) {
+        throw new Error(`MDN meldet Fehler: ${mdn.disposition}`);
+      }
+      if (mdn.micBase64 && mdn.micBase64 !== signed.micBase64) {
+        throw new Error("MDN-MIC stimmt nicht mit gesendetem Inhalt überein");
+      }
+      await ediMessageRepo.update(record.id, { status: "SENT" });
+      return {
+        channel: "EDI", ok: true,
+        message: "EDIFACT ORDERS per AS2 übertragen — signierte Empfangsquittung (MDN) validiert.",
+        details: {
+          ediMessageId: record.id,
+          interchangeRef: generated.interchangeRef,
+          mdnDisposition: mdn.disposition,
+          micVerified: !!mdn.micBase64,
+        },
+      };
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      await ediMessageRepo.update(record.id, { status: "SEND_FAILED", error: msg });
+      return {
+        channel: "EDI", ok: false,
+        message: `AS2-Versand fehlgeschlagen: ${msg}`,
+        details: { ediMessageId: record.id, interchangeRef: generated.interchangeRef },
+      };
+    }
+  }
 
   const transport = supplier.url ? "http" : "file";
   const record = await ediMessageRepo.create({

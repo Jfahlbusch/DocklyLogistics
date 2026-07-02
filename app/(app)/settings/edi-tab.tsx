@@ -26,6 +26,16 @@ type PartnerRow = {
   inboundPath: string;
   active: boolean;
   lastUsedAt: string | null;
+  as2Id: string | null;
+  as2Url: string | null;
+  as2CertPresent: boolean;
+};
+
+type As2Identity = {
+  as2Id: string;
+  certificatePem: string;
+  fingerprintSha256: string;
+  endpointPath: string;
 };
 
 type SupplierOption = { id: string; name: string };
@@ -48,7 +58,8 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
   const [busy, setBusy] = useState(false);
   const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
   const [origin, setOrigin] = useState("");
-  const [draft, setDraft] = useState<null | { name: string; partnerGln: string; supplierId: string }>(null);
+  const [as2, setAs2] = useState<As2Identity | null>(null);
+  const [draft, setDraft] = useState<null | { name: string; partnerGln: string; supplierId: string; as2Id: string; as2Url: string; as2Cert: string }>(null);
 
   async function refreshPartners() {
     const r = await fetch("/api/v1/settings/edi/partners");
@@ -61,11 +72,13 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
       fetch("/api/v1/settings/edi").then((r) => (r.ok ? r.json() : Promise.reject(new Error(String(r.status))))),
       fetch("/api/v1/settings/edi/partners").then((r) => (r.ok ? r.json() : { data: [] })),
       fetch("/api/v1/suppliers?pageSize=200").then((r) => (r.ok ? r.json() : { data: [] })),
+      fetch("/api/v1/settings/edi/as2-identity").then((r) => (r.ok ? r.json() : { data: null })),
     ])
-      .then(([s, p, su]) => {
+      .then(([s, p, su, a2]) => {
         setSettings(s.data as EdiSettings);
         setPartners((p.data ?? []) as PartnerRow[]);
         setSuppliers(((su.data ?? []) as Array<{ id: string; name: string }>).map(({ id, name }) => ({ id, name })));
+        setAs2((a2.data ?? null) as As2Identity | null);
       })
       .catch(() => setError("EDI-Einstellungen konnten nicht geladen werden."));
   }, []);
@@ -112,6 +125,27 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
     setFlash({ ok: true, text: `${label} kopiert` });
   }
 
+  async function generateAs2() {
+    if (as2 && !confirm("AS2-Identität erneuern? Das alte Zertifikat wird ungültig — alle AS2-Partner brauchen das neue.")) return;
+    setBusy(true);
+    try {
+      const r = await fetch("/api/v1/settings/edi/as2-identity", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
+      const b = await r.json().catch(() => ({}));
+      if (r.ok) {
+        setAs2(b.data as As2Identity);
+        setFlash({ ok: true, text: "AS2-Identität erzeugt — Zertifikat an Partner verteilen" });
+      } else {
+        setFlash({ ok: false, text: b.detail ?? b.title ?? "Erzeugen fehlgeschlagen" });
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
   /* ---------- partner mailboxes ---------- */
 
   async function createPartner() {
@@ -125,6 +159,9 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
           name: draft.name,
           partnerGln: draft.partnerGln.trim() || null,
           supplierId: draft.supplierId || null,
+          as2Id: draft.as2Id.trim() || null,
+          as2Url: draft.as2Url.trim() || null,
+          as2CertificatePem: draft.as2Cert.trim() || null,
         }),
       });
       const b = await r.json().catch(() => ({}));
@@ -195,7 +232,7 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
             </div>
             {canManage && (
               <Button
-                onClick={() => setDraft({ name: "", partnerGln: "", supplierId: "" })}
+                onClick={() => setDraft({ name: "", partnerGln: "", supplierId: "", as2Id: "", as2Url: "", as2Cert: "" })}
                 className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
               >
                 + Partner-Postfach
@@ -243,11 +280,71 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                 <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                   {p.partnerGln ? <span>GLN <span className="font-mono">{p.partnerGln}</span></span> : <span>keine GLN-Prüfung</span>}
                   <span>· {p.supplierName ? `Lieferant: ${p.supplierName}` : "kein Lieferant verknüpft"}</span>
+                  {p.as2Id && (
+                    <span className="inline-flex items-center rounded-full bg-navy-100 px-2 py-0.5 text-[10px] font-medium text-navy-700">
+                      AS2{p.as2CertPresent ? " ✓" : " (Zertifikat fehlt)"}
+                    </span>
+                  )}
                   <span>· zuletzt genutzt: {fmt(p.lastUsedAt)}</span>
                 </div>
               </div>
             ))}
           </div>
+        </CardContent>
+      </Card>
+
+      {/* AS2-Identität (Zertifikate + MDN) */}
+      <Card className="shadow-soft">
+        <CardContent className="space-y-4 p-5">
+          <div>
+            <h3 className="font-display text-lg text-foreground">AS2 (Zertifikate & MDN)</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Für Partner, die AS2 verlangen: Nachrichten werden S/MIME-verschlüsselt und
+              signiert, der Empfang mit einer signierten Quittung (MDN) bestätigt.
+              AS2-Endpunkt: <code className="font-mono text-xs">{origin}/api/edi/as2</code>
+            </p>
+          </div>
+
+          {!as2 ? (
+            <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-border bg-muted/30 px-4 py-3">
+              <span className="text-sm text-muted-foreground">Noch keine AS2-Identität erzeugt.</span>
+              {canManage && (
+                <Button disabled={busy} onClick={generateAs2} className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-xs">
+                  {busy ? "Erzeuge…" : "AS2-Identität erzeugen"}
+                </Button>
+              )}
+            </div>
+          ) : (
+            <div className="space-y-2 text-sm">
+              <div className="flex flex-wrap gap-x-6 gap-y-1">
+                <div>
+                  <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">AS2-ID</span>
+                  <div className="font-mono text-xs">{as2.as2Id}</div>
+                </div>
+                <div className="min-w-0">
+                  <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Zertifikat-Fingerprint (SHA-256)</span>
+                  <div className="truncate font-mono text-[11px]">{as2.fingerprintSha256}</div>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-2 pt-1">
+                <Button variant="outline" className="text-xs" onClick={() => copy(as2.certificatePem, "Zertifikat (PEM)")}>
+                  Zertifikat kopieren
+                </Button>
+                <Button variant="outline" className="text-xs" onClick={() => copy(as2.as2Id, "AS2-ID")}>
+                  AS2-ID kopieren
+                </Button>
+                {canManage && (
+                  <Button variant="outline" className="text-xs text-danger" disabled={busy} onClick={generateAs2}>
+                    Identität erneuern
+                  </Button>
+                )}
+              </div>
+              <p className="text-xs text-muted-foreground">
+                Zertifikat + AS2-ID an den Partner geben; dessen Zertifikat, AS2-ID und URL im
+                Partner-Postfach hinterlegen — der Versand nutzt AS2 dann automatisch.
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -383,6 +480,41 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                 <p className="mt-1 text-xs text-muted-foreground">
                   Verknüpft darf dieses Postfach nur Bestellungen dieses Lieferanten bestätigen.
                 </p>
+              </div>
+              <div className="space-y-3 border-t border-border pt-3">
+                <div className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">AS2 (optional)</div>
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">AS2-ID des Partners</label>
+                    <Input
+                      value={draft.as2Id}
+                      onChange={(e) => setDraft({ ...draft, as2Id: e.target.value })}
+                      placeholder="z. B. PARTNER-AS2"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">AS2-URL des Partners</label>
+                    <Input
+                      value={draft.as2Url}
+                      onChange={(e) => setDraft({ ...draft, as2Url: e.target.value })}
+                      placeholder="https://as2.partner.de/receive"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Partner-Zertifikat (PEM)</label>
+                  <textarea
+                    value={draft.as2Cert}
+                    onChange={(e) => setDraft({ ...draft, as2Cert: e.target.value })}
+                    placeholder="-----BEGIN CERTIFICATE-----"
+                    rows={4}
+                    className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Mit AS2-ID + Zertifikat + URL läuft der Versand an diesen Partner automatisch
+                    verschlüsselt/signiert über AS2 (statt einfachem HTTPS).
+                  </p>
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-1">
                 <Button variant="outline" onClick={() => setDraft(null)}>Abbrechen</Button>

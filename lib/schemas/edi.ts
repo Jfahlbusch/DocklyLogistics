@@ -41,10 +41,18 @@ export const EdiMessageSchema = z.object({
   createdAt: z.string(),
 }).openapi("EdiMessage");
 
+const CertPem = z.string().max(20000).refine(
+  (v) => v.includes("BEGIN CERTIFICATE"),
+  "PEM-Zertifikat erwartet (-----BEGIN CERTIFICATE-----)",
+);
+
 export const EdiPartnerCreateSchema = z.object({
   name: z.string().min(1).max(120),
   partnerGln: z.string().min(4).max(20).nullish(),
   supplierId: z.string().cuid().nullish(),
+  as2Id: z.string().min(1).max(128).nullish(),
+  as2CertificatePem: CertPem.nullish(),
+  as2Url: z.string().url().nullish(),
 }).openapi("EdiPartnerCreate");
 
 export const EdiPartnerUpdateSchema = z.object({
@@ -52,7 +60,14 @@ export const EdiPartnerUpdateSchema = z.object({
   partnerGln: z.string().min(4).max(20).nullable().optional(),
   supplierId: z.string().cuid().nullable().optional(),
   active: z.boolean().optional(),
+  as2Id: z.string().min(1).max(128).nullable().optional(),
+  as2CertificatePem: CertPem.nullable().optional(),
+  as2Url: z.string().url().nullable().optional(),
 }).openapi("EdiPartnerUpdate");
+
+export const As2IdentityGenerateSchema = z.object({
+  as2Id: z.string().min(1).max(128).optional(),
+}).openapi("As2IdentityGenerate");
 
 export type EdiSettingsUpdate = z.infer<typeof EdiSettingsUpdateSchema>;
 export type EdiPartnerCreate = z.infer<typeof EdiPartnerCreateSchema>;
@@ -129,4 +144,15 @@ registry.registerPath({
   method: "post", path: "/settings/edi/partners/{id}/rotate-token", summary: "Partner-Token rotieren", tags: ["EDI"],
   request: { params: z.object({ id: z.string().cuid() }) },
   responses: { 200: { description: "Neuer Token" }, 404: { description: "Nicht gefunden" } },
+});
+registry.registerPath({
+  method: "get", path: "/settings/edi/as2-identity", summary: "AS2-Identität des Tenants", tags: ["EDI"],
+  description: "AS2-ID, Zertifikat (PEM) und SHA-256-Fingerprint. Der private Schlüssel verlässt den Server nie.",
+  responses: { 200: { description: "Identität oder null" } },
+});
+registry.registerPath({
+  method: "post", path: "/settings/edi/as2-identity", summary: "AS2-Identität erzeugen/erneuern", tags: ["EDI"],
+  description: "Erzeugt ein neues RSA-2048-Schlüsselpaar + self-signed Zertifikat (5 Jahre). Partner brauchen danach das neue Zertifikat.",
+  request: { body: { content: { "application/json": { schema: As2IdentityGenerateSchema } } } },
+  responses: { 200: { description: "Neue Identität" } },
 });

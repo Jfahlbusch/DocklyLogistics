@@ -505,6 +505,10 @@ model TenantEdiSettings {
   inboundToken  String   @unique
   inboundActive Boolean  @default(true)
   autoConfirm   Boolean  @default(true) // inbound ORDRSP auto-confirms the referenced order
+  // AS2 identity (generated on demand): private key AES-encrypted via APP_KEY.
+  as2Id                  String?  @unique
+  as2PrivateKeyEncrypted String?  @db.Text
+  as2CertificatePem      String?  @db.Text
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }
@@ -572,6 +576,10 @@ model EdiPartnerMailbox {
   partnerGln String?
   supplierId String?
   token      String    @unique // "edi_p_<hex>"
+  // AS2 partner data: their AS2-ID, their public certificate, their endpoint.
+  as2Id             String?
+  as2CertificatePem String? @db.Text
+  as2Url            String?
   active     Boolean   @default(true)
   lastUsedAt DateTime?
   createdAt  DateTime  @default(now())

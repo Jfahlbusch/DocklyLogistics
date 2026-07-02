@@ -9,6 +9,7 @@ import { EdiPartnerCreateSchema } from "@/lib/schemas/edi";
 function view(m: {
   id: string; name: string; partnerGln: string | null; supplierId: string | null;
   token: string; active: boolean; lastUsedAt: Date | null; createdAt: Date;
+  as2Id?: string | null; as2CertificatePem?: string | null; as2Url?: string | null;
 } & { supplierName?: string | null }) {
   return {
     id: m.id,
@@ -21,6 +22,9 @@ function view(m: {
     active: m.active,
     lastUsedAt: m.lastUsedAt,
     createdAt: m.createdAt,
+    as2Id: m.as2Id ?? null,
+    as2Url: m.as2Url ?? null,
+    as2CertPresent: !!m.as2CertificatePem,
   };
 }
 

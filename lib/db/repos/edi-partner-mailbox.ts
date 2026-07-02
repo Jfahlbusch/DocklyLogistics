@@ -34,13 +34,36 @@ export const ediPartnerMailboxRepo = {
     return prisma.ediPartnerMailbox.findUnique({ where: { token } });
   },
 
-  create(tenantId: string, data: { name: string; partnerGln?: string | null; supplierId?: string | null }) {
+  /** Active AS2-capable mailbox bound to a supplier (used by the outbound channel). */
+  findAs2ForSupplier(tenantId: string, supplierId: string) {
+    return prisma.ediPartnerMailbox.findFirst({
+      where: {
+        tenantId,
+        supplierId,
+        active: true,
+        as2Url: { not: null },
+        as2CertificatePem: { not: null },
+        as2Id: { not: null },
+      },
+    });
+  },
+
+  create(
+    tenantId: string,
+    data: {
+      name: string; partnerGln?: string | null; supplierId?: string | null;
+      as2Id?: string | null; as2CertificatePem?: string | null; as2Url?: string | null;
+    },
+  ) {
     return prisma.ediPartnerMailbox.create({
       data: {
         tenantId,
         name: data.name,
         partnerGln: data.partnerGln ?? null,
         supplierId: data.supplierId ?? null,
+        as2Id: data.as2Id ?? null,
+        as2CertificatePem: data.as2CertificatePem ?? null,
+        as2Url: data.as2Url ?? null,
         token: generatePartnerToken(),
       },
     });
@@ -49,7 +72,10 @@ export const ediPartnerMailboxRepo = {
   async update(
     tenantId: string,
     id: string,
-    data: { name?: string; partnerGln?: string | null; supplierId?: string | null; active?: boolean },
+    data: {
+      name?: string; partnerGln?: string | null; supplierId?: string | null; active?: boolean;
+      as2Id?: string | null; as2CertificatePem?: string | null; as2Url?: string | null;
+    },
   ) {
     const existing = await this.findInTenant(tenantId, id);
     if (!existing) return null;
