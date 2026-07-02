@@ -5,6 +5,7 @@ import { requireRoleFromHeaders } from "@/lib/api/guard";
 import { ok, fail } from "@/lib/api/respond";
 import { sendTestEmail } from "@/lib/channels/email";
 import { sendTestApi } from "@/lib/channels/api";
+import { sendTestEdi } from "@/lib/channels/edi";
 
 type Ctx = { params: Promise<{ id: string }> };
 
@@ -41,11 +42,15 @@ export const POST = handler(async (req: NextRequest, { params }: Ctx) => {
     });
   }
 
-  // EDI: a real test send (SFTP handshake) is not implemented yet.
+  // EDI: generate a self-addressed test ORDERS and run it through the real
+  // inbound pipeline (loopback) — visible afterwards in the EDI monitor.
+  const result = await sendTestEdi(ctx.tenantId, profile.config as Record<string, unknown>);
+  if (!result.ok) return fail(422, "Test-Versand fehlgeschlagen", result.message);
   return ok({
-    message: `Test-Versand für Kanal '${profile.channel}' ist noch nicht implementiert (aktuell EMAIL + API).`,
-    channel: profile.channel,
+    message: result.message,
+    channel: "EDI",
     label: profile.label,
     tested_at: new Date().toISOString(),
+    details: result.details,
   });
 });

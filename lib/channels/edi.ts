@@ -5,6 +5,8 @@ import { withRetry } from "./retry";
 import { isBlockedUrl } from "@/lib/net/ssrf-guard";
 import { generateOrdersEdifact } from "@/lib/edi/generate-orders";
 import { ediMessageRepo } from "@/lib/db/repos/edi-message";
+import { tenantEdiSettingsRepo } from "@/lib/db/repos/tenant-edi-settings";
+import { ediService } from "@/lib/services/edi-service";
 
 /**
  * EDI channel: emit a real EDIFACT ORDERS D.96A, archive it as EdiMessage(OUT)
@@ -25,6 +27,68 @@ type EdiSupplierCfg = {
   url?: string;
   headers?: Record<string, string>;
 };
+
+export type EdiTestResult = { ok: boolean; message: string; details?: Record<string, unknown> };
+
+/**
+ * Profile test (Einstellungen → Versand → Test): generate a self-addressed
+ * ORDERS from the profile's identity and run it through the REAL inbound
+ * pipeline — the same code path partners hit. Proves generator + parsing and
+ * leaves a visible PROCESSED entry in the EDI monitor. No partner is
+ * contacted (the transport target lives per supplier, not on the profile).
+ */
+export async function sendTestEdi(
+  tenantId: string,
+  rawCfg: Record<string, unknown>,
+): Promise<EdiTestResult> {
+  const cfg = rawCfg as Partial<EdiTenantCfg>;
+  if (!cfg.senderId || !cfg.senderQualifier || !cfg.edifactVersion) {
+    return {
+      ok: false,
+      message: "Profil unvollständig — senderId, senderQualifier und edifactVersion werden benötigt.",
+    };
+  }
+
+  const docNo = `TEST-${Date.now().toString(36).toUpperCase()}`;
+  const generated = generateOrdersEdifact({
+    orderNo: docNo,
+    currency: "EUR",
+    orderDate: new Date(),
+    sender: { id: cfg.senderId, qualifier: cfg.senderQualifier },
+    recipient: { id: cfg.senderId, qualifier: cfg.senderQualifier }, // Loopback an sich selbst
+    items: [
+      { sku: "EDI-TEST", name: "Testposition (Profil-Test)", ean: null, qtyOrderUnit: 1, orderUnit: "PIECE", unitPrice: 0 },
+    ],
+  });
+
+  const settings = await tenantEdiSettingsRepo.ensure(tenantId);
+  if (!settings.inboundActive) {
+    return {
+      ok: true,
+      message: "EDIFACT erfolgreich generiert (Profil gültig). Hinweis: Das EDI-Postfach ist deaktiviert, daher keine Loopback-Zustellung.",
+      details: { interchangeRef: generated.interchangeRef, bytes: generated.payload.length },
+    };
+  }
+
+  const result = await ediService.processInbound({
+    tenantId,
+    raw: generated.payload,
+    transport: "test-loopback",
+    createdBy: "channel-test",
+  });
+  if (result.status === "PROCESSED") {
+    return {
+      ok: true,
+      message: `Test erfolgreich: ORDERS ${docNo} generiert, über das Postfach empfangen und verarbeitet — im Bereich EDI einsehbar.`,
+      details: { messageId: result.messageId, interchangeRef: generated.interchangeRef },
+    };
+  }
+  return {
+    ok: false,
+    message: `Test-Nachricht wurde empfangen, aber nicht verarbeitet: ${result.error ?? "unbekannter Fehler"}`,
+    details: { messageId: result.messageId },
+  };
+}
 
 class EdiDispatchError extends Error {
   constructor(
