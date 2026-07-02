@@ -19,6 +19,14 @@ export type InboundProcessResult = {
 
 const EDI_ACTOR = { actorId: "edi-inbound", actorEmail: "edi@system" };
 
+/** Context of the per-partner mailbox a payload arrived through (if any). */
+export type MailboxContext = {
+  id: string;
+  name: string;
+  partnerGln?: string | null;
+  supplierId?: string | null;
+};
+
 /**
  * Per-tenant EDI processing. Inbound flow: persist first (the mailbox never
  * loses a payload), then process; failures mark the message FAILED with a
@@ -31,10 +39,12 @@ export const ediService = {
     raw: string;
     transport?: string;
     createdBy?: string;
+    /** Set when the payload arrived through a per-partner mailbox. */
+    mailbox?: MailboxContext;
   }): Promise<InboundProcessResult> {
-    const { tenantId, raw } = args;
-    const transport = args.transport ?? "inbound";
-    const createdBy = args.createdBy ?? "edi-inbound";
+    const { tenantId, raw, mailbox } = args;
+    const transport = args.transport ?? (mailbox ? "inbound-partner" : "inbound");
+    const createdBy = args.createdBy ?? (mailbox ? `mailbox:${mailbox.name}` : "edi-inbound");
 
     let classified: ClassifiedInbound;
     try {
@@ -42,7 +52,7 @@ export const ediService = {
     } catch (e) {
       const msg = await ediMessageRepo.create({
         tenantId, direction: "IN", type: "UNKNOWN", status: "FAILED",
-        transport, payload: raw, createdBy,
+        transport, payload: raw, createdBy, supplierId: mailbox?.supplierId ?? null,
         error: `EDIFACT nicht parsebar: ${e instanceof Error ? e.message : String(e)}`,
       });
       return { messageId: msg.id, type: "UNKNOWN", status: "FAILED", error: msg.error ?? undefined };
@@ -56,10 +66,24 @@ export const ediService = {
       transport,
       payload: raw,
       interchangeRef: classified.interchange.envelope?.interchangeRef ?? null,
+      supplierId: mailbox?.supplierId ?? null,
       createdBy,
     });
 
-    return this.processClassified(record.id, tenantId, classified);
+    // Sender validation: a partner mailbox with a pinned GLN only accepts
+    // interchanges whose UNB sender matches.
+    if (mailbox?.partnerGln) {
+      const sender = classified.interchange.envelope?.senderId ?? null;
+      if (sender !== mailbox.partnerGln) {
+        const error =
+          `Absender-GLN ${sender ?? "(fehlt)"} entspricht nicht dem Partner-Postfach ` +
+          `„${mailbox.name}“ (erwartet ${mailbox.partnerGln})`;
+        await ediMessageRepo.update(record.id, { status: "FAILED", error });
+        return { messageId: record.id, type: record.type, status: "FAILED", error };
+      }
+    }
+
+    return this.processClassified(record.id, tenantId, classified, mailbox);
   },
 
   /** Re-run processing for a stored inbound message (monitor action). */
@@ -82,14 +106,16 @@ export const ediService = {
     return this.processClassified(msg.id, tenantId, classified);
   },
 
-  /** Shared processing after classification. */
+  /** Shared processing after classification. `mailbox` only on first receipt —
+   *  reprocess is a deliberate MANAGER action and runs without partner binding. */
   async processClassified(
     messageId: string,
     tenantId: string,
     classified: ClassifiedInbound,
+    mailbox?: MailboxContext,
   ): Promise<InboundProcessResult> {
     if (classified.kind === "ORDRSP") {
-      return this.processOrdrsp(messageId, tenantId, classified);
+      return this.processOrdrsp(messageId, tenantId, classified, mailbox);
     }
     if (classified.kind === "ORDERS") {
       return this.processInboundOrders(messageId, tenantId, classified);
@@ -103,6 +129,7 @@ export const ediService = {
     messageId: string,
     tenantId: string,
     c: Extract<ClassifiedInbound, { kind: "ORDRSP" }>,
+    mailbox?: MailboxContext,
   ): Promise<InboundProcessResult> {
     const parsed = c.data as unknown as Prisma.InputJsonValue;
     try {
@@ -111,6 +138,13 @@ export const ediService = {
 
       const order = await prisma.order.findFirst({ where: { tenantId, orderNo: ref } });
       if (!order) throw new Error(`Bestellung ${ref} nicht gefunden`);
+
+      // A supplier-bound mailbox may only confirm that supplier's orders.
+      if (mailbox?.supplierId && order.supplierId !== mailbox.supplierId) {
+        throw new Error(
+          `Bestellung ${ref} gehört nicht zum Partner „${mailbox.name}“ — Bestätigung abgelehnt`,
+        );
+      }
 
       const base = { documentNo: c.data.documentNo ?? ref, orderId: order.id, parsed };
       const settings = await tenantEdiSettingsRepo.ensure(tenantId);

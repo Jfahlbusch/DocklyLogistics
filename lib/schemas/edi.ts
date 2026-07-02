@@ -41,7 +41,22 @@ export const EdiMessageSchema = z.object({
   createdAt: z.string(),
 }).openapi("EdiMessage");
 
+export const EdiPartnerCreateSchema = z.object({
+  name: z.string().min(1).max(120),
+  partnerGln: z.string().min(4).max(20).nullish(),
+  supplierId: z.string().cuid().nullish(),
+}).openapi("EdiPartnerCreate");
+
+export const EdiPartnerUpdateSchema = z.object({
+  name: z.string().min(1).max(120).optional(),
+  partnerGln: z.string().min(4).max(20).nullable().optional(),
+  supplierId: z.string().cuid().nullable().optional(),
+  active: z.boolean().optional(),
+}).openapi("EdiPartnerUpdate");
+
 export type EdiSettingsUpdate = z.infer<typeof EdiSettingsUpdateSchema>;
+export type EdiPartnerCreate = z.infer<typeof EdiPartnerCreateSchema>;
+export type EdiPartnerUpdate = z.infer<typeof EdiPartnerUpdateSchema>;
 
 // OpenAPI registration
 registry.registerPath({
@@ -83,4 +98,35 @@ registry.registerPath({
   method: "post", path: "/settings/edi/rotate-token", summary: "EDI-Postfach-Token rotieren", tags: ["EDI"],
   description: "Erzeugt eine neue Postfach-Adresse; der alte Token ist sofort ungültig.",
   responses: { 200: { description: "Neuer Token" } },
+});
+registry.registerPath({
+  method: "get", path: "/settings/edi/partners", summary: "Partner-Postfächer auflisten", tags: ["EDI"],
+  description:
+    "Jeder Partner bekommt eine eigene Postfach-Adresse (einzeln sperr- und rotierbar). " +
+    "Optional gebunden: `partnerGln` pinnt den UNB-Absender, `supplierId` beschränkt " +
+    "ORDRSP auf Bestellungen dieses Lieferanten.",
+  responses: { 200: { description: "Liste" } },
+});
+registry.registerPath({
+  method: "post", path: "/settings/edi/partners", summary: "Partner-Postfach anlegen", tags: ["EDI"],
+  request: { body: { content: { "application/json": { schema: EdiPartnerCreateSchema } } } },
+  responses: { 201: { description: "Angelegt (inkl. Token)" }, 409: { description: "Name existiert" } },
+});
+registry.registerPath({
+  method: "patch", path: "/settings/edi/partners/{id}", summary: "Partner-Postfach ändern", tags: ["EDI"],
+  request: {
+    params: z.object({ id: z.string().cuid() }),
+    body: { content: { "application/json": { schema: EdiPartnerUpdateSchema } } },
+  },
+  responses: { 200: { description: "Aktualisiert" }, 404: { description: "Nicht gefunden" } },
+});
+registry.registerPath({
+  method: "delete", path: "/settings/edi/partners/{id}", summary: "Partner-Postfach löschen", tags: ["EDI"],
+  request: { params: z.object({ id: z.string().cuid() }) },
+  responses: { 204: { description: "Gelöscht (Token sofort ungültig)" }, 404: { description: "Nicht gefunden" } },
+});
+registry.registerPath({
+  method: "post", path: "/settings/edi/partners/{id}/rotate-token", summary: "Partner-Token rotieren", tags: ["EDI"],
+  request: { params: z.object({ id: z.string().cuid() }) },
+  responses: { 200: { description: "Neuer Token" }, 404: { description: "Nicht gefunden" } },
 });

@@ -407,6 +407,28 @@ async function main() {
   }
   console.log(`Funktionsprofile: ${profiles.length}`);
 
+  // 10) Partner-Postfach für den EDI-Lieferanten (eigener Token, GLN-gepinnt)
+  const zwForMailbox = await prisma.supplier.findFirst({ where: { tenantId, name: "ZuckerWelt Handels GmbH" } });
+  if (zwForMailbox) {
+    const existing = await prisma.ediPartnerMailbox.findUnique({
+      where: { tenantId_name: { tenantId, name: "ZuckerWelt (EDI)" } },
+    });
+    if (!existing) {
+      await prisma.ediPartnerMailbox.create({
+        data: {
+          tenantId,
+          name: "ZuckerWelt (EDI)",
+          partnerGln: PARTNER_GLN,
+          supplierId: zwForMailbox.id,
+          token: `edi_p_${crypto.randomBytes(20).toString("hex")}`,
+        },
+      });
+      console.log("Partner-Postfach: ZuckerWelt (EDI) angelegt");
+    } else {
+      console.log("Partner-Postfach: übersprungen (vorhanden)");
+    }
+  }
+
   console.log("✓ Demo-Seed abgeschlossen.");
 }
 

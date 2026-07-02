@@ -2,7 +2,8 @@ import type { NextRequest } from "next/server";
 import { publicHandler } from "@/lib/api/public-handler";
 import { PublicAuthError } from "@/lib/api/public-auth";
 import { tenantEdiSettingsRepo } from "@/lib/db/repos/tenant-edi-settings";
-import { ediService } from "@/lib/services/edi-service";
+import { ediPartnerMailboxRepo } from "@/lib/db/repos/edi-partner-mailbox";
+import { ediService, type MailboxContext } from "@/lib/services/edi-service";
 import { ok, fail } from "@/lib/api/respond";
 
 /**
@@ -18,9 +19,30 @@ type Ctx = { params: Promise<{ token: string }> };
 
 export const POST = publicHandler(async (req: NextRequest, { params }: Ctx) => {
   const { token } = await params;
+
+  // Two mailbox kinds share this endpoint: the tenant-wide token (edi_…) and
+  // per-partner tokens (edi_p_…) with sender/supplier binding.
+  let tenantId: string;
+  let mailbox: MailboxContext | undefined;
   const settings = await tenantEdiSettingsRepo.findByToken(token);
-  if (!settings || !settings.inboundActive) {
-    throw new PublicAuthError(401, "Unauthorized", "Unbekanntes oder deaktiviertes EDI-Postfach");
+  if (settings) {
+    if (!settings.inboundActive) {
+      throw new PublicAuthError(401, "Unauthorized", "Unbekanntes oder deaktiviertes EDI-Postfach");
+    }
+    tenantId = settings.tenantId;
+  } else {
+    const partner = await ediPartnerMailboxRepo.findByToken(token);
+    if (!partner || !partner.active) {
+      throw new PublicAuthError(401, "Unauthorized", "Unbekanntes oder deaktiviertes EDI-Postfach");
+    }
+    tenantId = partner.tenantId;
+    mailbox = {
+      id: partner.id,
+      name: partner.name,
+      partnerGln: partner.partnerGln,
+      supplierId: partner.supplierId,
+    };
+    ediPartnerMailboxRepo.touchLastUsed(partner.id).catch(() => {});
   }
 
   const raw = await req.text();
@@ -31,10 +53,6 @@ export const POST = publicHandler(async (req: NextRequest, { params }: Ctx) => {
     return fail(413, "Payload zu groß", "Maximal 1 MB pro Interchange");
   }
 
-  const result = await ediService.processInbound({
-    tenantId: settings.tenantId,
-    raw,
-    transport: "inbound",
-  });
+  const result = await ediService.processInbound({ tenantId, raw, mailbox });
   return ok(result, undefined, { status: 202 });
 });

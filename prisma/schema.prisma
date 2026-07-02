@@ -560,3 +560,23 @@ model TenantFeature {
   @@id([tenantId, featureKey])
   @@index([tenantId])
 }
+
+/// Per-partner EDI mailbox: each partner gets their own inbound token
+/// (individually revocable/rotatable). Optional binding: `supplierId` limits
+/// ORDRSP processing to that supplier's orders; `partnerGln` validates the
+/// UNB sender. The tenant-wide mailbox (TenantEdiSettings) stays as fallback.
+model EdiPartnerMailbox {
+  id         String    @id @default(cuid())
+  tenantId   String
+  name       String
+  partnerGln String?
+  supplierId String?
+  token      String    @unique // "edi_p_<hex>"
+  active     Boolean   @default(true)
+  lastUsedAt DateTime?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+
+  @@unique([tenantId, name])
+  @@index([tenantId])
+}
