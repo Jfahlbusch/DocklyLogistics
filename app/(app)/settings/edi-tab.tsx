@@ -59,7 +59,7 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
   const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
   const [origin, setOrigin] = useState("");
   const [as2, setAs2] = useState<As2Identity | null>(null);
-  const [draft, setDraft] = useState<null | { name: string; partnerGln: string; supplierId: string; as2Id: string; as2Url: string; as2Cert: string }>(null);
+  const [draft, setDraft] = useState<null | { id?: string; hadCert?: boolean; name: string; partnerGln: string; supplierId: string; as2Id: string; as2Url: string; as2Cert: string }>(null);
 
   async function refreshPartners() {
     const r = await fetch("/api/v1/settings/edi/partners");
@@ -148,29 +148,40 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
 
   /* ---------- partner mailboxes ---------- */
 
-  async function createPartner() {
+  async function savePartner() {
     if (!draft) return;
     setBusy(true);
     try {
-      const r = await fetch("/api/v1/settings/edi/partners", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name: draft.name,
-          partnerGln: draft.partnerGln.trim() || null,
-          supplierId: draft.supplierId || null,
-          as2Id: draft.as2Id.trim() || null,
-          as2Url: draft.as2Url.trim() || null,
-          as2CertificatePem: draft.as2Cert.trim() || null,
-        }),
-      });
+      const isEdit = !!draft.id;
+      const payload: {
+        name: string; partnerGln: string | null; supplierId: string | null;
+        as2Id: string | null; as2Url: string | null; as2CertificatePem?: string | null;
+      } = {
+        name: draft.name,
+        partnerGln: draft.partnerGln.trim() || null,
+        supplierId: draft.supplierId || null,
+        as2Id: draft.as2Id.trim() || null,
+        as2Url: draft.as2Url.trim() || null,
+      };
+      // On edit, an empty certificate field keeps the stored one; on create send it (or null).
+      if (!isEdit || draft.as2Cert.trim()) {
+        payload.as2CertificatePem = draft.as2Cert.trim() || null;
+      }
+      const r = await fetch(
+        isEdit ? `/api/v1/settings/edi/partners/${draft.id}` : "/api/v1/settings/edi/partners",
+        {
+          method: isEdit ? "PATCH" : "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        },
+      );
       const b = await r.json().catch(() => ({}));
-      if (r.status === 201) {
-        setFlash({ ok: true, text: `Partner-Postfach „${draft.name}“ angelegt` });
+      if (isEdit ? r.ok : r.status === 201) {
+        setFlash({ ok: true, text: isEdit ? `„${draft.name}“ gespeichert` : `Partner-Postfach „${draft.name}“ angelegt` });
         setDraft(null);
         refreshPartners();
       } else {
-        setFlash({ ok: false, text: b.detail ?? b.title ?? "Anlegen fehlgeschlagen" });
+        setFlash({ ok: false, text: b.detail ?? b.title ?? "Speichern fehlgeschlagen" });
       }
     } finally {
       setBusy(false);
@@ -262,6 +273,24 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                   </div>
                   {canManage && (
                     <div className="flex flex-wrap gap-1.5">
+                      <Button
+                        variant="outline"
+                        className="px-2 py-1 text-xs"
+                        onClick={() =>
+                          setDraft({
+                            id: p.id,
+                            hadCert: p.as2CertPresent,
+                            name: p.name,
+                            partnerGln: p.partnerGln ?? "",
+                            supplierId: p.supplierId ?? "",
+                            as2Id: p.as2Id ?? "",
+                            as2Url: p.as2Url ?? "",
+                            as2Cert: "",
+                          })
+                        }
+                      >
+                        Bearbeiten
+                      </Button>
                       <Button variant="outline" className="px-2 py-1 text-xs" onClick={() => copy(`${origin}${p.inboundPath}`, `URL für „${p.name}“`)}>
                         URL kopieren
                       </Button>
@@ -441,10 +470,11 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
       <Dialog open={draft !== null} onOpenChange={(o) => { if (!o) setDraft(null); }}>
         <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg">
           <DialogHeader>
-            <DialogTitle className="font-display">Neues Partner-Postfach</DialogTitle>
+            <DialogTitle className="font-display">{draft?.id ? "Partner-Postfach bearbeiten" : "Neues Partner-Postfach"}</DialogTitle>
             <DialogDescription>
-              Der Partner erhält eine eigene Empfangs-URL. GLN und Lieferant sind optional,
-              erhöhen aber die Sicherheit (Absender-Prüfung, Bestätigungs-Bindung).
+              {draft?.id
+                ? "Änderungen wirken sofort. Der Postfach-Token bleibt unverändert (zum Rotieren den Button in der Liste nutzen)."
+                : "Der Partner erhält eine eigene Empfangs-URL. GLN und Lieferant sind optional, erhöhen aber die Sicherheit (Absender-Prüfung, Bestätigungs-Bindung)."}
             </DialogDescription>
           </DialogHeader>
           {draft && (
@@ -506,11 +536,18 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                   <textarea
                     value={draft.as2Cert}
                     onChange={(e) => setDraft({ ...draft, as2Cert: e.target.value })}
-                    placeholder="-----BEGIN CERTIFICATE-----"
+                    placeholder={
+                      draft.id && draft.hadCert
+                        ? "Zertifikat vorhanden — leer lassen zum Behalten, neues PEM einfügen zum Ersetzen"
+                        : "-----BEGIN CERTIFICATE-----"
+                    }
                     rows={4}
                     className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs"
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
+                    {draft.id && draft.hadCert
+                      ? "Ein Zertifikat ist hinterlegt — leer lassen behält es, ein neues PEM ersetzt es. "
+                      : ""}
                     Mit AS2-ID + Zertifikat + URL läuft der Versand an diesen Partner automatisch
                     verschlüsselt/signiert über AS2 (statt einfachem HTTPS).
                   </p>
@@ -520,10 +557,10 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                 <Button variant="outline" onClick={() => setDraft(null)}>Abbrechen</Button>
                 <Button
                   disabled={busy || draft.name.trim().length === 0}
-                  onClick={createPartner}
+                  onClick={savePartner}
                   className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
                 >
-                  {busy ? "Lege an…" : "Anlegen"}
+                  {busy ? "Speichere…" : draft.id ? "Speichern" : "Anlegen"}
                 </Button>
               </div>
             </div>
