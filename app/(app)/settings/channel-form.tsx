@@ -24,14 +24,6 @@ const EXAMPLES: Record<(typeof CHANNELS)[number], Record<string, unknown>> = {
     senderId: "4012345000019",
     senderQualifier: "14",
     edifactVersion: "D.96A",
-    sftp: {
-      host: "sftp.example.com",
-      port: 22,
-      user: "user",
-      keyOrPassword: "secret",
-      remotePath: "/orders/outbound/",
-    },
-    encoding: "UTF-8",
   },
 };
 
@@ -156,7 +148,7 @@ export function ChannelForm({ initial, isCreate, busy, errorMessage, onSubmit, o
             "Erforderlich: fromEmail, fromName. Optional: replyTo, smtp, signature, pdfLogo."}
           {v.channel === "API" && "Optional: defaultClientId, defaultHeaders, callbackUrl."}
           {v.channel === "EDI" &&
-            "Erforderlich: senderId, senderQualifier, edifactVersion, sftp."}
+            "Erforderlich: senderId (eigene GLN), senderQualifier (14 = GLN), edifactVersion D.96A. Transport wird je Lieferant konfiguriert (channelConfig.url)."}
         </p>
       </Field>
 
