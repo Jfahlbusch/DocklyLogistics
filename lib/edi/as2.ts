@@ -320,7 +320,9 @@ export function decryptMime(
 /* MDN                                                                 */
 /* ------------------------------------------------------------------ */
 
-export type MdnDisposition = { processed: true } | { processed: false; error: string };
+export type MdnDisposition =
+  | { processed: true; warning?: string }
+  | { processed: false; error: string };
 
 /** Build a SIGNED synchronous MDN (multipart/report inside multipart/signed). */
 export function buildSignedMdn(args: {
@@ -332,11 +334,15 @@ export function buildSignedMdn(args: {
   signer: { privateKeyPem: string; certificatePem: string };
 }): { body: string; contentType: string } {
   const dispositionLine = args.disposition.processed
-    ? "automatic-action/MDN-sent-automatically; processed"
+    ? args.disposition.warning
+      ? `automatic-action/MDN-sent-automatically; processed/warning: ${args.disposition.warning.replace(/[\r\n]/g, " ").slice(0, 200)}`
+      : "automatic-action/MDN-sent-automatically; processed"
     : `automatic-action/MDN-sent-automatically; processed/error: ${args.disposition.error.replace(/[\r\n]/g, " ").slice(0, 200)}`;
 
   const humanText = args.disposition.processed
-    ? "Die AS2-Nachricht wurde empfangen und verarbeitet."
+    ? args.disposition.warning
+      ? `Die AS2-Nachricht wurde angenommen (Hinweis): ${args.disposition.warning}`
+      : "Die AS2-Nachricht wurde empfangen und verarbeitet."
     : `Die AS2-Nachricht konnte nicht verarbeitet werden: ${args.disposition.error}`;
 
   const fields = [
@@ -413,9 +419,12 @@ export function parseMdn(
   };
   const disposition = get("Disposition") ?? "";
   const mic = get("Received-Content-MIC");
+  // "processed" and "processed/warning" are success; "processed/error" and
+  // "failed" are not. (A duplicate is a warning → still counts as delivered.)
+  const isError = /processed\/(error|failure)/i.test(disposition) || /;\s*failed/i.test(disposition);
   return {
     disposition,
-    processed: /;\s*processed\s*$/i.test(disposition) || /;\s*processed(?!\/)/i.test(disposition),
+    processed: !isError && /processed/i.test(disposition),
     micBase64: mic ? (mic.split(",")[0] ?? "").trim() : null,
     originalMessageId: get("Original-Message-ID"),
   };

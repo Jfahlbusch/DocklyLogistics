@@ -93,6 +93,19 @@ describe("MDN build + parse", () => {
     expect(parsed.originalMessageId).toBe("<msg-123@dockly>");
   });
 
+  it("builds a duplicate warning-MDN that still counts as processed", () => {
+    const mdn = buildSignedMdn({
+      originalMessageId: "<dup-1@dockly>",
+      as2From: "US", as2To: "PARTNER", micBase64: null,
+      disposition: { processed: true, warning: "duplicate-document: bereits empfangen" },
+      signer: us,
+    });
+    const parsed = parseMdn(mdn.body, mdn.contentType, us.certificatePem);
+    expect(parsed.processed).toBe(true);
+    expect(parsed.disposition).toContain("warning");
+    expect(parsed.disposition).toContain("duplicate-document");
+  });
+
   it("builds a failure-MDN with readable error", () => {
     const mdn = buildSignedMdn({
       originalMessageId: "<msg-456@dockly>",

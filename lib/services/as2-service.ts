@@ -1,4 +1,5 @@
 import crypto from "node:crypto";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db/client";
 import { encryptSecret, decryptSecret } from "@/lib/crypto/aes";
 import {
@@ -131,6 +132,25 @@ export const as2Service = {
       return mdn({ processed: false, error: `Für Partner „${mailbox.name}“ ist kein Zertifikat hinterlegt` }, null);
     }
 
+    // Replay protection: the unique (tenantId, messageId) row is the atomic
+    // dedupe. A real Message-ID that we've already accepted → duplicate MDN,
+    // no reprocessing. Rolled back below if processing fails, so a corrected
+    // resend (same ID) still works. Messages without an ID can't be deduped.
+    const hasRealId = !!messageId;
+    if (hasRealId) {
+      try {
+        await prisma.as2InboundReceipt.create({ data: { tenantId, messageId: messageId! } });
+      } catch (e) {
+        if (e instanceof Prisma.PrismaClientKnownRequestError && e.code === "P2002") {
+          return mdn(
+            { processed: true, warning: `duplicate-document: Message-ID ${messageId} bereits empfangen` },
+            null,
+          );
+        }
+        throw e;
+      }
+    }
+
     // 1) decrypt (if enveloped), 2) verify signature against the pinned cert.
     let signedBody = args.rawBody;
     let signedCt = contentType ?? "";
@@ -165,6 +185,13 @@ export const as2Service = {
       void result;
       return mdn({ processed: true }, verified.micBase64);
     } catch (e) {
+      // Processing failed → release the replay lock so a corrected resend
+      // with the same Message-ID isn't wrongly rejected as a duplicate.
+      if (hasRealId) {
+        await prisma.as2InboundReceipt
+          .deleteMany({ where: { tenantId, messageId: messageId! } })
+          .catch(() => {});
+      }
       const msg = e instanceof Error ? e.message : String(e);
       return mdn({ processed: false, error: msg }, null);
     }

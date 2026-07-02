@@ -588,3 +588,16 @@ model EdiPartnerMailbox {
   @@unique([tenantId, name])
   @@index([tenantId])
 }
+
+/// Replay protection for AS2: one row per (tenant, AS2 Message-ID). The unique
+/// constraint is the atomic dedupe — a second delivery with the same Message-ID
+/// is answered with a duplicate-document MDN and NOT reprocessed.
+model As2InboundReceipt {
+  id        String   @id @default(cuid())
+  tenantId  String
+  messageId String
+  createdAt DateTime @default(now())
+
+  @@unique([tenantId, messageId])
+  @@index([tenantId])
+}
