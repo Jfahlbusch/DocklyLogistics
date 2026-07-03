@@ -601,3 +601,28 @@ model As2InboundReceipt {
   @@unique([tenantId, messageId])
   @@index([tenantId])
 }
+
+/// Per-tenant SFTP bridge to the Warenwirtschaft (a separate SFTP server).
+/// DocklyLogistics is a CLIENT: it polls `outboxDir` (WaWi drops ready-to-send
+/// EDIFACT → we transmit to the trading partner) and writes received documents
+/// into `inboxDir` for the WaWi. Credentials are AES-encrypted (APP_KEY).
+model TenantSftpSettings {
+  tenantId             String   @id
+  host                 String
+  port                 Int      @default(22)
+  username             String
+  authType             String   // KEY | PASSWORD
+  privateKeyEncrypted  String?  @db.Text
+  passwordEncrypted    String?  @db.Text
+  hostKeyFingerprint   String?  // optional SHA256 host-key pin (MITM protection)
+  outboxDir            String   @default("/outbox")
+  inboxDir             String   @default("/inbox")
+  inboxFormat          String   @default("XML")   // XML | EDIFACT — what we write for the WaWi
+  routing              String   @default("FILE")  // FILE (recipient in EDIFACT) | SUBFOLDER
+  active               Boolean  @default(true)
+  autoSend             Boolean  @default(true)     // poll outbox and dispatch new files
+  lastPolledAt         DateTime?
+  lastPollError        String?
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}

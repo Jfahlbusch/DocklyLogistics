@@ -8,6 +8,7 @@ import { FlashBanner } from "@/components/ui/flash-banner";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from "@/components/ui/dialog";
+import { SftpSection } from "./sftp-section";
 
 type EdiSettings = {
   inboundToken: string;
@@ -437,6 +438,8 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
           </div>
         </CardContent>
       </Card>
+
+      <SftpSection canManage={canManage} />
 
       <Card className="shadow-soft">
         <CardContent className="space-y-2 p-5 text-sm">

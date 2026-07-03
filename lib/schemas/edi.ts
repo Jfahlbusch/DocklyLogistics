@@ -69,6 +69,22 @@ export const As2IdentityGenerateSchema = z.object({
   as2Id: z.string().min(1).max(128).optional(),
 }).openapi("As2IdentityGenerate");
 
+export const SftpSettingsUpdateSchema = z.object({
+  host: z.string().min(1).max(255),
+  port: z.number().int().min(1).max(65535).default(22),
+  username: z.string().min(1).max(128),
+  authType: z.enum(["KEY", "PASSWORD"]),
+  privateKey: z.string().max(20000).optional(), // empty = keep stored
+  password: z.string().max(1000).optional(),
+  hostKeyFingerprint: z.string().max(200).nullish(),
+  outboxDir: z.string().min(1).max(255).default("/outbox"),
+  inboxDir: z.string().min(1).max(255).default("/inbox"),
+  inboxFormat: z.enum(["XML", "EDIFACT"]).default("XML"),
+  routing: z.enum(["FILE", "SUBFOLDER"]).default("FILE"),
+  active: z.boolean().default(true),
+  autoSend: z.boolean().default(true),
+}).openapi("SftpSettingsUpdate");
+
 export type EdiSettingsUpdate = z.infer<typeof EdiSettingsUpdateSchema>;
 export type EdiPartnerCreate = z.infer<typeof EdiPartnerCreateSchema>;
 export type EdiPartnerUpdate = z.infer<typeof EdiPartnerUpdateSchema>;
@@ -155,4 +171,26 @@ registry.registerPath({
   description: "Erzeugt ein neues RSA-2048-Schlüsselpaar + self-signed Zertifikat (5 Jahre). Partner brauchen danach das neue Zertifikat.",
   request: { body: { content: { "application/json": { schema: As2IdentityGenerateSchema } } } },
   responses: { 200: { description: "Neue Identität" } },
+});
+registry.registerPath({
+  method: "get", path: "/settings/edi/sftp", summary: "SFTP-Anbindung (Warenwirtschaft)", tags: ["EDI"],
+  description:
+    "SFTP-Brücke zur WaWi: DocklyLogistics pollt den Ausgangsordner (WaWi legt fertiges " +
+    "EDIFACT ab → wir übertragen an den Partner) und schreibt empfangene Dokumente in den " +
+    "Eingangsordner. Zugangsdaten sind AES-verschlüsselt; der Response enthält nie Key/Passwort.",
+  responses: { 200: { description: "Konfiguration oder null" } },
+});
+registry.registerPath({
+  method: "put", path: "/settings/edi/sftp", summary: "SFTP-Anbindung speichern", tags: ["EDI"],
+  description: "Leeres Key-/Passwort-Feld behält das gespeicherte Geheimnis.",
+  request: { body: { content: { "application/json": { schema: SftpSettingsUpdateSchema } } } },
+  responses: { 200: { description: "Gespeichert" }, 422: { description: "Validierungsfehler" } },
+});
+registry.registerPath({
+  method: "post", path: "/settings/edi/sftp/test", summary: "SFTP-Verbindung testen", tags: ["EDI"],
+  responses: { 200: { description: "Verbunden" }, 422: { description: "Verbindung fehlgeschlagen" } },
+});
+registry.registerPath({
+  method: "post", path: "/settings/edi/sftp/poll-now", summary: "Ausgangsordner jetzt abrufen/versenden", tags: ["EDI"],
+  responses: { 200: { description: "Ergebnis (verarbeitet/gesendet/fehlgeschlagen)" } },
 });

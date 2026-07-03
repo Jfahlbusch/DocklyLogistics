@@ -266,6 +266,24 @@ export const ediService = {
         body: `${lines.length} Positionen, ${matched} Artikeln zugeordnet.`,
         link: "/edi",
       });
+      // Best-effort: hand the parsed order to the WaWi via the SFTP inbox (XML).
+      // Dynamic import avoids the edi ↔ as2 ↔ sftp module cycle.
+      void import("./sftp-service")
+        .then(({ sftpService }) =>
+          sftpService.deliverOrderToInbox(tenantId, {
+            documentNo: c.data.documentNo ?? "order",
+            orderDate: c.data.orderDate,
+            currency: c.data.currency,
+            buyerId: c.data.buyerId,
+            supplierId: c.data.supplierId,
+            source: "edi-inbound",
+            lines: lines.map((l) => ({
+              lineNo: l.lineNo, ean: l.ean, sku: l.sku,
+              name: l.articleName ?? l.name, qty: l.qty, unit: l.unit, price: l.price,
+            })),
+          }),
+        )
+        .catch(() => {});
       return { messageId, type: "ORDERS", status: "PROCESSED" };
     } catch (e) {
       const error = e instanceof Error ? e.message : String(e);
