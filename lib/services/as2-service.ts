@@ -91,7 +91,11 @@ export const as2Service = {
       return { kind: "plain", status: 400, message: "AS2-From/AS2-To-Header fehlen" };
     }
 
-    const settings = await prisma.tenantEdiSettings.findUnique({ where: { as2Id: as2To } });
+    // AS2-IDs are matched case-insensitively (a common onboarding pitfall);
+    // trust still rests on the certificate signature verified further down.
+    const settings = await prisma.tenantEdiSettings.findFirst({
+      where: { as2Id: { equals: as2To, mode: "insensitive" } },
+    });
     if (!settings || !settings.as2PrivateKeyEncrypted || !settings.as2CertificatePem) {
       return { kind: "plain", status: 403, message: `Unbekannte AS2-Empfänger-Kennung ${as2To}` };
     }
@@ -123,7 +127,7 @@ export const as2Service = {
 
     // Partner lookup by AS2-ID within this tenant.
     const mailbox = await prisma.ediPartnerMailbox.findFirst({
-      where: { tenantId, as2Id: as2From },
+      where: { tenantId, as2Id: { equals: as2From, mode: "insensitive" } },
     });
     if (!mailbox || !mailbox.active) {
       return mdn({ processed: false, error: `Unbekannter oder gesperrter AS2-Partner ${as2From}` }, null);

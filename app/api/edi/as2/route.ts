@@ -17,15 +17,24 @@ export async function POST(req: NextRequest) {
     return new NextResponse("Payload zu groß (max 2 MB)", { status: 413 });
   }
 
+  const as2From = req.headers.get("as2-from");
+  const as2To = req.headers.get("as2-to");
   const result = await as2Service.processInbound({
     headers: {
-      as2From: req.headers.get("as2-from"),
-      as2To: req.headers.get("as2-to"),
+      as2From,
+      as2To,
       messageId: req.headers.get("message-id"),
       contentType: req.headers.get("content-type"),
     },
     rawBody,
   });
+
+  // Onboarding visibility: rejected attempts leave no monitor entry, so log the
+  // addressing of every AS2 request (low volume) to make mismatches diagnosable.
+  console.warn(
+    `[as2-inbound] from=${as2From ?? "-"} to=${as2To ?? "-"} status=${result.status} ` +
+      `bytes=${Buffer.byteLength(rawBody, "utf8")} ct=${(req.headers.get("content-type") ?? "-").slice(0, 50)}`,
+  );
 
   if (result.kind === "plain") {
     return new NextResponse(result.message, { status: result.status });
