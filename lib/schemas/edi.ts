@@ -173,6 +173,13 @@ registry.registerPath({
   responses: { 200: { description: "Neue Identität" } },
 });
 registry.registerPath({
+  method: "get", path: "/settings/edi/as2-identity/certificate", summary: "AS2-Zertifikat herunterladen", tags: ["EDI"],
+  description:
+    "Öffentliches AS2-Zertifikat (PEM) als Datei-Download (Content-Disposition: attachment) — " +
+    "zum Weitergeben an EDI-Partner. Enthält nie den privaten Schlüssel.",
+  responses: { 200: { description: "PEM-Datei (application/x-pem-file)" }, 404: { description: "Noch keine Identität erzeugt" } },
+});
+registry.registerPath({
   method: "get", path: "/settings/edi/sftp", summary: "SFTP-Anbindung (Warenwirtschaft)", tags: ["EDI"],
   description:
     "SFTP-Brücke zur WaWi: DocklyLogistics pollt den Ausgangsordner (WaWi legt fertiges " +

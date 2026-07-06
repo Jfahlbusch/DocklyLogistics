@@ -357,6 +357,12 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                 </div>
               </div>
               <div className="flex flex-wrap gap-2 pt-1">
+                <Button asChild variant="outline" className="text-xs">
+                  {/* Server setzt Content-Disposition + Dateinamen (<AS2-ID>_as2.pem) */}
+                  <a href="/api/v1/settings/edi/as2-identity/certificate" download>
+                    Zertifikat herunterladen
+                  </a>
+                </Button>
                 <Button variant="outline" className="text-xs" onClick={() => copy(as2.certificatePem, "Zertifikat (PEM)")}>
                   Zertifikat kopieren
                 </Button>
