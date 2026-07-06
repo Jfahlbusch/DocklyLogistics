@@ -12,10 +12,15 @@ import { as2Service } from "@/lib/services/as2-service";
 const MAX_BYTES = 2_000_000;
 
 export async function POST(req: NextRequest) {
-  const rawBody = await req.text();
-  if (Buffer.byteLength(rawBody, "utf8") > MAX_BYTES) {
+  // Byte-treu lesen (latin1 = 1:1 Byte↔Zeichen, forges "binary string"):
+  // Partner wie SAP senden den PKCS#7-Body roh binär (Content-Transfer-
+  // Encoding: binary) — req.text() würde ihn als UTF-8 interpretieren und
+  // die DER-Bytes irreversibel zerstören ("Unparsed DER bytes remain").
+  const bodyBuf = Buffer.from(await req.arrayBuffer());
+  if (bodyBuf.length > MAX_BYTES) {
     return new NextResponse("Payload zu groß (max 2 MB)", { status: 413 });
   }
+  const rawBody = bodyBuf.toString("latin1");
 
   const as2From = req.headers.get("as2-from");
   const as2To = req.headers.get("as2-to");
@@ -33,7 +38,7 @@ export async function POST(req: NextRequest) {
   // addressing of every AS2 request (low volume) to make mismatches diagnosable.
   console.warn(
     `[as2-inbound] from=${as2From ?? "-"} to=${as2To ?? "-"} status=${result.status} ` +
-      `bytes=${Buffer.byteLength(rawBody, "utf8")} ct=${(req.headers.get("content-type") ?? "-").slice(0, 50)}`,
+      `bytes=${bodyBuf.length} ct=${(req.headers.get("content-type") ?? "-").slice(0, 50)}`,
   );
 
   if (result.kind === "plain") {

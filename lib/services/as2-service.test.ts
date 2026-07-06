@@ -44,10 +44,46 @@ describe("as2Service.processInbound addressing", () => {
     expect(res.kind).toBe("plain");
     if (res.kind === "plain") expect(res.status).toBe(403);
   });
+
+  it("stores a FAILED monitor entry even for a broken BINARY body (NUL bytes)", async () => {
+    // Regression: NUL-haltige Payloads ließen den ediMessage.create an der
+    // Postgres-TEXT-Spalte scheitern — catch(() => {}) verschluckte das, und
+    // die Fehlversuche (Dohle, 06.07.) blieben im Monitor unsichtbar.
+    const { generateAs2Identity } = await import("@/lib/edi/as2");
+    const partner = generateAs2Identity("BIN-PARTNER");
+    await prisma.ediPartnerMailbox.create({
+      data: {
+        tenantId: T, name: "BinPartner", as2Id: "BIN-PARTNER", active: true,
+        as2CertificatePem: partner.certificatePem,
+        token: `edi_p_test${crypto.randomBytes(8).toString("hex")}`,
+      },
+    });
+    // Roh-binärer Müll: DER-artiger Kopf + NUL-Bytes (keine \u-Escapes!).
+    const rawBody = String.fromCharCode(48, 130, 3, 16) + "garbage" + String.fromCharCode(0, 0, 7);
+    const res = await as2Service.processInbound({
+      headers: {
+        as2From: "BIN-PARTNER",
+        as2To: AS2_ID,
+        messageId: "<bin-body-test@partner>",
+        contentType: "application/pkcs7-mime; smime-type=enveloped-data",
+      },
+      rawBody,
+    });
+    expect(res.kind).toBe("mdn"); // signierte Fehler-MDN geht trotzdem raus
+
+    const failed = await prisma.ediMessage.findFirst({
+      where: { tenantId: T, direction: "IN", type: "AS2", status: "FAILED" },
+      orderBy: { createdAt: "desc" },
+    });
+    expect(failed).not.toBeNull();
+    expect(failed!.payload).toContain("base64-kodiert"); // NUL-sicher abgelegt
+  });
 });
 
 afterAll(async () => {
   await prisma.as2InboundReceipt.deleteMany({ where: { tenantId: T } });
+  await prisma.ediMessage.deleteMany({ where: { tenantId: T } });
+  await prisma.ediPartnerMailbox.deleteMany({ where: { tenantId: T } });
   await prisma.tenantEdiSettings.deleteMany({ where: { tenantId: T } });
   await prisma.tenant.deleteMany({ where: { id: T } });
   await prisma.$disconnect();

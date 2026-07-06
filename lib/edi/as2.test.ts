@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeAll } from "vitest";
+import forge from "node-forge";
 import {
   generateAs2Identity,
   certificateFingerprint,
@@ -73,6 +74,26 @@ describe("encrypt + decrypt (enveloped-data AES-256)", () => {
   it("refuses to decrypt for the wrong recipient", () => {
     const enc = encryptMime("hallo", "text/plain", partner.certificatePem);
     expect(() => decryptMime(enc.body, us)).toThrow(/nicht an dieses Zertifikat/);
+  });
+
+  it("decrypts a raw binary body (Content-Transfer-Encoding: binary, wie SAP/Dohle)", () => {
+    const signed = signPayload(EDIFACT, "application/edifact", us);
+    const enc = encryptMime(signed.body, signed.contentType, partner.certificatePem);
+    // Base64 → rohe DER-Bytes (latin1-Binärstring), wie die Route sie byte-treu liefert.
+    const binaryDer = forge.util.decode64(enc.body.replace(/[\r\n\s]/g, ""));
+    const dec = decryptMime(binaryDer, partner);
+    expect(dec.contentType).toContain("multipart/signed");
+    expect(verifySignedMime(dec.body, dec.contentType, us.certificatePem).payload).toBe(EDIFACT);
+  });
+
+  it("tolerates trailing padding bytes after the CMS structure", () => {
+    const signed = signPayload(EDIFACT, "application/edifact", us);
+    const enc = encryptMime(signed.body, signed.contentType, partner.certificatePem);
+    const der = forge.util.decode64(enc.body.replace(/[\r\n\s]/g, ""));
+    const padded = der + String.fromCharCode(0, 0, 0); // NUL-Trailer hinter der Struktur
+    // Strikt geparst hieße das "Unparsed DER bytes remain" — einmal Base64, einmal binär:
+    expect(decryptMime(forge.util.encode64(padded), partner).contentType).toContain("multipart/signed");
+    expect(decryptMime(padded, partner).contentType).toContain("multipart/signed");
   });
 });
 

@@ -113,6 +113,34 @@ export function splitMultipart(body: string, boundary: string): MimePart[] {
 }
 
 /* ------------------------------------------------------------------ */
+/* DER-Dekodierung (Base64 ODER binär, tolerant)                       */
+/* ------------------------------------------------------------------ */
+
+/**
+ * S/MIME-Body → DER-Bytes. Partner senden PKCS#7 wahlweise base64-kodiert
+ * (unser eigener Versand) oder roh binär (Content-Transfer-Encoding:
+ * binary, z. B. SAP Integration Suite / Dohle). Binäre Bodys enthalten
+ * früh Bytes außerhalb des Base64-Alphabets (Längenoktette ≥ 0x80) —
+ * daran werden sie erkannt und unverändert durchgereicht.
+ */
+function bodyToDer(body: string): string {
+  const compact = body.replace(/[\r\n\s]/g, "");
+  return compact.length > 0 && /^[A-Za-z0-9+/=]+$/.test(compact)
+    ? forge.util.decode64(compact)
+    : body;
+}
+
+/**
+ * DER-Parse mit Toleranz für nachlaufende Bytes hinter der CMS-Struktur
+ * (Padding/Trailer, wie SAP-Systeme sie anhängen — strikt geparst hieße
+ * das "Unparsed DER bytes remain"). Die @types kennen nur das boolean-
+ * "strict"; zur Laufzeit akzeptiert node-forge ein Options-Objekt.
+ */
+function fromDerTolerant(der: string): forge.asn1.Asn1 {
+  return forge.asn1.fromDer(der, { parseAllBytes: false } as unknown as boolean);
+}
+
+/* ------------------------------------------------------------------ */
 /* MIC                                                                 */
 /* ------------------------------------------------------------------ */
 
@@ -207,8 +235,8 @@ export function verifySignedMime(
     .map(([k, v]) => `${k.replace(/(^|-)([a-z])/g, (m) => m.toUpperCase())}: ${v}`);
   const canonical = headerLines.join(CRLF) + CRLF + CRLF + contentPart.body;
 
-  const sigDer = forge.util.decode64(sigPart.body.replace(/[\r\n\s]/g, ""));
-  const asn1 = forge.asn1.fromDer(sigDer);
+  const sigDer = bodyToDer(sigPart.body);
+  const asn1 = fromDerTolerant(sigDer);
   const p7 = forge.pkcs7.messageFromAsn1(asn1) as unknown as {
     rawCapture: {
       signature: string;
@@ -293,11 +321,11 @@ export function encryptMime(
 }
 
 export function decryptMime(
-  base64Body: string,
+  rawBody: string, // Base64 ODER roh binär (latin1) — siehe bodyToDer
   identity: { privateKeyPem: string; certificatePem: string },
 ): { body: string; contentType: string } {
-  const der = forge.util.decode64(base64Body.replace(/[\r\n\s]/g, ""));
-  const p7 = forge.pkcs7.messageFromAsn1(forge.asn1.fromDer(der)) as forge.pkcs7.PkcsEnvelopedData;
+  const der = bodyToDer(rawBody);
+  const p7 = forge.pkcs7.messageFromAsn1(fromDerTolerant(der)) as forge.pkcs7.PkcsEnvelopedData;
   const cert = forge.pki.certificateFromPem(identity.certificatePem);
   const recipient = p7.findRecipient(cert);
   if (!recipient) throw new Error("Nachricht ist nicht an dieses Zertifikat verschlüsselt");

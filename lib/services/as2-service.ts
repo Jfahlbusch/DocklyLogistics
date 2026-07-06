@@ -25,6 +25,21 @@ export type As2IdentityView = {
   endpointPath: string; // /api/edi/as2
 };
 
+/**
+ * Payload sicher für die Postgres-TEXT-Spalte machen: binäre Bodys (roher
+ * PKCS#7-DER) enthalten NUL-Bytes, die Postgres ablehnt — der create würde
+ * still scheitern (catch(() => {})) und der Fehlversuch bliebe im Monitor
+ * unsichtbar. NUL-Erkennung bewusst per charCode (keine \u-Escapes).
+ */
+export function safeMonitorPayload(raw: string): string {
+  let hasNul = false;
+  for (let i = 0; i < raw.length; i++) {
+    if (raw.charCodeAt(i) === 0) { hasNul = true; break; }
+  }
+  if (!hasNul) return raw;
+  return `[binärer Body; base64-kodiert]\n${Buffer.from(raw, "latin1").toString("base64")}`;
+}
+
 export const as2Service = {
   /** Current identity (without private key) or null if not generated yet. */
   async getIdentity(tenantId: string): Promise<As2IdentityView | null> {
@@ -133,7 +148,7 @@ export const as2Service = {
       const err = `Unbekannter oder gesperrter AS2-Partner ${as2From}`;
       console.warn(`[as2-inbound-fail] from=${as2From} to=${as2To} error=${err}`);
       await prisma.ediMessage
-        .create({ data: { tenantId, direction: "IN", type: "AS2", status: "FAILED", transport: "as2", payload: args.rawBody, createdBy: "as2-inbound", error: err } })
+        .create({ data: { tenantId, direction: "IN", type: "AS2", status: "FAILED", transport: "as2", payload: safeMonitorPayload(args.rawBody), createdBy: "as2-inbound", error: err } })
         .catch(() => {});
       return mdn({ processed: false, error: err }, null);
     }
@@ -208,7 +223,7 @@ export const as2Service = {
         .create({
           data: {
             tenantId, direction: "IN", type: "AS2", status: "FAILED", transport: "as2",
-            supplierId: mailbox.supplierId, payload: args.rawBody,
+            supplierId: mailbox.supplierId, payload: safeMonitorPayload(args.rawBody),
             createdBy: `as2:${mailbox.name}`, error: msg,
           },
         })
