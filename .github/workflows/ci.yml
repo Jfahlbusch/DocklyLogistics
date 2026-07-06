@@ -35,6 +35,10 @@ jobs:
       KEYCLOAK_CLIENT_ID: ci
       KEYCLOAK_CLIENT_SECRET: ci
       KEYCLOAK_ISSUER: http://example.test/auth/realms/ci
+      # CI-only dummy secrets (not real). APP_KEY must be hex64 or base64→32 bytes;
+      # tests that AES-encrypt (AS2 identity, webhook secrets) need it set.
+      APP_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+      CRON_SECRET: ci-cron-secret-not-used
 
     steps:
       - uses: actions/checkout@v4

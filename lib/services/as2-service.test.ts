@@ -3,6 +3,11 @@ import crypto from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { as2Service } from "./as2-service";
 
+// Encrypting the AS2 private key needs APP_KEY. Provision a throwaway key so the
+// test is hermetic (matches lib/crypto/aes.test.ts) instead of depending on the
+// ambient env — that dependency was exactly why this passed locally but failed CI.
+process.env.APP_KEY = process.env.APP_KEY ?? crypto.randomBytes(32).toString("hex");
+
 const T = `test-as2svc-${crypto.randomBytes(4).toString("hex")}`;
 const AS2_ID = "TEST-AS2-UPPER";
 
