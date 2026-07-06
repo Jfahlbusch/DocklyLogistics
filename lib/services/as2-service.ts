@@ -130,7 +130,12 @@ export const as2Service = {
       where: { tenantId, as2Id: { equals: as2From, mode: "insensitive" } },
     });
     if (!mailbox || !mailbox.active) {
-      return mdn({ processed: false, error: `Unbekannter oder gesperrter AS2-Partner ${as2From}` }, null);
+      const err = `Unbekannter oder gesperrter AS2-Partner ${as2From}`;
+      console.warn(`[as2-inbound-fail] from=${as2From} to=${as2To} error=${err}`);
+      await prisma.ediMessage
+        .create({ data: { tenantId, direction: "IN", type: "AS2", status: "FAILED", transport: "as2", payload: args.rawBody, createdBy: "as2-inbound", error: err } })
+        .catch(() => {});
+      return mdn({ processed: false, error: err }, null);
     }
     if (!mailbox.as2CertificatePem) {
       return mdn({ processed: false, error: `Für Partner „${mailbox.name}“ ist kein Zertifikat hinterlegt` }, null);
@@ -197,6 +202,17 @@ export const as2Service = {
           .catch(() => {});
       }
       const msg = e instanceof Error ? e.message : String(e);
+      console.warn(`[as2-inbound-fail] from=${as2From} to=${as2To} error=${msg}`);
+      // Make the crypto failure visible in the EDI monitor (was invisible before).
+      await prisma.ediMessage
+        .create({
+          data: {
+            tenantId, direction: "IN", type: "AS2", status: "FAILED", transport: "as2",
+            supplierId: mailbox.supplierId, payload: args.rawBody,
+            createdBy: `as2:${mailbox.name}`, error: msg,
+          },
+        })
+        .catch(() => {});
       return mdn({ processed: false, error: msg }, null);
     }
   },
