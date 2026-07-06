@@ -41,7 +41,9 @@ export async function sendAs2Raw(
     return { ok: false, error: "AS2-URL zeigt auf ein internes/ungültiges Ziel (SSRF-Schutz)." };
   }
   try {
-    const signed = signPayload(payload, opts.contentType ?? "application/edifact", identity);
+    // "application/edi-edifact": der von Handelspartnern (u. a. HIT/Dohle
+    // Connectivity-Guide) erwartete Inner-MIME-Type für EDIFACT-Payloads.
+    const signed = signPayload(payload, opts.contentType ?? "application/edi-edifact", identity);
     const enc = encryptMime(signed.body, signed.contentType, recipient.as2CertificatePem);
 
     const res = await withRetry(

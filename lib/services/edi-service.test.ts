@@ -102,6 +102,36 @@ describe("ediService inbound", () => {
     expect(parsed.lines[0].qty).toBe(12);
   });
 
+  it("marks a re-sent ORDERS with a known order number as DUPLICATE", async () => {
+    const mk = (icRef: string, msgRef: string) =>
+      `UNB+UNOC:3+4111111000005:14+4098765000004:14+260706:0900+${icRef}'` +
+      `UNH+${msgRef}+ORDERS:D:96A:UN'` +
+      "BGM+220+KUNDE-2026-777+9'" +
+      "DTM+137:20260706:102'" +
+      "NAD+BY+4111111000005::9'" +
+      "NAD+SU+4098765000004::9'" +
+      "CUX+2:EUR:9'" +
+      `LIN+1++${EAN}:EN'` +
+      "QTY+21:5:SA'" +
+      "UNS+S'" +
+      `UNT+10+${msgRef}'` +
+      `UNZ+1+${icRef}'`;
+
+    const first = await ediService.processInbound({ tenantId: T, raw: mk("ICD1", "MD1") });
+    expect(first.status).toBe("PROCESSED");
+
+    // Re-Send: neue Interchange-/Message-Referenzen, gleiche Bestellnummer.
+    const second = await ediService.processInbound({ tenantId: T, raw: mk("ICD2", "MD2") });
+    expect(second.status).toBe("DUPLICATE");
+    expect(second.error).toContain("KUNDE-2026-777");
+
+    const msg = await prisma.ediMessage.findUnique({ where: { id: second.messageId } });
+    expect(msg?.status).toBe("DUPLICATE");
+    // Die ursprüngliche Nachricht bleibt unangetastet PROCESSED.
+    const orig = await prisma.ediMessage.findUnique({ where: { id: first.messageId } });
+    expect(orig?.status).toBe("PROCESSED");
+  });
+
   it("marks unparseable payloads FAILED without throwing", async () => {
     const r = await ediService.processInbound({ tenantId: T, raw: "   " });
     expect(r.status).toBe("FAILED");

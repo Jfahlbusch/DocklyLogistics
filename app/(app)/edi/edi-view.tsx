@@ -46,6 +46,7 @@ const STATUS_STYLES: Record<string, string> = {
   RECEIVED:    "bg-navy-100 text-navy-700",
   PROCESSED:   "bg-emerald-50 text-emerald-700",
   FAILED:      "bg-rose-50 text-rose-700",
+  DUPLICATE:   "bg-amber-50 text-amber-700",
   PENDING:     "bg-muted text-foreground",
   SENT:        "bg-emerald-50 text-emerald-700",
   SEND_FAILED: "bg-rose-50 text-rose-700",

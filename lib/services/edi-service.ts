@@ -11,7 +11,7 @@ import type { Prisma } from "@prisma/client";
 export type InboundProcessResult = {
   messageId: string;
   type: string;
-  status: "PROCESSED" | "FAILED";
+  status: "PROCESSED" | "FAILED" | "DUPLICATE";
   orderId?: string | null;
   note?: string;
   error?: string;
@@ -233,6 +233,26 @@ export const ediService = {
     c: Extract<ClassifiedInbound, { kind: "ORDERS" }>,
   ): Promise<InboundProcessResult> {
     try {
+      // Dubletten-Prüfung nach Bestellnummer (lt. HIT/Dohle-Guide Pflicht des
+      // Lieferanten): eine erneut gesendete ORDERS mit bekannter BGM-Nummer
+      // darf nicht ein zweites Mal in der WaWi-Inbox landen. Die AS2-Replay-
+      // Sperre greift hier nicht — ein Re-Send trägt eine neue Message-ID.
+      const docNo = c.data.documentNo ?? null;
+      if (docNo) {
+        const prior = await prisma.ediMessage.findFirst({
+          where: {
+            tenantId, direction: "IN", type: "ORDERS", status: "PROCESSED",
+            documentNo: docNo, id: { not: messageId },
+          },
+          select: { id: true },
+        });
+        if (prior) {
+          const error = `Duplikat: Bestellnummer ${docNo} bereits verarbeitet (${prior.id})`;
+          await ediMessageRepo.update(messageId, { status: "DUPLICATE", error, documentNo: docNo });
+          return { messageId, type: "ORDERS", status: "DUPLICATE", error };
+        }
+      }
+
       // Match lines to our articles by EAN first, SKU second.
       const eans = c.data.lines.map((l) => l.ean).filter((v): v is string => !!v);
       const skus = c.data.lines.map((l) => l.sku).filter((v): v is string => !!v);
