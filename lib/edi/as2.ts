@@ -76,7 +76,21 @@ export function headerParam(headerValue: string, param: string): string | null {
   return m ? (m[1] ?? m[2]) : null;
 }
 
-type MimePart = { headers: Record<string, string>; body: string };
+type MimePart = {
+  headers: Record<string, string>;
+  body: string;
+  /** Exakte Original-Bytes des Parts (Header + Leerzeile + Body), wie übertragen. */
+  raw: string;
+};
+
+/**
+ * RFC-5322-Unfolding: gefaltete Header (CRLF + Whitespace am Zeilenanfang,
+ * wie SAP sie bei langen Content-Type-Zeilen erzeugt) zu einer Zeile ziehen.
+ * Nur fürs PARSEN — die Original-Bytes (raw) bleiben unangetastet.
+ */
+function unfoldHeaders(headerBlock: string): string {
+  return headerBlock.replace(/\r?\n[ \t]+/g, " ");
+}
 
 /** Split a multipart body into parts (raw bodies preserved byte-for-byte). */
 export function splitMultipart(body: string, boundary: string): MimePart[] {
@@ -103,11 +117,11 @@ export function splitMultipart(body: string, boundary: string): MimePart[] {
       partBody = sec.slice(nlHeaderEnd + 2);
     }
     const headers: Record<string, string> = {};
-    for (const line of headerBlock.split(/\r?\n/)) {
+    for (const line of unfoldHeaders(headerBlock).split(/\r?\n/)) {
       const idx = line.indexOf(":");
       if (idx > 0) headers[line.slice(0, idx).trim().toLowerCase()] = line.slice(idx + 1).trim();
     }
-    parts.push({ headers, body: partBody });
+    parts.push({ headers, body: partBody, raw: sec });
   }
   return parts;
 }
@@ -230,10 +244,11 @@ export function verifySignedMime(
   const sigPart = parts.find((p) => (p.headers["content-type"] ?? "").includes("pkcs7-signature"));
   if (!sigPart) throw new Error("Signatur-Part fehlt");
 
-  // reconstruct the exact signed bytes: headers + CRLF CRLF + body
-  const headerLines = Object.entries(contentPart.headers)
-    .map(([k, v]) => `${k.replace(/(^|-)([a-z])/g, (m) => m.toUpperCase())}: ${v}`);
-  const canonical = headerLines.join(CRLF) + CRLF + CRLF + contentPart.body;
+  // Die Signatur deckt die EXAKTEN übertragenen Bytes des Content-Parts ab
+  // (RFC 5751: Header + Leerzeile + Body). Keine Rekonstruktion aus der
+  // Header-Map — fremde Absender (SAP) falten/formatieren Header anders als
+  // wir, und jede Abweichung ließe den messageDigest fälschlich scheitern.
+  const canonical = contentPart.raw;
 
   const sigDer = bodyToDer(sigPart.body);
   const asn1 = fromDerTolerant(sigDer);
@@ -291,7 +306,16 @@ export function verifySignedMime(
   if (!sigOk) throw new Error("Signaturprüfung fehlgeschlagen (Zertifikat passt nicht)");
 
   return {
-    payload: forge.util.decodeUtf8(contentPart.body),
+    // UTF-8 dekodieren, aber tolerant: EDIFACT UNOC ist Latin-1 — Umlaute von
+    // SAP-Partnern sind kein gültiges UTF-8 (decodeUtf8 wirft "URI malformed").
+    // Dann ist der Binärstring (latin1, 1 Zeichen = 1 Byte) bereits korrekt.
+    payload: (() => {
+      try {
+        return forge.util.decodeUtf8(contentPart.body);
+      } catch {
+        return contentPart.body;
+      }
+    })(),
     payloadContentType: contentPart.headers["content-type"] ?? "application/octet-stream",
     micBase64: computeMic(canonical),
   };
@@ -334,7 +358,10 @@ export function decryptMime(
   const mime = typeof rawContent === "string" ? rawContent : (rawContent?.getBytes() ?? "");
   const sep = mime.indexOf(`${CRLF}${CRLF}`);
   if (sep === -1) throw new Error("Entschlüsselter Inhalt ist kein MIME");
-  const headerBlock = mime.slice(0, sep);
+  // Unfolding vor dem Parsen: SAP faltet den Content-Type über mehrere
+  // Zeilen — die boundary stünde sonst unerreichbar in der Folgezeile
+  // ("multipart/signed ohne boundary").
+  const headerBlock = unfoldHeaders(mime.slice(0, sep));
   const ctLine = headerBlock
     .split(/\r?\n/)
     .find((l: string) => l.toLowerCase().startsWith("content-type:"));
