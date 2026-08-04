@@ -1,12 +1,27 @@
 import { NextRequest } from "next/server";
 
-/** Build a NextRequest for calling a route handler directly in a test. */
+/**
+ * Build a NextRequest for calling a route handler directly in a test.
+ *
+ * `body` wird als JSON gesendet. Für Routen, die den Body per `req.text()`
+ * roh lesen (EDI-Eingang, AS2), stattdessen `rawBody` verwenden — sonst käme
+ * der Inhalt JSON-escaped und in Anführungszeichen beim Handler an.
+ */
 export function makeRequest(
   url: string,
-  opts: { headers?: Record<string, string>; method?: string; body?: unknown } = {},
+  opts: {
+    headers?: Record<string, string>;
+    method?: string;
+    body?: unknown;
+    rawBody?: string;
+  } = {},
 ): NextRequest {
   const headers = new Headers(opts.headers ?? {});
   const method = opts.method ?? "GET";
+  if (opts.rawBody !== undefined) {
+    if (!headers.has("content-type")) headers.set("content-type", "text/plain");
+    return new NextRequest(url, { method, headers, body: opts.rawBody });
+  }
   if (opts.body !== undefined) {
     headers.set("content-type", "application/json");
     return new NextRequest(url, { method, headers, body: JSON.stringify(opts.body) });
