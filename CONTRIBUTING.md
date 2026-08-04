@@ -3,13 +3,31 @@
 Kurzregeln für die Entwicklung. Die maschinenlesbare Variante steht in `CLAUDE.md`, die Struktur in `ARCHITECTURE.md`.
 
 ## Setup
+
+Die Entwicklungs-Datenbank liegt — wie bei den anderen Projekten dieser Maschine — als eigene
+Datenbank `docklylogistics` auf dem **zentralen lokalen Postgres-Server** (Port 5432). Ein
+eigener Datenbank-Container wird für Entwicklung und Tests nicht gebraucht.
+
 ```bash
 pnpm install
-docker start docklylogistics-pg            # lokales Postgres (oder neu anlegen)
-pnpm exec prisma db push                    # Schema in die lokale DB
-pnpm dev                                     # http://localhost:3000
+pnpm exec prisma migrate deploy             # Schema in die lokale DB
+pnpm dev                                    # http://localhost:3000
 ```
+
+Einmalig, falls die Datenbank auf einer neuen Maschine noch fehlt:
+
+```bash
+psql -h 127.0.0.1 -d postgres -c "CREATE ROLE docklylogistics LOGIN PASSWORD 'docklylogistics';"
+psql -h 127.0.0.1 -d postgres -c "CREATE DATABASE docklylogistics OWNER docklylogistics;"
+# Test-Cleanup umgeht die Append-only-Trigger — dafür genau dieses eine Recht (kein Superuser):
+psql -h 127.0.0.1 -d postgres -c "GRANT SET ON PARAMETER session_replication_role TO docklylogistics;"
+```
+
 Umgebungsvariablen: `.env` (lokal). Keycloak-, DB- und Mail-Variablen sind dort dokumentiert.
+
+`docker-compose.yml` beschreibt den **vollständigen Stack** (App + eigene Datenbank) für
+produktionsnahe Läufe (`docker compose --profile full up`) — dessen Postgres veröffentlicht
+bewusst Port 55432, damit er nie mit dem zentralen Server kollidiert.
 
 ## Workflow
 1. Branch von `main`. Kleine, fokussierte Commits — **ein Thema pro Commit**. Bugfix und Refactoring nie mischen.

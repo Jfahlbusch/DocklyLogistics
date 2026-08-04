@@ -79,14 +79,12 @@ Aktuelles Schema (Phase M1): nur `Tenant` und `User`-Modelle. Volles Datenmodell
 
 ## Lokale Entwicklung
 
-```bash
-# Postgres starten (nur dieser Service, ohne app-container)
-docker compose up -d postgres
+Die Entwicklungs-Datenbank ist die Datenbank `docklylogistics` auf dem zentralen lokalen
+Postgres-Server (Port 5432) — kein eigener Container. Ersteinrichtung auf einer neuen Maschine:
+siehe [CONTRIBUTING.md](CONTRIBUTING.md) → Setup.
 
+```bash
 # Schema + Migrationen
-docker exec docklylogistics-pg psql -U docklylogistics -d docklylogistics \
-  -c "CREATE SCHEMA IF NOT EXISTS docklylogistics;"
-set -a && source .env.local && set +a
 pnpm prisma migrate deploy
 
 # Dev-Server

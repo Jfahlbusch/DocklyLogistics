@@ -5,7 +5,7 @@ Maschinenlesbare Regeln für Claude-Sessions in diesem Repo. **Nutzeranweisungen
 ## Stack & Befehle
 - Next.js 15 (App Router, Turbopack) · React 19 · TypeScript · Tailwind v4 (`@theme` in `app/globals.css`) · Prisma + PostgreSQL · NextAuth v5 + Keycloak · pnpm · Vitest.
 - Vor jedem Commit grün: `pnpm exec tsc --noEmit` · `pnpm lint` · `pnpm test`.
-- DB-Tests brauchen Postgres: `docker start docklylogistics-pg`. Schema lokal: `pnpm exec prisma db push`.
+- DB-Tests laufen gegen die Datenbank `docklylogistics` auf dem **zentralen lokalen Postgres** (Port 5432, neben den anderen Projekten dieser Maschine) — **kein** eigener DB-Container. Schema: `pnpm exec prisma migrate deploy`. Ersteinrichtung: siehe `CONTRIBUTING.md` → Setup.
 - Deploy: siehe `ARCHITECTURE.md` → „Deploy". Migration **vor** Image-Swap.
 
 ## Architektur-Regeln (nicht verletzen)
