@@ -63,6 +63,13 @@ describe("requireCronSecret", () => {
     const long = crypto.randomBytes(48).toString("base64url");
     process.env.CRON_SECRET = long;
     expect(requireCronSecret(headers(long))).toBeNull();
-    expect(requireCronSecret(headers(long.slice(0, -1) + "A"))?.status).toBe(401);
+
+    // Letztes Zeichen garantiert verändern: ein festes Ersatzzeichen wäre in
+    // 1 von 64 Fällen identisch mit dem ursprünglichen — der Test würde dann
+    // das echte Secret schicken und scheinbar grundlos fehlschlagen.
+    const last = long.slice(-1);
+    const mutated = long.slice(0, -1) + (last === "A" ? "B" : "A");
+    expect(mutated).not.toBe(long);
+    expect(requireCronSecret(headers(mutated))?.status).toBe(401);
   });
 });
