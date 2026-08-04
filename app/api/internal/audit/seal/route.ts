@@ -1,13 +1,12 @@
 import type { NextRequest } from "next/server";
 import { handler } from "@/lib/api/handler";
-import { ok, fail } from "@/lib/api/respond";
+import { ok } from "@/lib/api/respond";
+import { requireCronSecret } from "@/lib/api/cron-auth";
 import { sealYesterdayForAllTenants, sealDay } from "@/lib/audit/seal";
 
 export const POST = handler(async (req: NextRequest) => {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) return fail(503, "Cron not configured");
-  const got = req.headers.get("x-internal-cron-secret");
-  if (got !== expected) return fail(401, "Unauthorized");
+  const denied = requireCronSecret(req.headers);
+  if (denied) return denied;
 
   // Optional: ?date=YYYY-MM-DD&tenant=demo to seal a specific day/tenant
   const date = req.nextUrl.searchParams.get("date");

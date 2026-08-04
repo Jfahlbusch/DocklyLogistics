@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { handler } from "@/lib/api/handler";
-import { ok, fail } from "@/lib/api/respond";
+import { ok } from "@/lib/api/respond";
+import { requireCronSecret } from "@/lib/api/cron-auth";
 import { sftpService } from "@/lib/services/sftp-service";
 
 /**
@@ -8,8 +9,7 @@ import { sftpService } from "@/lib/services/sftp-service";
  * trading partners. Protected by X-Internal-Cron-Secret (env CRON_SECRET).
  */
 export const POST = handler(async (req: NextRequest) => {
-  const expected = process.env.CRON_SECRET;
-  if (!expected) return fail(503, "Cron not configured", "Server has no CRON_SECRET");
-  if (req.headers.get("x-internal-cron-secret") !== expected) return fail(401, "Unauthorized");
+  const denied = requireCronSecret(req.headers);
+  if (denied) return denied;
   return ok(await sftpService.pollAll());
 });
