@@ -19,6 +19,15 @@ export function sessionHeaders(role: string, tenant: string): Record<string, str
   return { "x-user-role": role, "x-user-tenant": tenant };
 }
 
+/**
+ * Zweites Argument für dynamische Routen (`app/api/**\/[id]/route.ts`).
+ * Next.js 15 übergibt die Pfadparameter als Promise — die Handler awaiten sie,
+ * also muss der Test sie genauso liefern.
+ */
+export function routeParams<T extends Record<string, string>>(params: T): { params: Promise<T> } {
+  return { params: Promise.resolve(params) };
+}
+
 export async function readJson<T = unknown>(res: Response): Promise<T> {
   const text = await res.text();
   return (text ? JSON.parse(text) : null) as T;
