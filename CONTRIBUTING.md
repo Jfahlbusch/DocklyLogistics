@@ -55,3 +55,19 @@ bewusst Port 55432, damit er nie mit dem zentralen Server kollidiert.
 
 ## Review-Kriterien
 Korrektheit & Tenant-Isolation zuerst, dann API-Parität, dann Wiederverwendung (wurde ein bestehender Baustein übersehen?), dann Stil. Append-only-Tabellen (`AuditLog`, `OrderEvent`, `StockMovement`) dürfen nie per UPDATE/DELETE angefasst werden.
+
+## Tests, die verlässlich bleiben
+
+Zwei Fehlerbilder haben hier bereits CI-Läufe gekippt, obwohl lokal alles grün war —
+beide sind Testfehler, keine Codefehler:
+
+- **Kein globales Zählen.** `prisma.<model>.count()` ohne `where` zählt über alle Mandanten
+  und wird damit von parallel laufenden Testdateien verändert. Immer auf den Testmandanten
+  einschränken.
+- **Keine Zufallsabhängigkeit in Zusicherungen.** Wird ein zufälliger Wert mutiert, um einen
+  Fehlerfall zu erzeugen, muss die Mutation ihn garantiert verändern (und das sollte
+  mitgeprüft werden) — sonst schlägt der Test in einem Bruchteil der Läufe grundlos fehl.
+
+Dazu: Test-Cleanup läuft **vor und nach** dem Lauf, damit ein Abbruch den nächsten Lauf nicht
+blockiert (Unique-Constraints!). Routen, die den Body per `req.text()` lesen, brauchen
+`makeRequest(..., { rawBody })` — ein JSON-Body käme escaped an.
