@@ -53,7 +53,9 @@ describe("/api/edi/as2", () => {
   });
 
   it("weist eine unbekannte Empfänger-Kennung ab (403) und legt nichts an", async () => {
-    const before = await prisma.ediMessage.count();
+    // Mandanten-gescoped zählen: ein globaler count() wäre von parallel
+    // laufenden Testdateien abhängig und damit unzuverlässig.
+    const before = await prisma.ediMessage.count({ where: { tenantId: T } });
     const res = await POST(
       makeRequest(URL, {
         method: "POST",
@@ -62,7 +64,7 @@ describe("/api/edi/as2", () => {
       }),
     );
     expect(res.status).toBe(403);
-    expect(await prisma.ediMessage.count()).toBe(before);
+    expect(await prisma.ediMessage.count({ where: { tenantId: T } })).toBe(before);
   });
 
   it("erkennt die eigene Kennung unabhängig von Groß-/Kleinschreibung", async () => {

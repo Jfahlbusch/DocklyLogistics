@@ -80,13 +80,15 @@ describe("/api/edi/inbound/[token]", () => {
   afterAll(cleanup);
 
   it("weist einen unbekannten Token ab und legt nichts an", async () => {
-    const before = await prisma.ediMessage.count();
+    // Mandanten-gescoped zählen: ein globaler count() wäre von parallel
+    // laufenden Testdateien abhängig und damit unzuverlässig.
+    const before = await prisma.ediMessage.count({ where: { tenantId: { in: [T, OTHER] } } });
     const res = await POST(
       makeRequest(URL("edi_gibtesnicht"), { method: "POST", rawBody: ordersFrom(PARTNER_GLN) }),
       routeParams({ token: "edi_gibtesnicht" }),
     );
     expect(res.status).toBe(401);
-    expect(await prisma.ediMessage.count()).toBe(before);
+    expect(await prisma.ediMessage.count({ where: { tenantId: { in: [T, OTHER] } } })).toBe(before);
   });
 
   it("weist ein deaktiviertes Partner-Postfach ab", async () => {
