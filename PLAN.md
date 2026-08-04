@@ -72,9 +72,9 @@ hinter unveränderten Verträgen.
 
 ## Meilensteine
 
-- [ ] **M0: Testfundament reparieren** — Ergebnis: `pnpm test` läuft lokal reproduzierbar grün,
-      und es existiert eine Vorlage für dynamische `[id]`-Routen.
-- [ ] **M1: Von außen erreichbare Endpunkte absichern** — Ergebnis: Alle 8 ohne Session
+- [x] **M0: Testfundament reparieren** ✅ — `pnpm test` läuft reproduzierbar grün (Commits
+      `6d7fa70`, `35aee13`); Vorlage für dynamische `[id]`-Routen vorhanden.
+- [ ] **M1: Von außen erreichbare Endpunkte absichern** — A1.1 erledigt (`17592f7`); Ergebnis: Alle 8 ohne Session
       erreichbaren Routen haben Tests, die unbefugten Zugriff nachweisen; Cron-Secrets
       timing-sicher.
 - [ ] **M2: Privilegierte Routen absichern** — Ergebnis: Key-Verwaltung, Admin- und
