@@ -327,7 +327,7 @@ enum OrderStatus {
 model Order {
   id          String      @id @default(cuid())
   tenantId    String
-  orderNo     String      @unique
+  orderNo     String
   supplierId  String
   status      OrderStatus @default(DRAFT)
   currency    String      @default("EUR")
@@ -347,6 +347,11 @@ model Order {
   items    OrderItem[]
   events   OrderEvent[]
 
+  // Bestellnummern werden pro Mandant vergeben (nextOrderNo zählt je
+  // tenantId + Jahr) — die Eindeutigkeit muss deshalb ebenfalls pro Mandant
+  // gelten. Ein globaler Unique-Index blockierte den zweiten Mandanten bei
+  // seiner ersten Bestellung des Jahres.
+  @@unique([tenantId, orderNo])
   @@index([tenantId, status])
   @@index([supplierId])
   @@index([tenantId, createdAt])
