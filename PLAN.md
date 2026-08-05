@@ -319,6 +319,29 @@ Cron-Endpunkte) — abgeleitet aus dem Code, nicht generisch.
 | A5.2 (UI-Split) ohne UI-Tests | Unbemerkte Regression | Playwright fehlt — daher kleine Schritte + manuelle Prüfung je Komponente |
 | **Offen:** Soll Playwright eingeführt werden? | UI bleibt manuell geprüft | Entscheidung des Nutzers; steht unter „Später" |
 
+### A3.0: Bestellnummern pro Mandant eindeutig ✅ (`caa6773`)
+**Warum:** Beim Seeden aufgefallen: `nextOrderNo()` zählt je Mandant, `Order.orderNo` trug aber
+einen **globalen** Unique-Index. Der zweite Mandant, der im selben Jahr eine Bestellung anlegt,
+berechnet dieselbe Nummer und scheitert. Produktion war nur deshalb nicht betroffen, weil zwei
+der drei Mandanten noch gar keine Bestellungen haben.
+**Akzeptanzkriterien:** alle erfüllt — zwei Mandanten dürfen `ORD-JJJJ-0001` führen, je Mandant
+wird unabhängig weitergezählt, Doppelvergabe innerhalb eines Mandanten bleibt verboten.
+**Verifikation:** Wirksamkeit beidseitig belegt (alter Index → `Unique constraint failed on the
+fields: (orderNo)`, neuer Index → grün); Migration tauscht nur Indizes.
+**Status:** erledigt · **Prod-Migration:** offen, braucht Freigabe
+
+### A3.3: Testrückstände in der Entwicklungs-Datenbank vermeiden
+**Warum:** Testdateien löschen ihren Mandanten, aber `AuditLog` und `OrderEvent` sind
+append-only und bleiben ohne Trigger-Umweg liegen. Nach den heutigen Läufen lagen Einträge von
+vier längst gelöschten Testmandanten in der Datenbank — wächst mit jedem Lauf.
+**Scope:** Gemeinsamer Cleanup-Helfer, der die Append-only-Tabellen mandantenscharf mitentfernt;
+Nutzung in allen DB-gestützten Testdateien.
+**Akzeptanzkriterien:**
+- [ ] Nach einem vollständigen Suite-Lauf liegen keine Zeilen von `test-*`-Mandanten mehr vor
+- [ ] Der Helfer aktiviert die Trigger im `finally` zuverlässig wieder
+- [ ] Bestehende Tests bleiben grün
+**Abhängigkeiten:** keine · **Aufwand:** S
+
 ## Später
 
 - Playwright-E2E-Setup (Login-Flow, Bestelldurchstich, Mobile-Viewport).
