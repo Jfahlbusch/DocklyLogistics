@@ -1,21 +1,17 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { prisma } from "@/lib/db/client";
 import { stockRepo, InsufficientStockError } from "./stock";
+import { purgeAppendOnly } from "@/tests/helpers/purge-append-only";
 
 const TENANT_ID = "test-stock-tenant";
 let articleId = "";
 let locA = "";
 let locB = "";
 
+// The append-only trigger on StockMovement blocks DELETE in normal queries.
+// Wipe rows session-locally (see tests/helpers/purge-append-only.ts).
 async function deleteStockMovementsRaw() {
-  // The append-only trigger on StockMovement blocks DELETE in normal queries.
-  // Tests need to wipe rows between cases, so we disable the trigger transiently.
-  await prisma.$executeRawUnsafe(`ALTER TABLE "StockMovement" DISABLE TRIGGER stockmovement_no_update`);
-  try {
-    await prisma.stockMovement.deleteMany({ where: { tenantId: TENANT_ID } });
-  } finally {
-    await prisma.$executeRawUnsafe(`ALTER TABLE "StockMovement" ENABLE TRIGGER stockmovement_no_update`);
-  }
+  await purgeAppendOnly(prisma, { tenantIds: [TENANT_ID] });
 }
 
 async function cleanup() {

@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { ediService } from "./edi-service";
 import { ediPartnerMailboxRepo } from "@/lib/db/repos/edi-partner-mailbox";
+import { purgeAppendOnly } from "@/tests/helpers/purge-append-only";
 
 const T = `test-edipartner-${crypto.randomBytes(4).toString("hex")}`;
 const ORDER_A = `TEST-PA-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
@@ -98,12 +99,8 @@ describe("per-partner EDI mailboxes", () => {
 });
 
 afterAll(async () => {
-  await prisma.$transaction([
-    prisma.$executeRawUnsafe(`SET LOCAL session_replication_role = replica`),
-    prisma.orderEvent.deleteMany({ where: { order: { tenantId: T } } }),
-    prisma.auditLog.deleteMany({ where: { tenantId: T } }),
-    prisma.order.deleteMany({ where: { tenantId: T } }),
-  ]);
+  await purgeAppendOnly(prisma, { tenantIds: [T] });
+  await prisma.order.deleteMany({ where: { tenantId: T } });
   await prisma.webhookDelivery.deleteMany({ where: { tenantId: T } });
   await prisma.notification.deleteMany({ where: { tenantId: T } });
   await prisma.ediMessage.deleteMany({ where: { tenantId: T } });

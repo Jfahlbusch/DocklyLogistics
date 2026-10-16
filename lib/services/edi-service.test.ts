@@ -3,6 +3,7 @@ import crypto from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { ediService } from "./edi-service";
 import { tenantEdiSettingsRepo } from "@/lib/db/repos/tenant-edi-settings";
+import { purgeAppendOnly } from "@/tests/helpers/purge-append-only";
 
 const T = `test-edi-${crypto.randomBytes(4).toString("hex")}`;
 const ORDER_NO = `TEST-EDI-${crypto.randomBytes(4).toString("hex").toUpperCase()}`;
@@ -165,16 +166,10 @@ describe("ediService inbound", () => {
 });
 
 afterAll(async () => {
-  // Append-only tables (OrderEvent/AuditLog) block UPDATE/DELETE via triggers.
-  // SET LOCAL session_replication_role=replica skips them ONLY inside this
-  // transaction/session — unlike ALTER TABLE … DISABLE TRIGGER it has zero
-  // globally observable state, so parallel trigger-tests never flake.
-  await prisma.$transaction([
-    prisma.$executeRawUnsafe(`SET LOCAL session_replication_role = replica`),
-    prisma.orderEvent.deleteMany({ where: { order: { tenantId: T } } }),
-    prisma.auditLog.deleteMany({ where: { tenantId: T } }),
-    prisma.order.deleteMany({ where: { tenantId: T } }), // events gone; cascades items
-  ]);
+  // Append-only tables (OrderEvent/AuditLog) block DELETE via triggers — purge
+  // them session-locally (no global trigger state, no flakes in parallel files).
+  await purgeAppendOnly(prisma, { tenantIds: [T] });
+  await prisma.order.deleteMany({ where: { tenantId: T } }); // events gone; cascades items
   await prisma.webhookDelivery.deleteMany({ where: { tenantId: T } });
   await prisma.notification.deleteMany({ where: { tenantId: T } });
   await prisma.ediMessage.deleteMany({ where: { tenantId: T } });

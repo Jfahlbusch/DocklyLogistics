@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import { prisma } from "@/lib/db/client";
 import { postInventory } from "./inventory";
+import { purgeAppendOnly } from "@/tests/helpers/purge-append-only";
 
 const T = "test-inventory";
 const mkArticle = (sku: string) =>
@@ -9,13 +10,8 @@ const mkArticle = (sku: string) =>
   });
 
 async function cleanup() {
-  // StockMovement is append-only (trigger blocks DELETE); disable it transiently.
-  await prisma.$executeRawUnsafe(`ALTER TABLE "StockMovement" DISABLE TRIGGER stockmovement_no_update`);
-  try {
-    await prisma.stockMovement.deleteMany({ where: { tenantId: T } });
-  } finally {
-    await prisma.$executeRawUnsafe(`ALTER TABLE "StockMovement" ENABLE TRIGGER stockmovement_no_update`);
-  }
+  // StockMovement is append-only (trigger blocks DELETE); purge session-locally.
+  await purgeAppendOnly(prisma, { tenantIds: [T] });
   await prisma.stockBalance.deleteMany({ where: { tenantId: T } });
   await prisma.article.deleteMany({ where: { tenantId: T } });
   await prisma.storageLocation.deleteMany({ where: { tenantId: T } });

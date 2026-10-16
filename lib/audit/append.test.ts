@@ -1,43 +1,30 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { prisma } from "@/lib/db/client";
 import { appendAudit } from "./append";
-import type { Prisma } from "@prisma/client";
+import { purgeAppendOnly } from "@/tests/helpers/purge-append-only";
 
 const TENANT_ID = "test-audit-tenant";
 
-async function disableAuditLogTrigger() {
-  await prisma.$executeRawUnsafe('ALTER TABLE "AuditLog" DISABLE TRIGGER auditlog_no_update;');
-}
-async function enableAuditLogTrigger() {
-  await prisma.$executeRawUnsafe('ALTER TABLE "AuditLog" ENABLE TRIGGER auditlog_no_update;');
-}
-
-async function clearTenant(tx: Prisma.TransactionClient | typeof prisma) {
-  await tx.auditLog.deleteMany({ where: { tenantId: TENANT_ID } });
-  await tx.user.deleteMany({ where: { tenantId: TENANT_ID } });
-  await tx.tenant.deleteMany({ where: { id: TENANT_ID } });
+async function clearTenant() {
+  await purgeAppendOnly(prisma, { tenantIds: [TENANT_ID] });
+  await prisma.user.deleteMany({ where: { tenantId: TENANT_ID } });
+  await prisma.tenant.deleteMany({ where: { id: TENANT_ID } });
 }
 
 beforeAll(async () => {
-  await disableAuditLogTrigger();
-  await clearTenant(prisma);
-  await enableAuditLogTrigger();
+  await clearTenant();
   await prisma.tenant.create({
     data: { id: TENANT_ID, name: "test-audit" },
   });
 });
 
 afterAll(async () => {
-  await disableAuditLogTrigger();
-  await clearTenant(prisma);
-  await enableAuditLogTrigger();
+  await clearTenant();
   await prisma.$disconnect();
 });
 
 beforeEach(async () => {
-  await disableAuditLogTrigger();
-  await prisma.auditLog.deleteMany({ where: { tenantId: TENANT_ID } });
-  await enableAuditLogTrigger();
+  await purgeAppendOnly(prisma, { tenantIds: [TENANT_ID] });
 });
 
 describe("appendAudit", () => {

@@ -2,6 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from "vitest";
 import crypto from "node:crypto";
 import { prisma } from "@/lib/db/client";
 import { orderService } from "./order-service";
+import { purgeAppendOnly } from "@/tests/helpers/purge-append-only";
 
 /**
  * Bestellnummern werden **pro Mandant** vergeben (nextOrderNo filtert auf
@@ -18,9 +19,7 @@ const TENANTS = [A, B];
 const ids: Record<string, { articleId: string; supplierId: string }> = {};
 
 async function cleanup() {
-  await prisma.$executeRawUnsafe('ALTER TABLE "OrderEvent" DISABLE TRIGGER orderevent_no_update;');
-  await prisma.orderEvent.deleteMany({ where: { order: { tenantId: { in: TENANTS } } } });
-  await prisma.$executeRawUnsafe('ALTER TABLE "OrderEvent" ENABLE TRIGGER orderevent_no_update;');
+  await purgeAppendOnly(prisma, { tenantIds: TENANTS });
   await prisma.orderItem.deleteMany({ where: { order: { tenantId: { in: TENANTS } } } });
   await prisma.order.deleteMany({ where: { tenantId: { in: TENANTS } } });
   await prisma.articleSupplier.deleteMany({ where: { article: { tenantId: { in: TENANTS } } } });

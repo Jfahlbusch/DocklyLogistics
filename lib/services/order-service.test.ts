@@ -1,26 +1,18 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from "vitest";
 import { prisma } from "@/lib/db/client";
 import { orderService, OrderStatusError } from "./order-service";
+import { purgeAppendOnly } from "@/tests/helpers/purge-append-only";
 
 const TENANT_ID = "test-order-tenant";
 let articleId = "";
 let supplierId = "";
 
-async function disableOrderEventTrigger() {
-  await prisma.$executeRawUnsafe('ALTER TABLE "OrderEvent" DISABLE TRIGGER orderevent_no_update;');
-}
-async function enableOrderEventTrigger() {
-  await prisma.$executeRawUnsafe('ALTER TABLE "OrderEvent" ENABLE TRIGGER orderevent_no_update;');
-}
-
 async function cleanup() {
-  await disableOrderEventTrigger();
   // Scoped to THIS test tenant: the orderNo counter counts per tenant+year
   // (nextOrderNo filters on tenantId), so wiping our own orders is enough for
   // the 0001 expectation — and parallel test files keep their orders. A global
   // deleteMany({}) here used to race the edi-service tests.
-  await prisma.orderEvent.deleteMany({ where: { order: { tenantId: TENANT_ID } } });
-  await enableOrderEventTrigger();
+  await purgeAppendOnly(prisma, { tenantIds: [TENANT_ID] });
   await prisma.orderItem.deleteMany({ where: { order: { tenantId: TENANT_ID } } });
   await prisma.order.deleteMany({ where: { tenantId: TENANT_ID } });
   await prisma.articleSupplier.deleteMany({ where: { article: { tenantId: TENANT_ID } } });
@@ -41,9 +33,7 @@ beforeAll(async () => {
 afterAll(async () => { await cleanup(); await prisma.$disconnect(); });
 
 beforeEach(async () => {
-  await disableOrderEventTrigger();
-  await prisma.orderEvent.deleteMany({ where: { order: { tenantId: TENANT_ID } } });
-  await enableOrderEventTrigger();
+  await purgeAppendOnly(prisma, { tenantIds: [TENANT_ID] });
   await prisma.orderItem.deleteMany({ where: { order: { tenantId: TENANT_ID } } });
   await prisma.order.deleteMany({ where: { tenantId: TENANT_ID } });
 });
