@@ -1,4 +1,8 @@
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+// next-intl ohne i18n-Routing: Sprache fix Deutsch, URLs bleiben unverändert (siehe i18n/request.ts).
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -9,4 +13,4 @@ const nextConfig: NextConfig = {
   serverExternalPackages: ["ssh2", "ssh2-sftp-client"],
 };
 
-export default nextConfig;
+export default withNextIntl(nextConfig);

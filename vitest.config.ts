@@ -15,7 +15,7 @@ export default defineConfig({
     include: [
       "lib/**/*.test.ts",
       "components/**/*.test.tsx",
-      "tests/unit/**/*.test.ts",
+      "tests/unit/**/*.test.{ts,tsx}",
       "tests/integration/**/*.test.ts",
     ],
     coverage: {

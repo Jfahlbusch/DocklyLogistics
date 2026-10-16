@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/layout/service-worker-register";
 import { ThemeProvider, THEME_FOUC_SCRIPT } from "@/components/theme/theme-provider";
@@ -51,17 +53,22 @@ export const viewport: Viewport = {
   themeColor: "#041E24",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  // Nur Deutsch, ohne URL-Sprache (i18n/request.ts); die Texte kommen aus messages/de.json.
+  const locale = await getLocale();
+  const messages = await getMessages();
   return (
-    <html lang="de" className={`${playfair.variable} ${dmSans.variable} ${poppins.variable}`} suppressHydrationWarning>
+    <html lang={locale} className={`${playfair.variable} ${dmSans.variable} ${poppins.variable}`} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
         <script dangerouslySetInnerHTML={{ __html: THEME_FOUC_SCRIPT }} />
-        <ThemeProvider>
-          {children}
-          <ServiceWorkerRegister />
-        </ThemeProvider>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <ThemeProvider>
+            {children}
+            <ServiceWorkerRegister />
+          </ThemeProvider>
+        </NextIntlClientProvider>
       </body>
     </html>
   );
