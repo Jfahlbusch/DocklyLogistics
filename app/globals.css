@@ -199,6 +199,12 @@
   box-shadow: 0 0.5rem 1rem color-mix(in srgb, var(--foreground) 15%, transparent);
 }
 
+/* Logo `variant="auto"` (components/layout/logo.tsx): je Farbschema nur die passende Bildmarke. */
+.dark .mark-on-light,
+:root:not(.dark) .mark-on-dark {
+  display: none;
+}
+
 /* Reduced motion */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

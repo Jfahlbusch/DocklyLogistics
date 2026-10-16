@@ -1,61 +1,62 @@
 "use client";
 
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
-import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { Brand } from "./brand";
-import { TenantChip } from "./tenant-chip";
-import { TenantSwitcher, type TenantSwitcherData } from "./tenant-switcher";
-import { NavLinks } from "./nav-links";
-import { SidebarProfile } from "./sidebar-profile";
-import type { ProfilUser } from "./profile-menu-content";
+import type { TenantNavigation } from "@/lib/schemas/tenant-view";
 
-/** Hamburger + full-screen off-canvas drawer below md; spiegelt die Sidebar (Brand, Mandant, Gruppen, Profil-Fuß). */
-export function MobileNav({
-  user,
-  allowedNav,
-  tenantSwitcher,
-}: {
-  user: ProfilUser;
-  allowedNav?: string[];
-  tenantSwitcher?: TenantSwitcherData | null;
-}) {
+import { useState } from "react";
+import { Menu } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { TenantSwitcher } from "./tenant-switcher";
+import { Brand } from "./brand";
+import { NavLinks } from "./nav-links";
+import { SidebarFooter } from "./sidebar-footer";
+import { SIDEBAR_SHELL_CLASS } from "@/lib/sidebar-geometry";
+import { cn } from "@/lib/utils";
+import type { UserRole } from "@/lib/auth/role";
+
+type Props = {
+  role: UserRole;
+  allowed?: readonly string[];
+  userName: string;
+  userEmail: string;
+  tenantNavigation?: TenantNavigation;
+};
+
+/**
+ * Burger-Trigger + Drawer, ersetzt die Sidebar unterhalb 992 px (Portal-Breakpoint `lg`). Der Drawer ist dieselbe schwebende Leiste wie am
+ * Desktop (Portal: `.sidebar` unter `lg` mit `transform`): 268 px breit (höchstens Display − 24 px), 12 px vom Rand, Höhe Display − 24 px,
+ * Radius 26 px, Rand 1 px und Schatten, mit Marke, Unternehmen, Bereichen und Profilzeile; ohne Einklapp-Knopf (nur ab 992 px).
+ */
+export function MobileNav({ role, allowed, userName, userEmail, tenantNavigation }: Props) {
+  const t = useTranslations("shell");
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
+
   return (
     <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
         <button
           type="button"
-          aria-label="Menü öffnen"
-          className="-ml-1 rounded-md p-2 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground md:hidden"
+          aria-label={t("openMenu")}
+          className="-ml-2 inline-flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring nav:hidden"
         >
-          <Menu size={24} strokeWidth={1.5} />
+          <Menu size={24} strokeWidth={1.5} aria-hidden />
         </button>
       </SheetTrigger>
+      {/* Ohne SheetDescription: `aria-describedby={undefined}` ist der dokumentierte
+          Radix-Opt-out, sonst verweist der Drawer auf eine fehlende Beschreibungs-ID. */}
       <SheetContent
         side="left"
-        showCloseButton={false}
-        className="app-sidebar !w-full !max-w-full gap-0 border-white/10 p-0 text-white"
+        aria-describedby={undefined}
+        // Unser shadcn-Sheet setzt die Seitenmaße über `data-[side=left]:*` (höhere Spezifität) — darum dieselbe Variante,
+        // damit tailwind-merge die Vorgaben ersetzt statt sie zu überlagern.
+        className={cn("gap-0 overflow-visible data-[side=left]:inset-y-auto data-[side=left]:top-3 data-[side=left]:left-3 data-[side=left]:h-[calc(100dvh-1.5rem)] data-[side=left]:w-[268px] data-[side=left]:max-w-[calc(100vw-1.5rem)] data-[side=left]:border data-[side=left]:sm:max-w-[calc(100vw-1.5rem)]", SIDEBAR_SHELL_CLASS)}
       >
-        <SheetTitle className="sr-only">Navigation</SheetTitle>
-
-        {/* Menü-Anatomie wie die Sidebar: Brand → Mandant → Gruppen → Profil; Schließen oben rechts */}
-        <div className="relative">
-          <Brand />
-          <button
-            type="button"
-            onClick={close}
-            aria-label="Menü schließen"
-            className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/10 hover:text-white"
-          >
-            <X size={26} strokeWidth={1.5} />
-          </button>
-        </div>
-        {tenantSwitcher ? <TenantSwitcher {...tenantSwitcher} /> : <TenantChip tenant={user.tenant} />}
-
-        <NavLinks onNavigate={close} allowedNav={allowedNav} />
-        <SidebarProfile user={user} />
+        <SheetTitle className="sr-only">{t("navigation")}</SheetTitle>
+        <Brand />
+        {tenantNavigation && <TenantSwitcher navigation={tenantNavigation} />}
+        <NavLinks role={role} allowed={allowed} onNavigate={close} />
+        <SidebarFooter userName={userName} userEmail={userEmail} role={role} subtitle={tenantNavigation?.currentName} />
       </SheetContent>
     </Sheet>
   );

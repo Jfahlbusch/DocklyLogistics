@@ -5,6 +5,7 @@ import { getLocale, getMessages } from "next-intl/server";
 import "./globals.css";
 import { ServiceWorkerRegister } from "@/components/layout/service-worker-register";
 import { ThemeProvider, THEME_FOUC_SCRIPT } from "@/components/theme/theme-provider";
+import { SIDEBAR_PREPAINT_SCRIPT } from "@/lib/sidebar-preference";
 
 // Self-hosted fonts (woff2 in ./fonts) so builds never depend on Google Fonts.
 const playfair = localFont({
@@ -63,6 +64,8 @@ export default async function RootLayout({
     <html lang={locale} className={`${playfair.variable} ${dmSans.variable} ${poppins.variable}`} suppressHydrationWarning>
       <body className="bg-background text-foreground antialiased">
         <script dangerouslySetInnerHTML={{ __html: THEME_FOUC_SCRIPT }} />
+        {/* Breite der Leiste vor dem ersten Paint aus dem Cookie `ui_sidebar` (seitenmenue.md §4). */}
+        <script dangerouslySetInnerHTML={{ __html: SIDEBAR_PREPAINT_SCRIPT }} />
         <NextIntlClientProvider locale={locale} messages={messages}>
           <ThemeProvider>
             {children}

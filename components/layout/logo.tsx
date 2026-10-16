@@ -1,61 +1,63 @@
 import Image from "next/image";
 import { cn } from "@/lib/utils";
+import markLight from "../../public/brand/dockly-mark.png";
+import markDark from "../../public/brand/dockly-mark-neg.png";
 
+const SIZES = {
+  sm: { markHeight: 28, textClass: "text-[1.35rem]" },
+  lg: { markHeight: 48, textClass: "text-2xl" },
+} as const;
+
+/** Höhe der Marke im Menükopf des Portals. */
+export const INLINE_MARK_PX = 30;
+const BRAND_NAME = "DocklyLogistics";
 type Variant = "dark" | "light" | "auto";
 
 type Props = {
-  /**
-   * "dark"  = on a permanently dark surface → white logo (e.g. the teal sidebar).
-   * "light" = on a permanently light surface → teal logo.
-   * "auto"  = adapt to the color theme (teal in light mode, white in dark mode).
-   */
+  size?: "sm" | "lg";
+  /** Dunkle Fläche wie die Navy-Sidebar, helle Fläche oder Theme-Wechsel. */
   variant?: Variant;
-  className?: string;
+  /** Eingeklappte Sidebar: nur die Schmetterlingsmarke. */
+  markOnly?: boolean;
+  /** Marke und Wortmarke nebeneinander, Marke 30 px hoch (Portal: `.sidebar-logo img`); sonst übereinander. */
+  inline?: boolean;
 };
 
-const MARK_TEAL = "/brand/dockly-mark.png";
-const MARK_WHITE = "/brand/dockly-mark-neg.png";
-const MARK_CLS = "h-7 w-auto shrink-0";
-
-function Mark({ variant }: { variant: Variant }) {
-  if (variant === "dark") {
-    return <Image src={MARK_WHITE} alt="DocklyLogistics" width={359} height={300} priority className={MARK_CLS} />;
-  }
-  if (variant === "light") {
-    return <Image src={MARK_TEAL} alt="DocklyLogistics" width={359} height={300} priority className={MARK_CLS} />;
-  }
-  // auto: swap the mark with the theme
-  return (
-    <>
-      <Image src={MARK_TEAL} alt="DocklyLogistics" width={359} height={300} priority className={cn(MARK_CLS, "dark:hidden")} />
-      <Image src={MARK_WHITE} alt="" aria-hidden width={359} height={300} className={cn(MARK_CLS, "hidden dark:block")} />
-    </>
-  );
-}
-
 /**
- * DocklyLogistics brand logo — the Dockly butterfly mark + "dockly LOGISTICS"
- * wordmark, rebuilt in the DocklyProtect style (Poppins ExtraBold: italic
- * lowercase "dockly" + upright caps second word). Single colour via the parent
- * text colour; the mark ships in teal + white variants.
+ * DocklyLogistics-Logo (Dockly-Familie) mit der Originalmarke aus DocklyBI. Auf einer fest
+ * dunklen oder hellen Fläche wird nur die passende Bilddatei gerendert; bei
+ * `auto` übernimmt CSS den Theme-Wechsel (mark-on-light/mark-on-dark).
  */
-export function Logo({ variant = "dark", className }: Props) {
-  const textColor =
-    variant === "dark"
-      ? "text-white"
-      : variant === "light"
-        ? "text-navy-900"
-        : "text-navy-900 dark:text-white";
+export function Logo({ size = "lg", variant = "auto", markOnly = false, inline = false }: Props) {
+  const { markHeight: stackedHeight, textClass } = SIZES[size];
+  const markHeight = inline ? INLINE_MARK_PX : stackedHeight;
+  const markSize = `${Math.round(markHeight * (359 / 300))}px`;
+  const markAlt = markOnly ? BRAND_NAME : "";
   return (
-    <span className={cn("inline-flex flex-col items-center gap-1.5 select-none", textColor, className)}>
-      <Mark variant={variant} />
-      <span
-        style={{ fontFamily: "var(--font-poppins)", fontWeight: 800 }}
-        className="text-[1.35rem] leading-none whitespace-nowrap"
-      >
-        <span className="italic">dockly</span>
-        <span className="ml-1 uppercase tracking-[0.01em]">Logistics</span>
+    <div
+      className={cn(
+        "flex select-none items-center",
+        inline ? "flex-row gap-2" : "flex-col gap-1.5",
+        variant === "dark" ? "text-sidebar-foreground" : variant === "light" ? "text-navy-900" : "text-foreground",
+      )}
+    >
+      <span className="relative" style={{ height: markHeight, width: markHeight * (359 / 300) }}>
+        {variant !== "dark" ? (
+          <Image src={markLight} alt={markAlt} fill priority className={cn("object-contain", variant === "auto" && "mark-on-light")} sizes={markSize} />
+        ) : null}
+        {variant !== "light" ? (
+          <Image src={markDark} alt={markAlt} fill priority className={cn("object-contain", variant === "auto" && "mark-on-dark")} sizes={markSize} />
+        ) : null}
       </span>
-    </span>
+      {!markOnly ? (
+        <span
+          style={{ fontFamily: "var(--font-poppins)", fontWeight: 800 }}
+          className={cn("leading-none whitespace-nowrap", textClass)}
+        >
+          <span className="italic">dockly</span>
+          <span className="ml-1 uppercase tracking-[0.01em]">LOGISTICS</span>
+        </span>
+      ) : null}
+    </div>
   );
 }

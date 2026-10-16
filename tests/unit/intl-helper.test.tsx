@@ -34,6 +34,6 @@ describe("next-intl ohne URL-Sprache", () => {
   });
 
   it("de.json hat die Namespaces shell und nav", () => {
-    expect(Object.keys(de).sort()).toEqual(["nav", "shell"]);
+    expect(Object.keys(de).sort()).toEqual(["common", "nav", "shell"]);
   });
 });

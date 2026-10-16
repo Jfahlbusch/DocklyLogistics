@@ -1,64 +1,83 @@
 "use client";
 
-import Link from "next/link";
-import { usePathname } from "next/navigation";
 import { Search } from "lucide-react";
-import { activeNavId, tabItems } from "@/lib/navigation";
+import { useTranslations } from "next-intl";
+import { Link, usePathname } from "@/i18n/navigation";
+import { useScrollingDown } from "@/hooks/use-scroll-direction";
 import { openSearch } from "@/components/search/open-search";
+import type { UserRole } from "@/lib/auth/role";
+import { areaHref, findActiveEntry, visibleAreas } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
-import { useScrollMinimized } from "./use-scroll-minimized";
 
-/** ID des Scrollcontainers im App-Layout (`<section id="app-scroll">`). */
-export const APP_SCROLL_ID = "app-scroll";
-
-const tabBase =
-  "flex min-h-11 min-w-11 flex-1 flex-col items-center justify-center rounded-full px-1 text-muted-foreground outline-none transition-colors focus-visible:ring-2 focus-visible:ring-ring motion-reduce:transition-none";
-const tabIdle = "hover:text-foreground active:bg-muted";
-const tabActive = "bg-navy-900 font-medium text-white dark:bg-gold-500 dark:text-navy-900";
-const tabLabelClass =
-  "block max-h-4 overflow-hidden text-[10px] leading-4 transition-[max-height,opacity] duration-200 motion-reduce:transition-none group-data-[minimized=true]/pill:max-h-0 group-data-[minimized=true]/pill:opacity-0";
+/** Symbolgröße der Tabs in px (Lucide `size`). */
+export const TAB_ICON_PX = 20;
 
 /**
- * Schwebende Bottom-Tab-Pill (nur unter md): bis zu vier Bereiche + Such-Tab, kein Profil-Tab.
- * Beim Herunterscrollen des Inhalts (`#app-scroll`) schrumpft sie auf reine Icons
- * (Labels klappen weg, Pill wird schmaler und rückt etwas tiefer); beim Hochscrollen kehrt sie zurück.
+ * Klassen der Tabs: 44 px Mindestgröße (`min-h-11 min-w-11`), 10 px Innenabstand, 4 px zwischen Symbol und Label. Die Maße gehen in
+ * die Breitenrechnung von tests/unit/tab-bar-fit.test.ts ein; wer sie ändert, lässt den Test neu rechnen.
  */
-export function TabBar({ allowedNav }: { allowedNav?: string[] }) {
+export const TAB_CLASS =
+  "flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-400 motion-reduce:transition-none";
+
+/**
+ * Klassen der Kapsel: 8 px Abstand zwischen den Tabs (L9), 4 px Innenabstand. Unter 400 px Bildschirmbreite rückt sie auf 8 px an den Rand
+ * (sonst 16 px), damit das längste Label (DE „Stammdaten“, 73,5 px) bei 360 px samt 8 px Lücke in das Bild passt.
+ */
+export const TAB_BAR_CLASS =
+  "fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-2 min-[400px]:left-4 z-40 flex max-w-[calc(100vw-1rem)] min-[400px]:max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border border-sidebar-foreground/10 bg-sidebar p-1 text-sidebar-foreground shadow-lg transition-transform duration-200 motion-reduce:transition-none nav:hidden [@media(prefers-reduced-transparency:no-preference)]:bg-sidebar/95 [@media(prefers-reduced-transparency:no-preference)]:backdrop-blur";
+
+/**
+ * Schwebende Tab-Pill unterhalb `lg` = 992 px, dem Breakpoint des Portal-Menüs (A8.18): je sichtbarem Bereich ein Tab plus Such-Tab. Beim
+ * Herunterscrollen zeigt sie nur noch Icons (`data-minimized`); im Normalzustand trägt nur der aktive
+ * Bereich sein Label in der Gold-Kapsel, alle Tabs haben einen übersetzten Namen (`aria-label`). Liegt unter Dialogen und Sheets (`z-50`).
+ */
+export function TabBar({ role, allowed }: { role: UserRole; allowed?: readonly string[] }) {
+  const t = useTranslations();
   const pathname = usePathname();
-  const activeId = activeNavId(pathname);
-  const minimized = useScrollMinimized(APP_SCROLL_ID);
+  const minimized = useScrollingDown();
+  const activeArea = findActiveEntry(pathname)?.area ?? "overview";
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+12px)] z-30 flex justify-center px-3 md:hidden">
-      <nav
-        aria-label="Schnellzugriff"
-        data-minimized={minimized}
-        className={cn(
-          "group/pill pointer-events-auto flex w-full items-center gap-0.5 rounded-full border border-border/60 bg-background/80 p-1.5 shadow-lg backdrop-blur-xl transition-[max-width,transform] duration-300 ease-out motion-reduce:transition-none",
-          minimized ? "max-w-[17rem] translate-y-1" : "max-w-md",
-        )}
+    <nav
+      aria-label={t("shell.tabBar.label")}
+      data-minimized={minimized ? "true" : "false"}
+      className={TAB_BAR_CLASS}
+    >
+      {visibleAreas(role, undefined, allowed).map((area) => {
+        const href = areaHref(area.id, role, undefined, allowed);
+        if (!href) return null;
+        const Icon = area.icon;
+        const label = t(area.labelKey);
+        // Kurzform nur für das sichtbare Label der Kapsel (8 px Abstand, 343 px nutzbar bei 375 px); der zugängliche Name
+        // bleibt die volle Bezeichnung und enthält den sichtbaren Text (WCAG 2.5.3).
+        const visibleLabel = area.id === "admin" ? t("shell.tabBar.adminShort") : label;
+        const active = area.id === activeArea;
+        return (
+          <Link
+            key={area.id}
+            href={href}
+            aria-current={active ? "page" : undefined}
+            aria-label={label}
+            className={cn(
+              TAB_CLASS,
+              active
+                ? "bg-gold-500 text-navy-900"
+                : "text-sidebar-foreground/75 hover:text-sidebar-foreground",
+            )}
+          >
+            <Icon size={TAB_ICON_PX} strokeWidth={1.5} aria-hidden />
+            {active && !minimized ? <span className="min-w-0 truncate">{visibleLabel}</span> : null}
+          </Link>
+        );
+      })}
+      <button
+        type="button"
+        aria-label={t("shell.tabBar.search")}
+        onClick={openSearch}
+        className={cn(TAB_CLASS, "text-sidebar-foreground/75 hover:text-sidebar-foreground")}
       >
-        {tabItems(allowedNav).map((item) => {
-          const Icon = item.icon;
-          const active = activeId === item.id;
-          return (
-            <Link
-              key={item.id}
-              href={item.href}
-              title={item.label}
-              aria-current={active ? "page" : undefined}
-              className={cn(tabBase, active ? tabActive : tabIdle)}
-            >
-              <Icon size={22} strokeWidth={1.5} aria-hidden className="shrink-0" />
-              <span className={tabLabelClass}>{item.tabLabel ?? item.label}</span>
-            </Link>
-          );
-        })}
-        <button type="button" onClick={openSearch} className={cn(tabBase, tabIdle)}>
-          <Search size={22} strokeWidth={1.5} aria-hidden className="shrink-0" />
-          <span className={tabLabelClass}>Suche</span>
-        </button>
-      </nav>
-    </div>
+        <Search size={TAB_ICON_PX} strokeWidth={1.5} aria-hidden />
+      </button>
+    </nav>
   );
 }

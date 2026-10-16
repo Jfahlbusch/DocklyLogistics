@@ -30,3 +30,16 @@ registry.registerPath({
   tags: ["Admin"],
   responses: { 204: { description: "Cookie gelöscht" }, 403: { description: "Nur GLOBAL_ADMIN" } },
 });
+
+/**
+ * Daten der Unternehmenskarte im Menü (Vorlage `assets/layout`). `tenants` ist nur für GLOBAL_ADMIN gesetzt — dann ist die Karte der
+ * Auslöser des Wechslers; sonst bleibt sie eine statische Anzeige (kein Mandantennamen-Leak an andere Rollen).
+ */
+export type TenantNavigation = {
+  /** Wirksamer Mandant (bei Fremdansicht der betrachtete). */
+  currentTenant: string;
+  /** Echter Mandant des Angemeldeten. */
+  homeTenant: string;
+  currentName: string;
+  tenants?: { id: string; name: string }[];
+};

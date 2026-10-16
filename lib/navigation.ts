@@ -50,13 +50,6 @@ export type NavEntry = {
    * `false`: nur in Sidebar, Drawer und ⌘K (z. B. Unterseiten ohne eigenes Segment).
    */
   readonly segment?: boolean;
-  /**
-   * Projektspezifisch (nicht in der Vorlage), bis S2 die Tab-Leiste umstellt: Eintrag erscheint als Tab der mobilen Leiste
-   * (höchstens 4) mit diesem Kurzlabel (`nav.tab.*`).
-   */
-  readonly tabLabelKey?: NavLabelKey;
-  /** Projektspezifisch: Scan-Akzent (Lagermodus) in der Darstellung. */
-  readonly accent?: boolean;
 };
 
 /** Bereiche in Anzeigereihenfolge (Übersicht zuerst, Verwaltung zuletzt). */
@@ -69,19 +62,19 @@ export const NAV_AREAS: readonly NavAreaDefinition[] = [
 
 /**
  * Alle Einträge; die Reihenfolge innerhalb eines Bereichs ist die Anzeigereihenfolge, der erste sichtbare Eintrag ist das Ziel des
- * Bereichs (`areaHref`). Die Tab-Leiste führt dashboard, orders, stock, warehouse (`tabLabelKey`), danach die Suche.
+ * Bereichs (`areaHref`) — die mobile Tab-Leiste führt je Bereich einen Tab dorthin, danach die Suche.
  */
 export const NAV_ENTRIES: readonly NavEntry[] = [
   // Übersicht
-  { id: "dashboard", area: "overview", labelKey: "nav.dashboard", href: "/dashboard", icon: Home, tabLabelKey: "nav.tab.dashboard" },
+  { id: "dashboard", area: "overview", labelKey: "nav.dashboard", href: "/dashboard", icon: Home },
   // Einkauf
   { id: "suggestions", area: "purchasing", labelKey: "nav.suggestions", href: "/order-suggestions", icon: ListChecks },
-  { id: "orders", area: "purchasing", labelKey: "nav.orders", href: "/orders", icon: ShoppingCart, tabLabelKey: "nav.tab.orders" },
+  { id: "orders", area: "purchasing", labelKey: "nav.orders", href: "/orders", icon: ShoppingCart },
   { id: "edi", area: "purchasing", labelKey: "nav.edi", href: "/edi", icon: ArrowLeftRight },
   { id: "reports", area: "purchasing", labelKey: "nav.reports", href: "/reports", icon: BarChart3 },
   // Lager
-  { id: "stock", area: "warehouse", labelKey: "nav.stock", href: "/stock", icon: Box, tabLabelKey: "nav.tab.stock" },
-  { id: "warehouse", area: "warehouse", labelKey: "nav.warehouse", href: "/warehouse-mode", icon: ScanLine, tabLabelKey: "nav.tab.warehouse", accent: true },
+  { id: "stock", area: "warehouse", labelKey: "nav.stock", href: "/stock", icon: Box },
+  { id: "warehouse", area: "warehouse", labelKey: "nav.warehouse", href: "/warehouse-mode", icon: ScanLine },
   { id: "articles", area: "warehouse", labelKey: "nav.articles", href: "/articles", icon: Package },
   { id: "suppliers", area: "warehouse", labelKey: "nav.suppliers", href: "/suppliers", icon: Truck },
   // Verwaltung
@@ -155,22 +148,6 @@ export function findActiveEntry(path: string, entries: readonly NavEntry[] = NAV
   return active;
 }
 
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-// Kompatible Wrapper für die bestehenden Aufrufer (Sidebar, Drawer, Tab-Leiste, ⌘K-Palette, Topbar, Feature-Filter in
-// `app/(app)/layout.tsx`). Sie leiten sich vollständig aus der Registry oben ab und liefern die bisherigen Formen mit fertigen
-// deutschen Texten (aus messages/de.json). S2 ersetzt die Aufrufer durch die Menü-Komponenten der Vorlage; danach entfällt dieser Block.
-// ───────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
-
-/** Bisherige Gruppen des Menüs (Übersicht gehörte zu „Einkauf“, damit die App in S1 unverändert aussieht). */
-export type NavGroupId = "einkauf" | "lager" | "verwaltung";
-
-const LEGACY_GROUP: Record<NavArea, NavGroupId> = {
-  overview: "einkauf",
-  purchasing: "einkauf",
-  warehouse: "lager",
-  admin: "verwaltung",
-};
-
 /** Deutscher Text zu einem `nav.*`-Key (die App ist vorerst nur Deutsch, siehe `i18n/request.ts`). */
 function germanLabel(key: NavLabelKey): string {
   let node: unknown = de;
@@ -179,77 +156,21 @@ function germanLabel(key: NavLabelKey): string {
   return node;
 }
 
-export const NAV_GROUPS: { id: NavGroupId; label: string }[] = [
-  { id: "einkauf", label: germanLabel("nav.areas.purchasing") },
-  { id: "lager", label: germanLabel("nav.areas.warehouse") },
-  { id: "verwaltung", label: germanLabel("nav.areas.admin") },
-];
-
-export type NavItem = {
-  id: string;
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  group: NavGroupId;
-  /** In der mobilen Tab-Leiste anzeigen (max. 4). */
-  tab?: boolean;
-  /** Kurzlabel für die mobile Tab-Pill (Pflicht bei `tab: true`). */
-  tabLabel?: string;
-  accent?: boolean;
-};
-
-/** Einträge in der bisherigen Form (Registry-Reihenfolge). */
-export const NAV_ITEMS: NavItem[] = NAV_ENTRIES.map((entry) => ({
-  id: entry.id,
-  label: germanLabel(entry.labelKey),
-  href: entry.href,
-  icon: entry.icon,
-  group: LEGACY_GROUP[entry.area],
-  ...(entry.tabLabelKey ? { tab: true, tabLabel: germanLabel(entry.tabLabelKey) } : {}),
-  ...(entry.accent ? { accent: true } : {}),
-}));
-
-const MAX_TABS = 4;
-
-function isAllowed(item: NavItem, allowed?: string[]): boolean {
-  return allowed === undefined || allowed.includes(item.id);
-}
-
-/** Einträge je Gruppe (nur erlaubte IDs; undefined = alle), leere Gruppen entfallen. */
-export function navGroups(allowed?: string[]): { id: NavGroupId; label: string; items: NavItem[] }[] {
-  return NAV_GROUPS
-    .map((g) => ({
-      ...g,
-      items: NAV_ITEMS.filter((i) => i.group === g.id && isAllowed(i, allowed)),
-    }))
-    .filter((g) => g.items.length > 0);
-}
-
-/** Einträge der mobilen Tab-Leiste (höchstens 4, Registry-Reihenfolge). */
-export function tabItems(allowed?: string[]): NavItem[] {
-  return NAV_ITEMS.filter((i) => i.tab && isAllowed(i, allowed)).slice(0, MAX_TABS);
-}
-
-/** ID des Eintrags zum Pfad; bei mehreren Treffern gewinnt der längste href. */
-export function activeNavId(pathname: string): string | undefined {
-  return findActiveEntry(pathname)?.id;
-}
-
 export type PaletteNavEntry = {
   id: string;
   label: string;
   href: string;
   icon: LucideIcon;
-  /** Gruppen-Label der Registry (Einkauf/Lager/Verwaltung). */
+  /** Bereichsname der Registry (Übersicht/Einkauf/Lager/Verwaltung). */
   group: string;
 };
 
-/** Navigationstreffer der Command-Palette: nur erlaubte Einträge, Label-Filter (case-insensitiv), Registry-Reihenfolge. */
-export function paletteNavEntries(query: string, allowed?: string[]): PaletteNavEntry[] {
+/** Navigationstreffer der ⌘K-Palette: nur erlaubte Einträge, Label-Filter (case-insensitiv), Bereichs- und Registry-Reihenfolge. */
+export function paletteNavEntries(query: string, allowed?: readonly string[]): PaletteNavEntry[] {
   const q = query.trim().toLowerCase();
-  return navGroups(allowed).flatMap((g) =>
-    g.items
-      .filter((i) => !q || i.label.toLowerCase().includes(q))
-      .map((i) => ({ id: i.id, label: i.label, href: i.href, icon: i.icon, group: g.label })),
+  return NAV_AREAS.flatMap((area) =>
+    NAV_ENTRIES.filter((entry) => entry.area === area.id && (allowed === undefined || allowed.includes(entry.id)))
+      .map((entry) => ({ id: entry.id, label: germanLabel(entry.labelKey), href: entry.href, icon: entry.icon, group: germanLabel(area.labelKey) }))
+      .filter((entry) => !q || entry.label.toLowerCase().includes(q)),
   );
 }

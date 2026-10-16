@@ -1,4 +1,7 @@
 {
+  "common": {
+    "appName": "DocklyLogistics"
+  },
   "shell": {
     "skipToContent": "Zum Inhalt springen",
     "openMenu": "Menü öffnen",
@@ -9,9 +12,6 @@
       "collapse": "Einklappen",
       "collapseMenu": "Menü einklappen",
       "expandMenu": "Menü ausklappen"
-    },
-    "brand": {
-      "tagline": "Rohstoff-Logistik"
     },
     "user": {
       "summary": "{name} · {email}",
@@ -45,12 +45,6 @@
       "search": "Suche",
       "adminShort": "Verwaltung"
     },
-    "language": {
-      "label": "Sprache",
-      "de": "Deutsch",
-      "en": "English",
-      "switchTo": "Sprache wechseln: {language}"
-    },
     "tenantSwitcher": {
       "caption": "Unternehmen",
       "label": "Unternehmen wechseln",
@@ -64,7 +58,9 @@
       "next": "Weitere Unternehmen",
       "page": "{page} von {pages}",
       "working": "Unternehmen wird geladen …",
-      "summary": "Aktuelles Unternehmen: {name}"
+      "summary": "Aktuelles Unternehmen: {name}",
+      "failed": "Das Unternehmen konnte nicht gewechselt werden.",
+      "retry": "Erneut versuchen"
     }
   },
   "nav": {
@@ -85,12 +81,6 @@
     "suppliers": "Lieferanten",
     "audit": "Audit",
     "settings": "Einstellungen",
-    "admin": "Administration",
-    "tab": {
-      "dashboard": "Start",
-      "orders": "Bestellungen",
-      "stock": "Bestand",
-      "warehouse": "Scan"
-    }
+    "admin": "Administration"
   }
 }

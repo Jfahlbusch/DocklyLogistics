@@ -11,7 +11,7 @@ export default defineConfig({
   test: {
     environment: "node",
     // Polyfills für Radix unter jsdom (No-op in node-Tests)
-    setupFiles: ["tests/setup/env.ts", "tests/setup/jsdom-polyfills.ts"],
+    setupFiles: ["tests/setup/env.ts", "tests/setup/jsdom-polyfills.ts", "tests/setup/jest-dom.ts"],
     include: [
       "lib/**/*.test.ts",
       "components/**/*.test.tsx",
