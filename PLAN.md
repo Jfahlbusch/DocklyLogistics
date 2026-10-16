@@ -350,3 +350,136 @@ Nutzung in allen DB-gestützten Testdateien.
 - Van-Haag-Einkaufspreise (aktuell 0,00 € — Preisliste liegt nicht vor).
 - Artikel-Lagerplatz-Zuordnung für Tenant `daube` (Codierung angelegt, Zuordnung offen).
 - Stop-Hook-Laufzeit (claude-mem, Median ~10 s) — Werkzeugkette, nicht Anwendung.
+
+---
+
+# Vorhaben 2026-10-16: Menü-Umbau nach den neuen Shell-Vorgaben
+
+## Ziel
+Menü und Shell auf die verbindlichen Dockly-Vorgaben bringen (`design-dockly.md` → Menü-Anatomie,
+`apple-struktur.md` → Navigationsmodell, `plattform/06-profilmenue.md`). Heute: flache Liste mit
+12 Einträgen ohne Gruppen, statische Nutzer-Plakette statt Profil-Auslöser, selbstgebautes
+Dropdown ohne Tastaturführung, mobil nur ein Vollbild-Hamburger ohne Tab-Bar.
+
+**Baseline:** 53 Testdateien / 291 Tests grün, CI auf `37166ba` grün. Modus B.
+
+## Ist → Soll
+
+| Baustein | Ist | Soll |
+|---|---|---|
+| Registry | `components/layout/nav-items.ts`, flach, 12 Einträge | `lib/navigation.ts` mit **3 Gruppen**, speist Sidebar, Drawer, Tab-Bar und ⌘K |
+| Brand-Kopf | Logo-SVG / Marken-PNG | Gold-Kachel + Wortmarke + Untertitel (Asset `brand.tsx` kopiert, Name angepasst) |
+| Unter dem Logo | — | statischer Mandanten-Chip (Initialen-Kachel + Name) |
+| Nav-Zeilen | 1 Liste, Kante links | Gruppen-Label in Caps, Zeilen ~36–40 px, aktive Zeile als Kapsel |
+| Sidebar-Fuß | statische Plakette | **Profil-Auslöser** (Avatar, Name, `Rolle · Mandant`, `ChevronsUpDown`) → Menü nach oben |
+| Profilmenü | eigenes Dropdown, ohne Fokus-/Pfeiltastenführung | Radix `DropdownMenu`, **ein** `ProfileMenuContent`, zwei Auslöser |
+| Initialen / Rolle | zweimal unterschiedlich berechnet, roher Enum | eine Hilfsfunktion; Rolle übersetzt („Manager") |
+| Abmelden | nur `signOut` | zusätzlich Service-Worker-Caches leeren |
+| Mobil | Hamburger-Vollbild | schwebende **Tab-Pill** (4 Bereiche + Suche), minimiert beim Scrollen; Drawer bleibt für den Rest |
+| Topbar-Avatar | 32 px überall | 44 px mobil, 32 px ab `md` |
+
+## Gruppierung (Vorschlag, Gate 1)
+
+1. **Einkauf:** Dashboard · Bestellvorschläge · Bestellungen · EDI-Monitor · Reports
+2. **Lager:** Lager & Bestand · Lagermodus (Scan) · Artikel / Rohstoffe · Lieferanten
+3. **Verwaltung:** Audit · Einstellungen · Administration
+
+**Tab-Bar mobil (max. 5 inkl. Suche):** Dashboard · Bestellungen · Lagermodus · Lager & Bestand · Suche.
+Fehlt einem Nutzer ein Bereich (Feature-Rechte), rückt nichts nach — die Pill wird kürzer.
+
+## Fundament-Funde (Modus B — werden nicht still nachgerüstet)
+
+- **i18n fehlt** (kein next-intl): Der Menüpunkt „Sprache" im Profilmenü entfällt; Labels bleiben
+  deutsch in der Registry, dort aber zentral — ein späterer i18n-Meilenstein tauscht sie gegen Keys.
+- **Tenant-Wechsler für GLOBAL_ADMIN fehlt** (`tenant-switcher.md`) — eigenes Vorhaben, unter „Später".
+- **Keycloak-Abmeldung am Realm** (end-session mit `id_token`) fehlt; heute endet nur die lokale
+  Sitzung. Auth-Änderung mit Hin- und Rückweg-Prüfung → eigene Aufgabe, nur auf Freigabe.
+- **Glocke** ist ein Eigenbau ohne Radix/Polling — gleiche Schwäche wie das Profilmenü; unter „Später".
+- **Komponententests:** Vitest läuft in `node`, `@testing-library/react` fehlt (jsdom ist installiert).
+
+## Arbeitsweise
+Planung und Review: Opus 5.5. Umsetzung je Aufgabe durch einen Sonnet-5.5-Agenten (TDD: roter Test
+zuerst), danach Review + Verifikation (tsc, lint, Suite) durch Opus, ein Commit je Aufgabe.
+
+## Meilensteine
+
+- [ ] **N1: Registry & Desktop-Sidebar nach Anatomie** — Ergebnis: Sidebar zeigt Brand-Kopf,
+      Mandanten-Chip und drei Gruppen; ⌘K und Drawer nutzen dieselbe Registry.
+- [ ] **N2: Profilmenü — ein Inhalt, zwei Auslöser** — Ergebnis: Sidebar-Fuß und Topbar-Avatar
+      öffnen dasselbe tastaturbedienbare Menü (Kopf, Farbschema, Abmelden).
+- [ ] **N3: Mobile Tab-Pill** — Ergebnis: auf dem Handy vier Bereiche + Suche unten, minimiert beim
+      Scrollen; Drawer spiegelt die Gruppen inklusive Profil-Fuß.
+- [ ] **N4 (Freigabe nötig): Deploy** — Image bauen, VM, Verify `login=200`, Sichtprüfung.
+
+### N1.1: Nav-Registry mit Gruppen und Ableitungen anlegen
+**Warum:** Eine Definition muss Sidebar, Drawer, Tab-Bar und ⌘K speisen (apple-struktur.md).
+**Scope:** `lib/navigation.ts` (id, label, href, icon, group, tab-Flag, accent); reine Funktionen
+`navGroups(allowed)`, `tabItems(allowed)`, `activeNavId(pathname)` (längster Präfix gewinnt);
+`nav-items.ts` wird zum Re-Export, damit `lib/features.ts`-Bezüge stabil bleiben.
+**Akzeptanzkriterien:**
+- [ ] Gruppenreihenfolge Einkauf → Lager → Verwaltung; leere Gruppen werden ausgelassen
+- [ ] `tabItems` liefert höchstens 4 Bereiche, nur erlaubte, in Registry-Reihenfolge
+- [ ] `activeNavId("/orders/abc")` = `orders`; `/order-suggestions` trifft **nicht** `orders`
+- [ ] Alle 12 bisherigen IDs existieren weiter (Feature-Rechte bleiben gültig)
+**Verifikation:** `pnpm exec vitest run lib/navigation.test.ts` · **Aufwand:** S
+
+### N1.2: Initialen- und Rollen-Helfer vereinheitlichen
+**Akzeptanzkriterien:** `initials("Jonathan Fahlbusch")`=`JF`; leer → `?`; Kleinschreibung → groß;
+`roleLabel("GLOBAL_ADMIN")`=„Plattform-Admin", `MANAGER`=„Manager", `USER`=„Benutzer",
+`VIEWER`=„Leser"; unbekannt → Rohwert. **Aufwand:** S
+
+### N1.3: Sidebar nach Menü-Anatomie umbauen
+**Scope:** Brand-Kopf aus Skill-Asset (`dockly LOGISTICS`, Untertitel „Rohstoff-Logistik"),
+Mandanten-Chip, Gruppen-Labels, Kapsel-Aktivzustand über `--sidebar-accent`/Gold, ⌘K-Palette
+gruppiert. Keine Aktions-Buttons in der Sidebar.
+**Akzeptanzkriterien:**
+- [ ] Reihenfolge Brand → Chip → Gruppen → Leerraum → Fuß → Einklappen
+- [ ] Eingeklappt: nur Kachel, Icons mit Tooltip, Gruppen-Labels ausgeblendet
+- [ ] Feature-Rechte wirken weiter (verbotener Bereich erscheint nirgends)
+- [ ] Hell/Dunkel geprüft, Kontrast der Gruppen-Labels ≥ 4.5:1 auf Navy
+**Verifikation:** tsc/lint/Suite; Sichtprüfung im Browser-Pane (Desktop, Hell + Dunkel) · **Aufwand:** M
+
+### N2.1: Komponententests ermöglichen
+**Scope:** `@testing-library/react` + `@testing-library/user-event` als devDependencies,
+`components/**/*.test.tsx` in die Vitest-`include`, jsdom pro Datei (`// @vitest-environment jsdom`).
+**Akzeptanzkriterien:** ein Smoke-Komponententest läuft lokal und in der CI. **Aufwand:** S
+
+### N2.2: `ProfileMenuContent` mit Radix bauen
+**Akzeptanzkriterien:**
+- [ ] Inhalt in Reihenfolge: Kopf (Name, E-Mail, `Rolle · Mandant` mit Mandant als Mono-Pill) →
+      Farbschema → Abmelden (rot, eigene Gruppe)
+- [ ] Rolle erscheint übersetzt, nicht als Enum
+- [ ] Menü per Tastatur bedienbar (Enter öffnet, Pfeile, Escape schließt, Fokus zurück am Auslöser)
+- [ ] Abmelden leert die Service-Worker-Caches vor dem Absenden
+**Verifikation:** Komponententests (jsdom) · **Aufwand:** M
+
+### N2.3: Zwei Auslöser verdrahten
+**Akzeptanzkriterien:**
+- [ ] Topbar-Avatar ganz rechts (rechts neben der Glocke), 44 px mobil / 32 px ab `md`
+- [ ] Sidebar-Fuß als Auslöser, öffnet nach oben; eingeklappt nur Avatar mit Tooltip
+- [ ] Beide rendern dieselbe Komponente (ein Import, keine Kopie)
+- [ ] Alte Komponenten `sidebar-user.tsx` und das Eigenbau-Dropdown sind entfernt
+**Aufwand:** S
+
+### N3.1: Schwebende Tab-Pill für Mobil
+**Akzeptanzkriterien:**
+- [ ] Nur unter `md` sichtbar; Einträge aus `tabItems` + Such-Tab (öffnet ⌘K-Sheet)
+- [ ] Aktiver Tab als Kapsel mit Icon + Label; Touch-Ziele ≥ 44 px
+- [ ] Minimiert beim Herunterscrollen, kehrt beim Hochscrollen zurück; bei
+      `prefers-reduced-motion` ohne Animation
+- [ ] `env(safe-area-inset-bottom)` berücksichtigt; Inhalt wird nicht verdeckt (Polster unten)
+- [ ] Kein Profil-Tab
+**Verifikation:** Komponententest der Scroll-Logik (Hook) + Sichtprüfung Mobile-Viewport · **Aufwand:** M
+
+### N3.2: Drawer spiegelt die Anatomie
+**Akzeptanzkriterien:** Drawer zeigt Brand, Chip, dieselben Gruppen, Profil-Fuß am Ende; schließt bei
+Navigation. **Aufwand:** S
+
+### N3.3 (optional, nur auf Freigabe): Abmelden auch bei Keycloak
+**Warum:** Heute bleibt die Keycloak-Sitzung bestehen — wer „Abmelden" drückt, ist beim nächsten
+Login sofort wieder drin. **Risiko:** Auth-Änderung; Hin- und Rückweg auf Prod prüfen.
+
+## Risiken
+- Optische Änderung an jeder Seite → Sichtprüfung Desktop/Mobil × Hell/Dunkel vor Deploy.
+- Tab-Pill verdeckt Inhalte am Seitenende → Polster unten als Akzeptanzkriterium.
+- Brand-Kopf ersetzt das bisherige Logo → Entscheidung an Gate 1.
