@@ -3,12 +3,13 @@
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
-import { Logo } from "./logo";
+import { Brand } from "./brand";
+import { TenantChip } from "./tenant-chip";
 import { NavLinks } from "./nav-links";
 import { SidebarProfile } from "./sidebar-profile";
 import type { ProfilUser } from "./profile-menu-content";
 
-/** Hamburger + full-screen off-canvas drawer that replaces the sidebar below md. */
+/** Hamburger + full-screen off-canvas drawer below md; spiegelt die Sidebar (Brand, Mandant, Gruppen, Profil-Fuß). */
 export function MobileNav({
   user,
   allowedNav,
@@ -36,22 +37,19 @@ export function MobileNav({
       >
         <SheetTitle className="sr-only">Navigation</SheetTitle>
 
-        {/* Logo centered with generous clear space (Schutzraum) */}
-        <div className="flex items-center justify-center border-b border-white/10 px-8 py-7">
-          <Logo variant="dark" />
-        </div>
-
-        {/* Close — placed at the menu items, not at the logo */}
-        <div className="flex justify-end px-4 pt-3">
+        {/* Menü-Anatomie wie die Sidebar: Brand → Mandant → Gruppen → Profil; Schließen oben rechts */}
+        <div className="relative">
+          <Brand />
           <button
             type="button"
             onClick={close}
             aria-label="Menü schließen"
-            className="rounded-md p-2 text-white/70 transition-colors hover:bg-white/10 hover:text-white"
+            className="absolute right-3 top-1/2 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-md text-white/70 transition-colors hover:bg-white/10 hover:text-white"
           >
             <X size={26} strokeWidth={1.5} />
           </button>
         </div>
+        <TenantChip tenant={user.tenant} />
 
         <NavLinks onNavigate={close} allowedNav={allowedNav} />
         <SidebarProfile user={user} />
