@@ -12,7 +12,7 @@ import { Logo } from "./logo";
 export function Brand({ collapsed }: { collapsed?: boolean }) {
   const t = useTranslations("common");
   return (
-    <div className={cn("flex shrink-0 items-center justify-center pb-[0.9rem] pt-[1.4rem] short:pb-2 short:pt-3 tiny:hidden", collapsed ? "px-3" : "px-[1.4rem] max-nav:pe-14")}>
+    <div className={cn("flex shrink-0 items-center justify-center pb-[0.9rem] pt-[1.4rem] short:pb-2 short:pt-3 tiny:hidden", collapsed ? "px-3" : "px-[1.4rem] max-nav:ps-4 max-nav:pe-14")}>
       <Link href="/" aria-label={t("appName")} className="inline-flex rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <Logo size="sm" variant="dark" inline markOnly={collapsed} />
       </Link>

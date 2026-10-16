@@ -10,6 +10,11 @@ const SIZES = {
 
 /** Höhe der Marke im Menükopf des Portals. */
 export const INLINE_MARK_PX = 30;
+/**
+ * Schriftzug im einzeiligen Menükopf: 16 px statt 21,6 px — „LOGISTICS“ ist länger als das „BASE“ der Vorlage und passte sonst weder
+ * in die 268-px-Leiste (223 px Innenbreite) noch in den Drawer (neben dem Schließen-Knopf).
+ */
+const INLINE_TEXT_CLASS = "text-base";
 const BRAND_NAME = "DocklyLogistics";
 type Variant = "dark" | "light" | "auto";
 
@@ -52,7 +57,7 @@ export function Logo({ size = "lg", variant = "auto", markOnly = false, inline =
       {!markOnly ? (
         <span
           style={{ fontFamily: "var(--font-poppins)", fontWeight: 800 }}
-          className={cn("leading-none whitespace-nowrap", textClass)}
+          className={cn("leading-none whitespace-nowrap", inline ? INLINE_TEXT_CLASS : textClass)}
         >
           <span className="italic">dockly</span>
           <span className="ml-1 uppercase tracking-[0.01em]">LOGISTICS</span>
