@@ -489,3 +489,19 @@ Login sofort wieder drin. **Risiko:** Auth-Änderung; Hin- und Rückweg auf Prod
 - Optische Änderung an jeder Seite → Sichtprüfung Desktop/Mobil × Hell/Dunkel vor Deploy.
 - Tab-Pill verdeckt Inhalte am Seitenende → Polster unten als Akzeptanzkriterium.
 - Brand-Kopf ersetzt das bisherige Logo → Entscheidung an Gate 1.
+
+## Fortsetzung 2026-10-16: Menü vollständig nach Vorgabe („mach alles fertig")
+
+Die an Gate 1 vertagten Bausteine werden auf Anweisung des Nutzers nachgezogen. Annahme
+(Skill-Standard, nicht ausdrücklich bestätigt): Sprachen **Deutsch (Quelle) + Englisch**.
+
+- [ ] **N5: Tenant-Wechsler für GLOBAL_ADMIN** (`tenant-switcher.md`) — Session-Cookie, zwei
+      Read-Points über `resolveSessionTenant`, signierter `x-user-tenant`, `homeTenant` getrennt,
+      Audit im Ziel-Mandanten, durchsuchbares Popover unter dem Logo (Sidebar + Drawer), Warnfärbung
+      bei Fremdansicht, Cookie-Löschung bei Abmelden und SSO-Einstieg.
+- [ ] **N6: Notificationcenter** (`plattform/08-notificationcenter.md`) — Radix, Lesestatus je
+      Nutzer (`NotificationRead`), stabile Sortierung, Aktualisierung bei Fokus + alle 60 s.
+- [ ] **N7: Abmelden am Keycloak-Realm** (`plattform/06-profilmenue.md`) — `id_token` nur im JWT,
+      end-session-URL, Hin- und Rückweg auf Prod geprüft.
+- [ ] **N8: Mehrsprachigkeit** (`i18n.md`) — next-intl, Sprache nur in der URL, alle sichtbaren
+      Texte über Keys, Key-Paritätstest, Sprachwahl im Profilmenü.
