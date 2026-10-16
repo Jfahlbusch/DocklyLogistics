@@ -83,6 +83,23 @@ describe("tabItems", () => {
   });
 });
 
+describe("tabLabel", () => {
+  it("alle Tab-Einträge haben ein nicht-leeres Kurzlabel", () => {
+    for (const i of NAV_ITEMS.filter((n) => n.tab)) {
+      expect(i.tabLabel, i.id).toBeTruthy();
+    }
+  });
+
+  it("nutzt die vorgegebenen Kurzlabels", () => {
+    expect(tabItems().map((i) => [i.id, i.tabLabel])).toEqual([
+      ["dashboard", "Start"],
+      ["orders", "Bestellungen"],
+      ["stock", "Bestand"],
+      ["warehouse", "Scan"],
+    ]);
+  });
+});
+
 describe("activeNavId", () => {
   it("trifft Unterpfade", () => {
     expect(activeNavId("/orders/abc")).toBe("orders");

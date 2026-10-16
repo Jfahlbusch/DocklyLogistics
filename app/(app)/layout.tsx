@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db/client";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { TabBar } from "@/components/layout/tab-bar";
 import { CommandPalette } from "@/components/search/command-palette";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { resolveUserFeatures } from "@/lib/services/feature-access";
@@ -32,8 +33,14 @@ export default async function AppLayout({ children }: { children: React.ReactNod
       <Sidebar user={user} allowedNav={allowedNav} />
       <main className="flex min-w-0 flex-1 flex-col overflow-hidden">
         <Topbar user={user} allowedNav={allowedNav} />
-        <section className="min-h-0 flex-1 overflow-y-auto p-5 md:p-8">{children}</section>
+        <section
+          id="app-scroll"
+          className="min-h-0 flex-1 overflow-y-auto p-5 pb-[calc(env(safe-area-inset-bottom)+96px)] md:p-8"
+        >
+          {children}
+        </section>
       </main>
+      <TabBar allowedNav={allowedNav} />
       <CommandPalette allowedNav={allowedNav} />
     </div>
   );

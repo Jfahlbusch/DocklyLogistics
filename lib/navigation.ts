@@ -20,18 +20,20 @@ export type NavItem = {
   group: NavGroupId;
   /** In der mobilen Tab-Leiste anzeigen (max. 4). */
   tab?: boolean;
+  /** Kurzlabel für die mobile Tab-Pill (Pflicht bei `tab: true`). */
+  tabLabel?: string;
   accent?: boolean;
 };
 
 /** Einzige Quelle der Navigation. Reihenfolge = Anzeigereihenfolge. */
 export const NAV_ITEMS: NavItem[] = [
-  { id: "dashboard",   label: "Dashboard",           href: "/dashboard",         icon: Home,           group: "einkauf",    tab: true },
+  { id: "dashboard",   label: "Dashboard",           href: "/dashboard",         icon: Home,           group: "einkauf",    tab: true, tabLabel: "Start" },
   { id: "suggestions", label: "Bestellvorschläge",   href: "/order-suggestions", icon: ListChecks,     group: "einkauf" },
-  { id: "orders",      label: "Bestellungen",        href: "/orders",            icon: ShoppingCart,   group: "einkauf",    tab: true },
+  { id: "orders",      label: "Bestellungen",        href: "/orders",            icon: ShoppingCart,   group: "einkauf",    tab: true, tabLabel: "Bestellungen" },
   { id: "edi",         label: "EDI",                 href: "/edi",               icon: ArrowLeftRight, group: "einkauf" },
   { id: "reports",     label: "Reports",             href: "/reports",           icon: BarChart3,      group: "einkauf" },
-  { id: "stock",       label: "Lager & Bestand",     href: "/stock",             icon: Box,            group: "lager",      tab: true },
-  { id: "warehouse",   label: "Lagermodus",          href: "/warehouse-mode",    icon: ScanLine,       group: "lager",      tab: true, accent: true },
+  { id: "stock",       label: "Lager & Bestand",     href: "/stock",             icon: Box,            group: "lager",      tab: true, tabLabel: "Bestand" },
+  { id: "warehouse",   label: "Lagermodus",          href: "/warehouse-mode",    icon: ScanLine,       group: "lager",      tab: true, tabLabel: "Scan", accent: true },
   { id: "articles",    label: "Artikel / Rohstoffe", href: "/articles",          icon: Package,        group: "lager" },
   { id: "suppliers",   label: "Lieferanten",         href: "/suppliers",         icon: Truck,          group: "lager" },
   { id: "audit",       label: "Audit",               href: "/audit",             icon: ShieldCheck,    group: "verwaltung" },
