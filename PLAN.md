@@ -403,11 +403,11 @@ zuerst), danach Review + Verifikation (tsc, lint, Suite) durch Opus, ein Commit 
 
 ## Meilensteine
 
-- [ ] **N1: Registry & Desktop-Sidebar nach Anatomie** — Ergebnis: Sidebar zeigt Brand-Kopf,
+- [x] **N1: Registry & Desktop-Sidebar nach Anatomie** ✅ (`3031d92`, `af833c3`, `aed2ca4`, `4f39abb`) — Ergebnis: Sidebar zeigt Brand-Kopf,
       Mandanten-Chip und drei Gruppen; ⌘K und Drawer nutzen dieselbe Registry.
-- [ ] **N2: Profilmenü — ein Inhalt, zwei Auslöser** — Ergebnis: Sidebar-Fuß und Topbar-Avatar
+- [x] **N2: Profilmenü — ein Inhalt, zwei Auslöser** ✅ (`4904ae5`, `eb09f43`, `1e8b4e4`) — Ergebnis: Sidebar-Fuß und Topbar-Avatar
       öffnen dasselbe tastaturbedienbare Menü (Kopf, Farbschema, Abmelden).
-- [ ] **N3: Mobile Tab-Pill** — Ergebnis: auf dem Handy vier Bereiche + Suche unten, minimiert beim
+- [x] **N3: Mobile Tab-Pill** ✅ (`98ea9f9`, `00bb3a7`) — Ergebnis: auf dem Handy vier Bereiche + Suche unten, minimiert beim
       Scrollen; Drawer spiegelt die Gruppen inklusive Profil-Fuß.
 - [ ] **N4 (Freigabe nötig): Deploy** — Image bauen, VM, Verify `login=200`, Sichtprüfung.
 
@@ -478,6 +478,12 @@ Navigation. **Aufwand:** S
 ### N3.3 (optional, nur auf Freigabe): Abmelden auch bei Keycloak
 **Warum:** Heute bleibt die Keycloak-Sitzung bestehen — wer „Abmelden" drückt, ist beim nächsten
 Login sofort wieder drin. **Risiko:** Auth-Änderung; Hin- und Rückweg auf Prod prüfen.
+
+## Nebenbefunde während der Umsetzung (eigene Commits)
+- **Schrift:** `--font-sans: var(--font-sans)` im `@theme inline` war ein Zyklus — die App lief seit 12.05. in Times. Behoben `07c20de`, Regressionstest.
+- **⌘K ignorierte Feature-Rechte** — behoben `aed2ca4`.
+- **Trigger-Rennen in Tests (A3.3):** sechs Dateien schalteten Append-only-Trigger global ab → Flakes + Rückstände. Behoben mit `purgeAppendOnly()`.
+- **Mock-Login fehlt** (Skill-Fundament): lokale Sichtprüfung nur mit echtem Keycloak möglich — unter „Später".
 
 ## Risiken
 - Optische Änderung an jeder Seite → Sichtprüfung Desktop/Mobil × Hell/Dunkel vor Deploy.

@@ -22,7 +22,9 @@ Jede UI-Funktion hat ein `/api/v1`-Gegenstück — keine Logik, die nur über di
 ## Wiederverwendung („erst suchen, dann bauen")
 Vor neuer UI/Logik prüfen, ob es den Baustein schon gibt:
 - UI: `components/ui/` — u. a. `StatusPill`, `FormField`, `DetailField`, `FlashBanner`, plus shadcn-Primitives.
-- Layout: `components/layout/` — `Logo`, `NotificationBell`, Topbar/Sidebar.
+- Layout: `components/layout/` — `Brand`, `TenantChip`, `NotificationBell`, Topbar/Sidebar, `TabBar` (mobil).
+- **Navigation:** einzige Quelle ist `lib/navigation.ts` (Gruppen Einkauf/Lager/Verwaltung, `tab`/`tabLabel` für die mobile Pill). Sidebar, Drawer, Tab-Pill und ⌘K leiten sich daraus ab — nie einen Menüpunkt nur in einer Darstellung anlegen. Max. 4 Tabs + Suche, kein Profil-Tab.
+- **Profilmenü:** ein Inhalt (`ProfileMenuContent`), zwei Auslöser (Topbar-Avatar, Sidebar-Fuß). Initialen/Rollen nur über `lib/user-display.ts`.
 - Quer: `lib/api` (`handler`, `guard`, `respond`), `lib/channels/retry` (`withRetry`), `lib/search`, `lib/utils`.
 Ähnlicher, aber zufällig gleicher Code wird **nicht** zwangsvereinheitlicht (siehe die bewusst inline belassenen px-4-Flash-Banner).
 
