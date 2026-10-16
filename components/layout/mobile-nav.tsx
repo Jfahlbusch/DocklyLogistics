@@ -5,14 +5,15 @@ import { Menu, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Logo } from "./logo";
 import { NavLinks } from "./nav-links";
-import { SidebarUser } from "./sidebar-user";
+import { SidebarProfile } from "./sidebar-profile";
+import type { ProfilUser } from "./profile-menu-content";
 
 /** Hamburger + full-screen off-canvas drawer that replaces the sidebar below md. */
 export function MobileNav({
   user,
   allowedNav,
 }: {
-  user: { name: string; role: string; tenant: string };
+  user: ProfilUser;
   allowedNav?: string[];
 }) {
   const [open, setOpen] = useState(false);
@@ -53,7 +54,7 @@ export function MobileNav({
         </div>
 
         <NavLinks onNavigate={close} allowedNav={allowedNav} />
-        <SidebarUser user={user} />
+        <SidebarProfile user={user} />
       </SheetContent>
     </Sheet>
   );

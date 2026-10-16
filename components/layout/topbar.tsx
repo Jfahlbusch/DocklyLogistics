@@ -7,12 +7,13 @@ import { openSearch } from "@/components/search/open-search";
 import { ProfileMenu } from "./profile-menu";
 import { NotificationBell } from "./notification-bell";
 import { MobileNav } from "./mobile-nav";
+import type { ProfilUser } from "./profile-menu-content";
 
 export function Topbar({
   user,
   allowedNav,
 }: {
-  user: { name: string; email?: string; role: string; tenant: string };
+  user: ProfilUser;
   allowedNav?: string[];
 }) {
   const pathname = usePathname();

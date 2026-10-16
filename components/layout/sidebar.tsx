@@ -5,11 +5,12 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Brand } from "./brand";
 import { NavLinks } from "./nav-links";
 import { TenantChip } from "./tenant-chip";
-import { SidebarUser } from "./sidebar-user";
+import { SidebarProfile } from "./sidebar-profile";
+import type { ProfilUser } from "./profile-menu-content";
 import { cn } from "@/lib/utils";
 
 type Props = {
-  user: { name: string; role: string; tenant: string };
+  user: ProfilUser;
   allowedNav?: string[];
 };
 
@@ -41,7 +42,7 @@ export function Sidebar({ user, allowedNav }: Props) {
       <Brand collapsed={collapsed} />
       <TenantChip tenant={user.tenant} collapsed={collapsed} />
       <NavLinks collapsed={collapsed} allowedNav={allowedNav} />
-      <SidebarUser user={user} collapsed={collapsed} />
+      <SidebarProfile user={user} collapsed={collapsed} />
       <button
         type="button"
         onClick={toggle}
