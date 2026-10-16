@@ -499,9 +499,9 @@ Die an Gate 1 vertagten Bausteine werden auf Anweisung des Nutzers nachgezogen. 
       Read-Points über `resolveSessionTenant`, signierter `x-user-tenant`, `homeTenant` getrennt,
       Audit im Ziel-Mandanten, durchsuchbares Popover unter dem Logo (Sidebar + Drawer), Warnfärbung
       bei Fremdansicht, Cookie-Löschung bei Abmelden und SSO-Einstieg.
-- [ ] **N6: Notificationcenter** (`plattform/08-notificationcenter.md`) — Radix, Lesestatus je
+- [x] **N6: Notificationcenter** ✅ (`dbdf3cb`, `6e7dfb7`, Fix `5d77e96`) (`plattform/08-notificationcenter.md`) — Radix, Lesestatus je
       Nutzer (`NotificationRead`), stabile Sortierung, Aktualisierung bei Fokus + alle 60 s.
-- [ ] **N7: Abmelden am Keycloak-Realm** (`plattform/06-profilmenue.md`) — `id_token` nur im JWT,
+- [x] **N7: Abmelden am Keycloak-Realm** ✅ (`4648130`) — Hin-/Rückweg: manuelle Prüfung durch Nutzer offen (`plattform/06-profilmenue.md`) — `id_token` nur im JWT,
       end-session-URL, Hin- und Rückweg auf Prod geprüft.
 - [~] **N8: Mehrsprachigkeit** — **auf Entscheidung des Nutzers vorerst gestrichen** (16.10.2026).
       Umfang wäre die komplette Oberfläche (82 Dateien, ~12.900 Zeilen) plus geänderte URLs (`/de`, `/en`).
