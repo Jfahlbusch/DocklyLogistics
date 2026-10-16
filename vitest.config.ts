@@ -10,6 +10,8 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "node",
+    // Polyfills für Radix unter jsdom (No-op in node-Tests)
+    setupFiles: ["tests/setup/jsdom-polyfills.ts"],
     include: [
       "lib/**/*.test.ts",
       "components/**/*.test.tsx",
