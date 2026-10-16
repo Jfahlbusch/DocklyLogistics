@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import { Search } from "lucide-react";
-import { NAV_ITEMS } from "./nav-items";
+import { NAV_ITEMS, activeNavId } from "@/lib/navigation";
 import { openSearch } from "@/components/search/open-search";
 import { ProfileMenu } from "./profile-menu";
 import { NotificationBell } from "./notification-bell";
@@ -16,7 +16,7 @@ export function Topbar({
   allowedNav?: string[];
 }) {
   const pathname = usePathname();
-  const current = NAV_ITEMS.find((n) => pathname.startsWith(n.href));
+  const current = NAV_ITEMS.find((n) => n.id === activeNavId(pathname));
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/85 px-4 shadow-sm backdrop-blur sm:gap-4 lg:px-6">
       <MobileNav user={user} allowedNav={allowedNav} />

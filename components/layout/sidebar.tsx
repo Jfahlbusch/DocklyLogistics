@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Brand } from "./brand";
 import { NavLinks } from "./nav-links";
+import { TenantChip } from "./tenant-chip";
 import { SidebarUser } from "./sidebar-user";
 import { cn } from "@/lib/utils";
 
@@ -38,6 +39,7 @@ export function Sidebar({ user, allowedNav }: Props) {
       )}
     >
       <Brand collapsed={collapsed} />
+      <TenantChip tenant={user.tenant} collapsed={collapsed} />
       <NavLinks collapsed={collapsed} allowedNav={allowedNav} />
       <SidebarUser user={user} collapsed={collapsed} />
       <button
