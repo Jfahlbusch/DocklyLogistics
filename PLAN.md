@@ -506,3 +506,31 @@ Die an Gate 1 vertagten Bausteine werden auf Anweisung des Nutzers nachgezogen. 
 - [~] **N8: Mehrsprachigkeit** — **auf Entscheidung des Nutzers vorerst gestrichen** (16.10.2026).
       Umfang wäre die komplette Oberfläche (82 Dateien, ~12.900 Zeilen) plus geänderte URLs (`/de`, `/en`).
       Folge: kein Punkt „Sprache" im Profilmenü; einzige bewusste Abweichung von `06-profilmenue.md`.
+
+---
+
+# Vorhaben 2026-10-16 (2): Schwebendes Seitenmenü nach `seitenmenue.md`
+
+Neue verbindliche Vorgabe (Skill-Stand 16.10.2026, 14:17): `references/seitenmenue.md` mit Kopiervorlagen
+`assets/layout/` (Quelle DocklyBase @ 8d3f430). Sie **ersetzt** Teile von N1–N7: kein Profil-Avatar mehr
+in der Topbar (`06-profilmenue.md` neu: Profilzeile mit drei Knöpfen), Unternehmenskarte statt Chip,
+Bereiche auf-/zuklappbar, Breakpoint 992 px, schwebende Leiste.
+
+## Abweichungen der Vorlagen vom Projektstand
+- Vorlagen nutzen `next-intl` + `@/i18n/navigation` — Projekt hat kein i18n (Nutzerentscheidung: vorerst keine
+  Mehrsprachigkeit). → Entscheidung Gate 1.
+- Vorlagen-Wechsler nutzt eigenes Fehlerformat; Projekt hat die bereits gehärtete Route `/api/v1/me/tenant-view`
+  → bleibt, Vorlage wird angebunden.
+- Abnahme verlangt Playwright-E2E (`menu.spec.ts`) — Projekt hat weder Playwright noch Mock-Login. → Gate 1.
+- Registry der Vorlage ist DocklyBase-Beispiel → eigene Registry bleibt, wird auf **4 Bereiche** umgestellt.
+
+## Meilensteine
+- [ ] **S1 Grundlagen:** `globals.sidebar.css` (Varianten `short`/`tiny`, `--breakpoint-nav`, `.sidebar-panel`),
+      Hooks, `sidebar-geometry`, `sidebar-preference` (Cookie `ui_sidebar`), `navigation-preference`
+      (Cookie `ui_nav_areas`, `navigationFlyouts`), Registry mit 4 Bereichen. Unit-Tests der Vorlage zuerst.
+- [ ] **S2 Schwebende Leiste:** Sidebar + Platzhalter, Kanten-Toggle, Vor-Paint-Skript, Bereichsköpfe als Schalter,
+      Kacheln (keine Startkante), Rail mit Popovers, Unternehmenskarte + Wechsler.
+- [ ] **S3 Fuß & Topbar:** Profilzeile (Farbschema · Benutzermenü · Abmelden), Topbar ohne Avatar, Glocke ganz rechts,
+      Farbschema unter 992 px in der Topbar.
+- [ ] **S4 Mobil:** schwebender Drawer gleicher Geometrie, Burger 44 px, Tab-Leiste unter 992 px.
+- [ ] **S5 Abnahme:** Checkliste `seitenmenue.md` §7, Deploy.
