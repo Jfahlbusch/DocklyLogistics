@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { Search, CornerDownLeft, Loader2, Package, Truck, ShoppingCart, type LucideIcon } from "lucide-react";
-import { NAV_ITEMS } from "@/components/layout/nav-items";
+import { paletteNavEntries } from "@/lib/navigation";
 import { useGlobalSearch } from "@/lib/search/use-global-search";
 import { SEARCH_OPEN_EVENT } from "./open-search";
 import { cn } from "@/lib/utils";
@@ -23,7 +23,7 @@ const GROUP_ICON: Record<string, LucideIcon> = {
   orders: ShoppingCart,
 };
 
-export function CommandPalette() {
+export function CommandPalette({ allowedNav }: { allowedNav?: string[] }) {
   const router = useRouter();
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
@@ -66,14 +66,11 @@ export function CommandPalette() {
 
   // ── Build the flat, ordered entry list: navigation targets + content hits ──
   const entries = useMemo<Entry[]>(() => {
-    const trimmed = query.trim().toLowerCase();
-    const nav: Entry[] = NAV_ITEMS.filter(
-      (n) => !trimmed || n.label.toLowerCase().includes(trimmed),
-    ).map((n) => ({
+    const nav: Entry[] = paletteNavEntries(query, allowedNav).map((n) => ({
       key: `nav:${n.id}`,
       href: n.href,
       label: n.label,
-      group: "Navigation",
+      group: n.group,
       icon: n.icon,
     }));
 
@@ -89,7 +86,7 @@ export function CommandPalette() {
     );
 
     return [...nav, ...content];
-  }, [query, groups]);
+  }, [query, groups, allowedNav]);
 
   // Clamp active index whenever the list changes.
   useEffect(() => {

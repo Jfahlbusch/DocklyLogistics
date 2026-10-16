@@ -34,7 +34,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <Topbar user={user} allowedNav={allowedNav} />
         <section className="min-h-0 flex-1 overflow-y-auto p-5 md:p-8">{children}</section>
       </main>
-      <CommandPalette />
+      <CommandPalette allowedNav={allowedNav} />
     </div>
   );
 }

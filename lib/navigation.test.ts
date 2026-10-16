@@ -4,6 +4,7 @@ import {
   NAV_ITEMS,
   activeNavId,
   navGroups,
+  paletteNavEntries,
   tabItems,
 } from "@/lib/navigation";
 
@@ -101,5 +102,50 @@ describe("activeNavId", () => {
 
   it("trifft warehouse-mode", () => {
     expect(activeNavId("/warehouse-mode/scan")).toBe("warehouse");
+  });
+});
+
+describe("paletteNavEntries", () => {
+  it("liefert ohne Filter und ohne Suchbegriff alle Einträge in Registry-Reihenfolge", () => {
+    expect(paletteNavEntries("").map((e) => e.id)).toEqual(NAV_ITEMS.map((i) => i.id));
+  });
+
+  it("blendet nicht erlaubte IDs aus", () => {
+    const ids = paletteNavEntries("", ["dashboard", "orders"]).map((e) => e.id);
+    expect(ids).toEqual(["dashboard", "orders"]);
+    expect(ids).not.toContain("admin");
+    expect(ids).not.toContain("audit");
+  });
+
+  it("liefert bei leerer Erlaubnisliste nichts", () => {
+    expect(paletteNavEntries("", [])).toEqual([]);
+  });
+
+  it("filtert den Suchbegriff case-insensitiv und ignoriert Leerraum", () => {
+    expect(paletteNavEntries("  LAGER ").map((e) => e.id)).toEqual(["stock", "warehouse"]);
+  });
+
+  it("kombiniert Suchbegriff und Erlaubnis", () => {
+    expect(paletteNavEntries("lager", ["stock"]).map((e) => e.id)).toEqual(["stock"]);
+  });
+
+  it("setzt als group das Gruppen-Label der Registry", () => {
+    const byId = Object.fromEntries(paletteNavEntries("").map((e) => [e.id, e.group]));
+    expect(byId.dashboard).toBe("Einkauf");
+    expect(byId.warehouse).toBe("Lager");
+    expect(byId.admin).toBe("Verwaltung");
+  });
+
+  it("bringt href und Icon aus der Registry mit", () => {
+    const orders = paletteNavEntries("", ["orders"])[0];
+    expect(orders.href).toBe("/orders");
+    expect(orders.label).toBe("Bestellungen");
+    expect(orders.icon).toBeDefined();
+  });
+
+  it("ordnet nach Registry, nicht nach der Reihenfolge der Erlaubnisliste", () => {
+    expect(paletteNavEntries("", ["audit", "stock", "dashboard"]).map((e) => e.id)).toEqual([
+      "dashboard", "stock", "audit",
+    ]);
   });
 });

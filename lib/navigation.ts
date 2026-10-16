@@ -69,3 +69,22 @@ export function activeNavId(pathname: string): string | undefined {
   }
   return best?.id;
 }
+
+export type PaletteNavEntry = {
+  id: string;
+  label: string;
+  href: string;
+  icon: LucideIcon;
+  /** Gruppen-Label der Registry (Einkauf/Lager/Verwaltung). */
+  group: string;
+};
+
+/** Navigationstreffer der Command-Palette: nur erlaubte Einträge, Label-Filter (case-insensitiv), Registry-Reihenfolge. */
+export function paletteNavEntries(query: string, allowed?: string[]): PaletteNavEntry[] {
+  const q = query.trim().toLowerCase();
+  return navGroups(allowed).flatMap((g) =>
+    g.items
+      .filter((i) => !q || i.label.toLowerCase().includes(q))
+      .map((i) => ({ id: i.id, label: i.label, href: i.href, icon: i.icon, group: g.label })),
+  );
+}
