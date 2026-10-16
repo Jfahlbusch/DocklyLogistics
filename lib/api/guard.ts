@@ -1,4 +1,4 @@
-import type { UserRole } from "@/lib/auth/role";
+import { hasMinRole, type UserRole } from "@/lib/auth/role";
 import { resolveUserApiKey } from "./user-key-auth";
 import { verifyUserHeaders } from "./user-headers";
 
@@ -16,16 +16,8 @@ export class ForbiddenError extends Error {
   }
 }
 
-const ROLE_PRIORITY: Record<UserRole, number> = {
-  GLOBAL_ADMIN: 4,
-  MANAGER: 3,
-  USER: 2,
-  VIEWER: 1,
-};
-
-export function hasMinRole(actual: UserRole, required: UserRole): boolean {
-  return ROLE_PRIORITY[actual] >= ROLE_PRIORITY[required];
-}
+// Die Rollenrangfolge lebt clientsicher in `lib/auth/role.ts`; hier nur weitergereicht (bestehende Importe bleiben gültig).
+export { hasMinRole };
 
 export type RequestContext = {
   role: UserRole;

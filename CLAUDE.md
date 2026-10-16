@@ -25,7 +25,7 @@ Jede UI-Funktion hat ein `/api/v1`-Gegenstück — keine Logik, die nur über di
 Vor neuer UI/Logik prüfen, ob es den Baustein schon gibt:
 - UI: `components/ui/` — u. a. `StatusPill`, `FormField`, `DetailField`, `FlashBanner`, plus shadcn-Primitives.
 - Layout: `components/layout/` — `Brand`, `TenantChip`, `NotificationBell`, Topbar/Sidebar, `TabBar` (mobil).
-- **Navigation:** einzige Quelle ist `lib/navigation.ts` (Gruppen Einkauf/Lager/Verwaltung, `tab`/`tabLabel` für die mobile Pill). Sidebar, Drawer, Tab-Pill und ⌘K leiten sich daraus ab — nie einen Menüpunkt nur in einer Darstellung anlegen. Max. 4 Tabs + Suche, kein Profil-Tab.
+- **Navigation:** einzige Quelle ist `lib/navigation.ts` (Registry-Modell der Menü-Vorlage: Bereiche Übersicht/Einkauf/Lager/Verwaltung in `NAV_AREAS`, Einträge in `NAV_ENTRIES` mit `labelKey` unter `nav.*` in `messages/de.json`; Sichtbarkeit über den `allowed`-Filter der Feature-Rechte; `tabLabelKey` für die mobile Pill). Sidebar, Drawer, Tab-Pill und ⌘K leiten sich daraus ab (bis zum Menü-Umbau S2 über kompatible Wrapper `navGroups`/`tabItems`/`activeNavId`/`paletteNavEntries`) — nie einen Menüpunkt nur in einer Darstellung anlegen. Max. 4 Tabs + Suche, kein Profil-Tab. Texte: next-intl nur Deutsch ohne URL-Sprache (`i18n/*`, `messages/de.json`); Tests mit `useTranslations` nutzen `renderWithIntl` aus `tests/helpers/intl.tsx`.
 - **Profilmenü:** ein Inhalt (`ProfileMenuContent`), zwei Auslöser (Topbar-Avatar, Sidebar-Fuß). Initialen/Rollen nur über `lib/user-display.ts`.
 - Quer: `lib/api` (`handler`, `guard`, `respond`), `lib/channels/retry` (`withRetry`), `lib/search`, `lib/utils`.
 Ähnlicher, aber zufällig gleicher Code wird **nicht** zwangsvereinheitlicht (siehe die bewusst inline belassenen px-4-Flash-Banner).

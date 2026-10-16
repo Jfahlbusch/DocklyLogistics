@@ -1,5 +1,17 @@
 export type UserRole = "GLOBAL_ADMIN" | "MANAGER" | "USER" | "VIEWER";
 
+const ROLE_PRIORITY: Record<UserRole, number> = {
+  GLOBAL_ADMIN: 4,
+  MANAGER: 3,
+  USER: 2,
+  VIEWER: 1,
+};
+
+/** `true`, wenn `actual` mindestens `required` entspricht. Rein und clientsicher (Menü-Registry, `lib/api/guard.ts`). */
+export function hasMinRole(actual: UserRole, required: UserRole): boolean {
+  return ROLE_PRIORITY[actual] >= ROLE_PRIORITY[required];
+}
+
 export class UnauthorizedError extends Error {
   constructor(message = "User is not authorized to access this tenant") {
     super(message);
