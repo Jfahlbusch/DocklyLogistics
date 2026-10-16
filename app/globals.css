@@ -182,8 +182,21 @@
   background:
     radial-gradient(140% 60% at 50% 0%, hsl(44 100% 52% / 0.10) 0%, hsl(44 100% 52% / 0.04) 22%, transparent 55%),
     linear-gradient(180deg, hsl(189 40% 11%) 0%, hsl(189 34% 15%) 100%);
-  border-right: 1px solid hsl(0 0% 100% / 0.10);
-  box-shadow: 1px 0 0 0 hsl(0 0% 100% / 0.04), 4px 0 24px -8px hsl(189 60% 2% / 0.55);
+}
+
+/* Menü-Ergänzungen (Vorlage assets/layout/globals.sidebar.css, Quelle: DocklyBase 8d3f430).
+   Die schwebende Leiste trägt Rand rundum (`border-sidebar-border`) und `.sidebar-panel` — darum hat .app-sidebar
+   weder `border-right` noch einen Seitenschatten (seitenmenue.md §5). */
+@custom-variant short (@media (max-height: 900px));
+@custom-variant tiny (@media (max-height: 400px));
+
+@theme {
+  --breakpoint-nav: 62rem;
+}
+
+/* Schatten der schwebenden Leiste und des Drawers; außerhalb der Tailwind-Ebenen, damit er das shadow-soft des Sheets übersteuert. */
+.sidebar-panel {
+  box-shadow: 0 0.5rem 1rem color-mix(in srgb, var(--foreground) 15%, transparent);
 }
 
 /* Reduced motion */
