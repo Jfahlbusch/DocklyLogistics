@@ -1,3 +1,5 @@
+// Bild-Importe (`import mark from "…png"`, components/layout/logo.tsx): next-env.d.ts ist gitignored und fehlt in der CI vor dem Build.
+/// <reference types="next/image-types/global" />
 import type messages from "./messages/de.json";
 import type { routing } from "./i18n/routing";
 
