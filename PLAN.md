@@ -525,12 +525,19 @@ Bereiche auf-/zuklappbar, Breakpoint 992 px, schwebende Leiste.
 - Registry der Vorlage ist DocklyBase-Beispiel → eigene Registry bleibt, wird auf **4 Bereiche** umgestellt.
 
 ## Meilensteine
-- [ ] **S1 Grundlagen:** `globals.sidebar.css` (Varianten `short`/`tiny`, `--breakpoint-nav`, `.sidebar-panel`),
+- [x] **S1 Grundlagen:** ✅ (`dd3a239`, `3ffd626`, `c9b77f5`) `globals.sidebar.css` (Varianten `short`/`tiny`, `--breakpoint-nav`, `.sidebar-panel`),
       Hooks, `sidebar-geometry`, `sidebar-preference` (Cookie `ui_sidebar`), `navigation-preference`
       (Cookie `ui_nav_areas`, `navigationFlyouts`), Registry mit 4 Bereichen. Unit-Tests der Vorlage zuerst.
-- [ ] **S2 Schwebende Leiste:** Sidebar + Platzhalter, Kanten-Toggle, Vor-Paint-Skript, Bereichsköpfe als Schalter,
+- [x] **S2 Schwebende Leiste:** ✅ (`f16599b`) Sidebar + Platzhalter, Kanten-Toggle, Vor-Paint-Skript, Bereichsköpfe als Schalter,
       Kacheln (keine Startkante), Rail mit Popovers, Unternehmenskarte + Wechsler.
-- [ ] **S3 Fuß & Topbar:** Profilzeile (Farbschema · Benutzermenü · Abmelden), Topbar ohne Avatar, Glocke ganz rechts,
+- [x] **S3 Fuß & Topbar:** ✅ (`f16599b`; Fix Bildtypen `362f5f0`) Profilzeile (Farbschema · Benutzermenü · Abmelden), Topbar ohne Avatar, Glocke ganz rechts,
       Farbschema unter 992 px in der Topbar.
-- [ ] **S4 Mobil:** schwebender Drawer gleicher Geometrie, Burger 44 px, Tab-Leiste unter 992 px.
-- [ ] **S5 Abnahme:** Checkliste `seitenmenue.md` §7, Deploy.
+- [x] **S4 Mobil:** ✅ (`f16599b`; Fix Logo-Breite `50877d0`) schwebender Drawer gleicher Geometrie, Burger 44 px, Tab-Leiste unter 992 px.
+- [~] **S5 Abnahme:** Deploy auf logistics.dockly.de am 16.10.2026, im Browser geprüft (1440×900 hell, 1280×720 dunkel,
+      375×812 hell, 390×844 dunkel): Abstand 12 px, Radius 26 px, Inhalt ab 292/100 px, Einklappen + Cookie über Neuladen,
+      kein Scrollen (Verwaltung bei 720 px Höhe im Popover), aktiver Eintrag ohne Startkante, Drawer gleicher Geometrie,
+      Touch 44 px, Tab-Leiste je Bereich. **Offen:** E2E `menu.spec.ts` (kein Playwright/Mock-Login im Projekt — Keycloak
+      lässt `localhost` als Redirect-URI nicht zu), Prüfung in Englisch entfällt (N8).
+      Bewusste Abweichungen: kein Sprachumschalter (N8); Sichtbarkeit über Feature-Rechte (`allowed`); Wechsler ohne
+      `ErrorNotice`; Schriftzug im Menükopf 16 px (LOGISTICS länger als BASE); Tab-Leiste je Bereich statt der bisherigen
+      Einzel-Tabs (der Scan-Tab „Lagermodus“ ist jetzt über Lager → Lagermodus erreichbar).
