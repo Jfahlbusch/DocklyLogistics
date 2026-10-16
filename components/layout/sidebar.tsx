@@ -5,6 +5,7 @@ import { PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import { Brand } from "./brand";
 import { NavLinks } from "./nav-links";
 import { TenantChip } from "./tenant-chip";
+import { TenantSwitcher, type TenantSwitcherData } from "./tenant-switcher";
 import { SidebarProfile } from "./sidebar-profile";
 import type { ProfilUser } from "./profile-menu-content";
 import { cn } from "@/lib/utils";
@@ -12,9 +13,11 @@ import { cn } from "@/lib/utils";
 type Props = {
   user: ProfilUser;
   allowedNav?: string[];
+  /** Nur für GLOBAL_ADMIN gesetzt — ersetzt dann den statischen Mandanten-Chip. */
+  tenantSwitcher?: TenantSwitcherData | null;
 };
 
-export function Sidebar({ user, allowedNav }: Props) {
+export function Sidebar({ user, allowedNav, tenantSwitcher }: Props) {
   const [collapsed, setCollapsed] = useState(false);
   const [mounted, setMounted] = useState(false);
 
@@ -40,7 +43,11 @@ export function Sidebar({ user, allowedNav }: Props) {
       )}
     >
       <Brand collapsed={collapsed} />
-      <TenantChip tenant={user.tenant} collapsed={collapsed} />
+      {tenantSwitcher ? (
+        <TenantSwitcher {...tenantSwitcher} collapsed={collapsed} />
+      ) : (
+        <TenantChip tenant={user.tenant} collapsed={collapsed} />
+      )}
       <NavLinks collapsed={collapsed} allowedNav={allowedNav} />
       <SidebarProfile user={user} collapsed={collapsed} />
       <button

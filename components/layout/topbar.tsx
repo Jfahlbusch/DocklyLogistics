@@ -7,20 +7,24 @@ import { openSearch } from "@/components/search/open-search";
 import { ProfileMenu } from "./profile-menu";
 import { NotificationBell } from "./notification-bell";
 import { MobileNav } from "./mobile-nav";
+import type { TenantSwitcherData } from "./tenant-switcher";
 import type { ProfilUser } from "./profile-menu-content";
 
 export function Topbar({
   user,
   allowedNav,
+  tenantSwitcher,
 }: {
   user: ProfilUser;
   allowedNav?: string[];
+  /** Wird nur an den Drawer durchgereicht — die Topbar selbst zeigt den Wechsler nicht. */
+  tenantSwitcher?: TenantSwitcherData | null;
 }) {
   const pathname = usePathname();
   const current = NAV_ITEMS.find((n) => n.id === activeNavId(pathname));
   return (
     <header className="sticky top-0 z-10 flex h-16 shrink-0 items-center gap-3 border-b border-border bg-background/85 px-4 shadow-sm backdrop-blur sm:gap-4 lg:px-6">
-      <MobileNav user={user} allowedNav={allowedNav} />
+      <MobileNav user={user} allowedNav={allowedNav} tenantSwitcher={tenantSwitcher} />
       <div className="min-w-0 truncate text-sm text-muted-foreground">
         <span className="hidden text-muted-foreground/50 sm:inline">DocklyLogistics</span>
         <span className="mx-2 hidden text-muted-foreground/40 sm:inline">/</span>

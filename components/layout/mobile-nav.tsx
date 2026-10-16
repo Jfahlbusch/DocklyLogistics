@@ -5,6 +5,7 @@ import { Menu, X } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Brand } from "./brand";
 import { TenantChip } from "./tenant-chip";
+import { TenantSwitcher, type TenantSwitcherData } from "./tenant-switcher";
 import { NavLinks } from "./nav-links";
 import { SidebarProfile } from "./sidebar-profile";
 import type { ProfilUser } from "./profile-menu-content";
@@ -13,9 +14,11 @@ import type { ProfilUser } from "./profile-menu-content";
 export function MobileNav({
   user,
   allowedNav,
+  tenantSwitcher,
 }: {
   user: ProfilUser;
   allowedNav?: string[];
+  tenantSwitcher?: TenantSwitcherData | null;
 }) {
   const [open, setOpen] = useState(false);
   const close = () => setOpen(false);
@@ -49,7 +52,7 @@ export function MobileNav({
             <X size={26} strokeWidth={1.5} />
           </button>
         </div>
-        <TenantChip tenant={user.tenant} />
+        {tenantSwitcher ? <TenantSwitcher {...tenantSwitcher} /> : <TenantChip tenant={user.tenant} />}
 
         <NavLinks onNavigate={close} allowedNav={allowedNav} />
         <SidebarProfile user={user} />
