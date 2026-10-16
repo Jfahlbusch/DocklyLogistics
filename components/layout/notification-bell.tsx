@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import { safeInternalLink } from "@/lib/safe-internal-link";
 
 type Notif = {
   id: string;
@@ -26,10 +27,7 @@ type Notif = {
 const API = "/api/v1/me/notifications";
 const POLL_MS = 60_000;
 
-/** Nur app-relative Pfade — nie `//host` oder absolute URLs (kein Open Redirect über Meldungstexte). */
-function internalLink(link: string | null): string | null {
-  return link && link.startsWith("/") && !link.startsWith("//") ? link : null;
-}
+
 
 async function postRead(id?: string): Promise<boolean> {
   try {
@@ -124,7 +122,7 @@ export function NotificationBell() {
       setUnread((u) => Math.max(0, u - 1));
     }
     setOpen(false);
-    const href = internalLink(n.link);
+    const href = safeInternalLink(n.link, window.location.origin);
     if (href) router.push(href);
     load(); // ohne Link bleibt die Seite stehen und zeigt den neuen Stand
   }
