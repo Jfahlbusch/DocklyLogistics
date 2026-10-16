@@ -1,6 +1,7 @@
 import type { NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { signIn } from "@/lib/auth";
+import { ADMIN_VIEW_TENANT_COOKIE } from "@/lib/auth/admin-view-tenant";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,10 @@ export async function GET(req: NextRequest) {
 
   if (origin) {
     const store = await cookies();
+    // Ein frischer Einstieg mit Ziel-Mandant beendet eine evtl. noch aktive
+    // Mandanten-Ansicht (GLOBAL_ADMIN) — sonst landet der Onboarding-Link im
+    // zuletzt betrachteten Mandanten.
+    store.delete(ADMIN_VIEW_TENANT_COOKIE);
     store.set(ORIGIN_TENANT_COOKIE, origin, {
       httpOnly: true,
       sameSite: "lax",

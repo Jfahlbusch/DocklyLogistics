@@ -17,6 +17,7 @@ import "@/lib/schemas/misc-routes";
 import "@/lib/schemas/pdf-settings";
 import "@/lib/schemas/edi";
 import "@/lib/schemas/admin";
+import "@/lib/schemas/tenant-view";
 
 export const dynamic = "force-static";
 

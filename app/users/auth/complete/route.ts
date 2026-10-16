@@ -7,7 +7,7 @@ export const dynamic = "force-dynamic";
 /**
  * GET /users/auth/complete
  *
- * Post-Login-Hop nach dem Keycloak-Callback. Liest die Session (Tenant stammt aus
+ * Post-Login-Hop nach dem Keycloak-Callback. Liest die Session (Heim-Tenant stammt aus
  * dem SSO-`origin`-Cookie, Rolle aus den Keycloak-Claims) und legt den Tenant-
  * Datensatz an, falls er noch nicht existiert — dann weiter ins Dashboard.
  *
@@ -26,7 +26,8 @@ function redirectTo(path: string): NextResponse {
 
 export async function GET() {
   const session = await auth();
-  const tenant = session?.tenant;
+  // Immer der HEIM-Mandant der Sitzung — nie ein per Ansicht betrachteter (GLOBAL_ADMIN).
+  const tenant = session?.homeTenant;
 
   if (!session?.role || !tenant) {
     return redirectTo("/login?error=unauthorized");
