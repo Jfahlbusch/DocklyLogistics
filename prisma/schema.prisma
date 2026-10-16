@@ -437,17 +437,33 @@ model UserApiKey {
 
 /// Tenant-wide in-app notification (ops events: webhook failures, …). Shared per
 /// tenant; readAt marks it read for the team. Surfaced in the header bell.
+// Benachrichtigungen gelten mandantenweit; der Lesestatus gilt je Nutzer
+// (NotificationRead). `readAt` ist Altbestand aus der Zeit vor dem Lesestatus je
+// Nutzer: Er wird nicht mehr gesetzt, Altmeldungen mit gesetztem Wert gelten aber
+// weiter als für alle gelesen (siehe lib/db/repos/notification.ts).
 model Notification {
-  id        String    @id @default(cuid())
+  id        String             @id @default(cuid())
   tenantId  String
   type      String
   title     String
   body      String?
   link      String?
   readAt    DateTime?
-  createdAt DateTime  @default(now())
+  createdAt DateTime           @default(now())
+  reads     NotificationRead[]
 
   @@index([tenantId, readAt, createdAt])
+}
+
+model NotificationRead {
+  notificationId String
+  userEmail      String
+  tenantId       String
+  readAt         DateTime     @default(now())
+  notification   Notification @relation(fields: [notificationId], references: [id], onDelete: Cascade)
+
+  @@id([notificationId, userEmail])
+  @@index([tenantId, userEmail])
 }
 
 model Webhook {

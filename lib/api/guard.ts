@@ -38,17 +38,16 @@ function isUserRole(value: string): value is UserRole {
   return VALID_ROLES.has(value as UserRole);
 }
 
+type Authenticated = RequestContext & {
+  /** Nur beim persönlichen API-Key gesetzt — bei einer Sitzung kommt die E-Mail aus `auth()`. */
+  keyUserEmail?: string;
+};
+
 /**
- * Reads the x-user-role and x-user-tenant headers that middleware.ts set after
- * NextAuth derived the role from Keycloak claims — but only if they carry a valid
- * x-user-signature (see lib/api/user-headers.ts). Unsigned or tampered headers are
- * ignored, never trusted: the request then has to authenticate with a real API key.
- * Throws if missing/insufficient.
+ * Die eine Authentifizierung: signierte Sitzungs-Header oder persönlicher API-Key.
+ * Wirft bei fehlender/unzureichender Berechtigung.
  */
-export async function requireRoleFromHeaders(
-  headers: Headers,
-  minRole: UserRole,
-): Promise<RequestContext> {
+async function authenticate(headers: Headers, minRole: UserRole): Promise<Authenticated> {
   const role = headers.get("x-user-role");
   const tenant = headers.get("x-user-tenant");
 
@@ -69,8 +68,51 @@ export async function requireRoleFromHeaders(
     if (!hasMinRole(keyCtx.role, minRole)) {
       throw new ForbiddenError(`Role ${keyCtx.role} is below required ${minRole}`);
     }
-    return { role: keyCtx.role, tenantId: keyCtx.tenantId };
+    return { role: keyCtx.role, tenantId: keyCtx.tenantId, keyUserEmail: keyCtx.userEmail };
   }
 
   throw new UnauthenticatedError("Missing session (x-user-role) or a valid X-API-Key");
+}
+
+/**
+ * Reads the x-user-role and x-user-tenant headers that middleware.ts set after
+ * NextAuth derived the role from Keycloak claims — but only if they carry a valid
+ * x-user-signature (see lib/api/user-headers.ts). Unsigned or tampered headers are
+ * ignored, never trusted: the request then has to authenticate with a real API key.
+ * Throws if missing/insufficient.
+ */
+export async function requireRoleFromHeaders(
+  headers: Headers,
+  minRole: UserRole,
+): Promise<RequestContext> {
+  const { role, tenantId } = await authenticate(headers, minRole);
+  return { role, tenantId };
+}
+
+export type UserRequestContext = RequestContext & { userEmail: string };
+
+/** Vergleichbar machen: dieselbe Person liefert über Sitzung und API-Key dieselbe Adresse. */
+function normalizeEmail(email: string): string {
+  return email.trim().toLowerCase();
+}
+
+/**
+ * Wie `requireRoleFromHeaders`, liefert aber zusätzlich die E-Mail des Nutzers für
+ * nutzerbezogene Daten (z. B. Lesestatus von Benachrichtigungen). Rolle und
+ * Mandant kommen unverändert aus der einen Authentifizierung; die E-Mail stammt aus
+ * der Sitzung (`auth()`) bzw. dem persönlichen API-Key — nie aus Request-Headern
+ * oder -Body. Ohne ermittelbare E-Mail: `UnauthenticatedError`.
+ */
+export async function requireUserFromHeaders(
+  headers: Headers,
+  minRole: UserRole,
+): Promise<UserRequestContext> {
+  const { role, tenantId, keyUserEmail } = await authenticate(headers, minRole);
+  if (keyUserEmail) return { role, tenantId, userEmail: normalizeEmail(keyUserEmail) };
+
+  // Dynamisch: `@/lib/auth` zieht NextAuth/Keycloak nach — das braucht nur der Sitzungspfad.
+  const { auth } = await import("@/lib/auth");
+  const email = (await auth())?.user?.email;
+  if (!email || !email.trim()) throw new UnauthenticatedError("Session without e-mail address");
+  return { role, tenantId, userEmail: normalizeEmail(email) };
 }

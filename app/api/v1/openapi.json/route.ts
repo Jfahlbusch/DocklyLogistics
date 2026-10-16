@@ -18,6 +18,7 @@ import "@/lib/schemas/pdf-settings";
 import "@/lib/schemas/edi";
 import "@/lib/schemas/admin";
 import "@/lib/schemas/tenant-view";
+import "@/lib/schemas/notification";
 
 export const dynamic = "force-static";
 

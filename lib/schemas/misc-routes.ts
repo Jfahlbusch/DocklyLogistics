@@ -55,22 +55,6 @@ registry.registerPath({
 });
 
 registry.registerPath({
-  method: "get",
-  path: "/me/notifications",
-  summary: "Benachrichtigungen + Anzahl ungelesen",
-  tags: ["Benachrichtigungen"],
-  responses: { 200: { description: "{ items, unread }" } },
-});
-registry.registerPath({
-  method: "post",
-  path: "/me/notifications/read",
-  summary: "Benachrichtigung(en) als gelesen markieren",
-  tags: ["Benachrichtigungen"],
-  request: { body: { content: { "application/json": { schema: z.object({ id: z.string().cuid().optional() }) } } } },
-  responses: { 200: { description: "OK (id = eine, leer = alle)" } },
-});
-
-registry.registerPath({
   method: "post",
   path: "/stock/inventory",
   summary: "Inventur buchen (Bestände auf gezählte Mengen korrigieren)",
