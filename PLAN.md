@@ -495,7 +495,7 @@ Login sofort wieder drin. **Risiko:** Auth-Änderung; Hin- und Rückweg auf Prod
 Die an Gate 1 vertagten Bausteine werden auf Anweisung des Nutzers nachgezogen. Annahme
 (Skill-Standard, nicht ausdrücklich bestätigt): Sprachen **Deutsch (Quelle) + Englisch**.
 
-- [ ] **N5: Tenant-Wechsler für GLOBAL_ADMIN** (`tenant-switcher.md`) — Session-Cookie, zwei
+- [x] **N5: Tenant-Wechsler für GLOBAL_ADMIN** ✅ (`12cd364`, `d80b56e`, `725a1c6`) (`tenant-switcher.md`) — Session-Cookie, zwei
       Read-Points über `resolveSessionTenant`, signierter `x-user-tenant`, `homeTenant` getrennt,
       Audit im Ziel-Mandanten, durchsuchbares Popover unter dem Logo (Sidebar + Drawer), Warnfärbung
       bei Fremdansicht, Cookie-Löschung bei Abmelden und SSO-Einstieg.
@@ -503,5 +503,6 @@ Die an Gate 1 vertagten Bausteine werden auf Anweisung des Nutzers nachgezogen. 
       Nutzer (`NotificationRead`), stabile Sortierung, Aktualisierung bei Fokus + alle 60 s.
 - [ ] **N7: Abmelden am Keycloak-Realm** (`plattform/06-profilmenue.md`) — `id_token` nur im JWT,
       end-session-URL, Hin- und Rückweg auf Prod geprüft.
-- [ ] **N8: Mehrsprachigkeit** (`i18n.md`) — next-intl, Sprache nur in der URL, alle sichtbaren
-      Texte über Keys, Key-Paritätstest, Sprachwahl im Profilmenü.
+- [~] **N8: Mehrsprachigkeit** — **auf Entscheidung des Nutzers vorerst gestrichen** (16.10.2026).
+      Umfang wäre die komplette Oberfläche (82 Dateien, ~12.900 Zeilen) plus geänderte URLs (`/de`, `/en`).
+      Folge: kein Punkt „Sprache" im Profilmenü; einzige bewusste Abweichung von `06-profilmenue.md`.
