@@ -3,10 +3,11 @@ import "next-auth";
 
 declare module "next-auth" {
   interface Session {
-    accessToken?: string;
-    claims?: Record<string, unknown>;
     role?: UserRole;
+    /** Wirksamer Mandant — bei GLOBAL_ADMIN ggf. der betrachtete (Cookie `admin_view_tenant`). */
     tenant?: string;
+    /** Echter, unveränderlicher Mandant der Sitzung. */
+    homeTenant?: string;
     error?: string;
   }
 }

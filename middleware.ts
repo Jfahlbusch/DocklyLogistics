@@ -1,6 +1,8 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
 import { forwardUserHeaders } from "@/lib/api/user-headers";
+import { ADMIN_VIEW_TENANT_COOKIE } from "@/lib/auth/admin-view-tenant";
+import { headerSessionFor } from "@/lib/auth/session-tenant";
 
 // "/api-docs" (Scalar viewer) and "/api/v1/openapi.json" (the generated spec) are
 // intentionally public so external developers can read the API reference without a
@@ -19,9 +21,12 @@ export default auth(async (req) => {
   // mitgeschickte x-user-*-Header werden auf JEDEM Pfad verworfen und — bei
   // gültiger Sitzung — durch signierte Werte ersetzt. Weitergereicht wird über
   // `request: { headers }`; `res.headers.set` würde nur Antwort-Header setzen.
+  // Read-Point 2 der Mandanten-Ansicht (GLOBAL_ADMIN): der wirksame Mandant kommt über
+  // dieselbe Regel wie in der Session (`resolveSessionTenant`) und wird mitsigniert.
+  // Das Cookie zählt nur für GLOBAL_ADMIN; die Rolle stammt immer aus der Sitzung.
   const headers = await forwardUserHeaders(
     req.headers,
-    req.auth ? { role: req.auth.role, tenant: req.auth.tenant } : null,
+    headerSessionFor(req.auth, req.cookies.get(ADMIN_VIEW_TENANT_COOKIE)?.value),
   );
   const next = () => NextResponse.next({ request: { headers } });
 

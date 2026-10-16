@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Keycloak from "next-auth/providers/keycloak";
-import { deriveRole, UnauthorizedError, type UserRole } from "./role";
+import { ADMIN_VIEW_TENANT_COOKIE } from "./admin-view-tenant";
+import { buildSessionFields } from "./session-fields";
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
@@ -50,29 +51,18 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      const tenant =
-        (typeof token.tenant === "string" && token.tenant) || process.env.NEXT_PUBLIC_APP_TENANT!;
-      const claims = (token.claims ?? {}) as Parameters<typeof deriveRole>[0];
+      // Read-Point 1 (Seiten/Server Components). Read-Point 2 ist middleware.ts — beide
+      // lösen den wirksamen Mandanten über dieselbe Regel `resolveSessionTenant` auf.
+      let ansicht: string | null = null;
       try {
-        const role: UserRole = deriveRole(claims, tenant);
-        return {
-          ...session,
-          accessToken: token.accessToken as string | undefined,
-          claims,
-          role,
-          tenant,
-        };
-      } catch (e) {
-        if (e instanceof UnauthorizedError) {
-          if (process.env.NODE_ENV === "development") {
-            console.warn(
-              `[auth/session] deriveRole failed for tenant="${tenant}". Claims keys: ${Object.keys(claims).join(", ")}`,
-            );
-          }
-          return { ...session, role: undefined, tenant, error: "Unauthorized" } as typeof session;
-        }
-        throw e;
+        // Dynamic import: next/headers bleibt aus dem Edge-Middleware-Bundle.
+        const { cookies } = await import("next/headers");
+        ansicht = (await cookies()).get(ADMIN_VIEW_TENANT_COOKIE)?.value ?? null;
+      } catch {
+        // Kein Request-Kontext (z. B. Middleware/Edge) — keine Fremdansicht hier.
       }
+      // Die Session enthält bewusst KEINE Claims und kein Access-Token.
+      return { ...session, ...buildSessionFields(token, ansicht) } as typeof session;
     },
   },
   pages: {
