@@ -1,5 +1,6 @@
 import type { UserRole } from "@/lib/auth/role";
 import { resolveUserApiKey } from "./user-key-auth";
+import { verifyUserHeaders } from "./user-headers";
 
 export class UnauthenticatedError extends Error {
   constructor(message = "Unauthenticated") {
@@ -39,7 +40,10 @@ function isUserRole(value: string): value is UserRole {
 
 /**
  * Reads the x-user-role and x-user-tenant headers that middleware.ts set after
- * NextAuth derived the role from Keycloak claims. Throws if missing/insufficient.
+ * NextAuth derived the role from Keycloak claims — but only if they carry a valid
+ * x-user-signature (see lib/api/user-headers.ts). Unsigned or tampered headers are
+ * ignored, never trusted: the request then has to authenticate with a real API key.
+ * Throws if missing/insufficient.
  */
 export async function requireRoleFromHeaders(
   headers: Headers,
@@ -48,8 +52,10 @@ export async function requireRoleFromHeaders(
   const role = headers.get("x-user-role");
   const tenant = headers.get("x-user-tenant");
 
-  // Session path: middleware set these headers from the NextAuth JWT.
-  if (role && isUserRole(role) && tenant) {
+  // Session path: middleware set (and signed) these headers from the NextAuth JWT.
+  const signed =
+    !!role && !!tenant && (await verifyUserHeaders(role, tenant, headers.get("x-user-signature")));
+  if (signed && role && isUserRole(role) && tenant) {
     if (!hasMinRole(role, minRole)) {
       throw new ForbiddenError(`Role ${role} is below required ${minRole}`);
     }

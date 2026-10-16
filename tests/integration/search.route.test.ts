@@ -36,14 +36,14 @@ describe("GET /api/v1/search", () => {
   });
 
   it("returns empty groups below the 2-char minimum", async () => {
-    const res = await GET(makeRequest(url("m"), { headers: sessionHeaders("VIEWER", T) }));
+    const res = await GET(makeRequest(url("m"), { headers: await sessionHeaders("VIEWER", T) }));
     expect(res.status).toBe(200);
     const b = await readJson<SearchBody>(res);
     expect(b.data.groups).toEqual([]);
   });
 
   it("finds the tenant's articles and deep-links them", async () => {
-    const res = await GET(makeRequest(url("Weizen"), { headers: sessionHeaders("VIEWER", T) }));
+    const res = await GET(makeRequest(url("Weizen"), { headers: await sessionHeaders("VIEWER", T) }));
     expect(res.status).toBe(200);
     const b = await readJson<SearchBody>(res);
     const articles = b.data.groups.find((g) => g.key === "articles");
@@ -53,7 +53,7 @@ describe("GET /api/v1/search", () => {
   });
 
   it("does not leak other tenants' data", async () => {
-    const res = await GET(makeRequest(url("Weizen"), { headers: sessionHeaders("VIEWER", "other-tenant") }));
+    const res = await GET(makeRequest(url("Weizen"), { headers: await sessionHeaders("VIEWER", "other-tenant") }));
     const b = await readJson<SearchBody>(res);
     expect(b.data.groups).toEqual([]);
   });

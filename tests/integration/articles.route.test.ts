@@ -37,7 +37,7 @@ describe("/api/v1/articles", () => {
   });
 
   it("lists only the tenant's articles (VIEWER)", async () => {
-    const res = await GET(makeRequest(ART_URL, { headers: sessionHeaders("VIEWER", T) }));
+    const res = await GET(makeRequest(ART_URL, { headers: await sessionHeaders("VIEWER", T) }));
     expect(res.status).toBe(200);
     const b = await readJson<{ data: Array<{ sku: string }>; meta: { total: number } }>(res);
     expect(b.meta.total).toBe(1);
@@ -46,7 +46,7 @@ describe("/api/v1/articles", () => {
 
   it("403 when creating below the required role (VIEWER < USER)", async () => {
     const res = await POST(
-      makeRequest(ART_URL, { method: "POST", headers: sessionHeaders("VIEWER", T), body: { sku: "X", name: "X" } }),
+      makeRequest(ART_URL, { method: "POST", headers: await sessionHeaders("VIEWER", T), body: { sku: "X", name: "X" } }),
     );
     expect(res.status).toBe(403);
   });

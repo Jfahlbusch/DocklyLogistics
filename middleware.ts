@@ -1,5 +1,6 @@
 import { auth } from "@/lib/auth";
 import { NextResponse } from "next/server";
+import { forwardUserHeaders } from "@/lib/api/user-headers";
 
 // "/api-docs" (Scalar viewer) and "/api/v1/openapi.json" (the generated spec) are
 // intentionally public so external developers can read the API reference without a
@@ -11,14 +12,24 @@ const PUBLIC_PATHS = ["/login", "/api/auth", "/api/public", "/api/edi", "/api/in
 // PWA-related static files that must be reachable without authentication.
 const PUBLIC_FILES = ["/manifest.webmanifest", "/sw.js", "/icon-192.svg", "/icon-512.svg"];
 
-export default auth((req) => {
+export default auth(async (req) => {
   const { pathname } = req.nextUrl;
 
+  // SICHERHEIT: Rolle/Mandant setzt ausschließlich diese Middleware. Vom Client
+  // mitgeschickte x-user-*-Header werden auf JEDEM Pfad verworfen und — bei
+  // gültiger Sitzung — durch signierte Werte ersetzt. Weitergereicht wird über
+  // `request: { headers }`; `res.headers.set` würde nur Antwort-Header setzen.
+  const headers = await forwardUserHeaders(
+    req.headers,
+    req.auth ? { role: req.auth.role, tenant: req.auth.tenant } : null,
+  );
+  const next = () => NextResponse.next({ request: { headers } });
+
   if (PUBLIC_PATHS.some((p) => pathname.startsWith(p))) {
-    return NextResponse.next();
+    return next();
   }
   if (PUBLIC_FILES.includes(pathname)) {
-    return NextResponse.next();
+    return next();
   }
 
   if (!req.auth) {
@@ -29,24 +40,18 @@ export default auth((req) => {
       pathname.startsWith("/api/v1") &&
       (req.headers.get("x-api-key") || req.headers.get("authorization"))
     ) {
-      return NextResponse.next();
+      return next();
     }
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
     return NextResponse.redirect(loginUrl);
   }
 
-  const role = req.auth.role;
-  const tenant = req.auth.tenant;
-
-  if (!role) {
+  if (!req.auth.role) {
     return NextResponse.redirect(new URL("/login?error=unauthorized", req.url));
   }
 
-  const res = NextResponse.next();
-  res.headers.set("x-user-role", role);
-  if (tenant) res.headers.set("x-user-tenant", tenant);
-  return res;
+  return next();
 });
 
 export const config = {

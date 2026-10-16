@@ -64,7 +64,7 @@ describe("/api/v1/articles/[id]", () => {
 
   it("liefert den eigenen Artikel (VIEWER)", async () => {
     const res = await GET(
-      makeRequest(url(ownId), { headers: sessionHeaders("VIEWER", T) }),
+      makeRequest(url(ownId), { headers: await sessionHeaders("VIEWER", T) }),
       routeParams({ id: ownId }),
     );
     expect(res.status).toBe(200);
@@ -74,7 +74,7 @@ describe("/api/v1/articles/[id]", () => {
 
   it("liefert 404 für einen Artikel eines fremden Tenants (Isolationsnachweis)", async () => {
     const res = await GET(
-      makeRequest(url(foreignId), { headers: sessionHeaders("VIEWER", T) }),
+      makeRequest(url(foreignId), { headers: await sessionHeaders("VIEWER", T) }),
       routeParams({ id: foreignId }),
     );
     expect(res.status).toBe(404);
@@ -84,7 +84,7 @@ describe("/api/v1/articles/[id]", () => {
     const res = await PATCH(
       makeRequest(url(ownId), {
         method: "PATCH",
-        headers: sessionHeaders("VIEWER", T),
+        headers: await sessionHeaders("VIEWER", T),
         body: { name: "Darf nicht durchgehen" },
       }),
       routeParams({ id: ownId }),
@@ -98,7 +98,7 @@ describe("/api/v1/articles/[id]", () => {
     const res = await PATCH(
       makeRequest(url(ownId), {
         method: "PATCH",
-        headers: sessionHeaders("USER", T),
+        headers: await sessionHeaders("USER", T),
         body: { name: "Umbenannt" },
       }),
       routeParams({ id: ownId }),
@@ -112,7 +112,7 @@ describe("/api/v1/articles/[id]", () => {
     const res = await PATCH(
       makeRequest(url(foreignId), {
         method: "PATCH",
-        headers: sessionHeaders("MANAGER", T),
+        headers: await sessionHeaders("MANAGER", T),
         body: { name: "Fremdzugriff" },
       }),
       routeParams({ id: foreignId }),
@@ -124,7 +124,7 @@ describe("/api/v1/articles/[id]", () => {
 
   it("löscht keinen fremden Artikel (404, Datensatz bleibt bestehen)", async () => {
     const res = await DELETE(
-      makeRequest(url(foreignId), { method: "DELETE", headers: sessionHeaders("MANAGER", T) }),
+      makeRequest(url(foreignId), { method: "DELETE", headers: await sessionHeaders("MANAGER", T) }),
       routeParams({ id: foreignId }),
     );
     expect(res.status).toBe(404);

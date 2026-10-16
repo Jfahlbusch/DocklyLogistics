@@ -34,7 +34,7 @@ describe("/api/v1/me/api-keys", () => {
 
   it("creates a key with the session role and returns it exactly once", async () => {
     const res = await POST(
-      makeRequest(KEYS_URL, { method: "POST", headers: sessionHeaders("MANAGER", T), body: { label: "ERP" } }),
+      makeRequest(KEYS_URL, { method: "POST", headers: await sessionHeaders("MANAGER", T), body: { label: "ERP" } }),
     );
     expect(res.status).toBe(201);
     const b = await readJson<{ data: { key: string; role: string; prefix: string } }>(res);
@@ -44,7 +44,7 @@ describe("/api/v1/me/api-keys", () => {
   });
 
   it("lists the user's keys without exposing the secret", async () => {
-    const res = await GET(makeRequest(KEYS_URL, { headers: sessionHeaders("MANAGER", T) }));
+    const res = await GET(makeRequest(KEYS_URL, { headers: await sessionHeaders("MANAGER", T) }));
     expect(res.status).toBe(200);
     const b = await readJson<{ data: Array<{ key?: string; prefix: string; role: string }> }>(res);
     expect(b.data.length).toBeGreaterThanOrEqual(1);

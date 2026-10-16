@@ -1,3 +1,4 @@
+import { signUserHeaders } from "@/lib/api/user-headers";
 import { NextRequest } from "next/server";
 
 /**
@@ -29,9 +30,16 @@ export function makeRequest(
   return new NextRequest(url, { method, headers });
 }
 
-/** Headers the middleware would set for an authenticated session. */
-export function sessionHeaders(role: string, tenant: string): Record<string, string> {
-  return { "x-user-role": role, "x-user-tenant": tenant };
+/**
+ * Header, wie die Middleware sie nach der Anmeldung setzt — inklusive Signatur
+ * (lib/api/user-headers.ts). Unsignierte x-user-*-Header lehnt der Guard ab.
+ */
+export async function sessionHeaders(role: string, tenant: string): Promise<Record<string, string>> {
+  return {
+    "x-user-role": role,
+    "x-user-tenant": tenant,
+    "x-user-signature": await signUserHeaders(role, tenant),
+  };
 }
 
 /**
