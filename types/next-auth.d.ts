@@ -15,6 +15,8 @@ declare module "next-auth" {
 declare module "next-auth/jwt" {
   interface JWT {
     accessToken?: string;
+    /** Keycloak-id_token für `id_token_hint` beim Logout — nur im JWT, nie in der Session. */
+    idToken?: string;
     claims?: Record<string, unknown>;
   }
 }

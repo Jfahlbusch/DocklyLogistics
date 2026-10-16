@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import Keycloak from "next-auth/providers/keycloak";
 import { ADMIN_VIEW_TENANT_COOKIE } from "./admin-view-tenant";
+import { storeIdToken } from "./id-token";
 import { buildSessionFields } from "./session-fields";
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
@@ -25,7 +26,9 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   ],
   session: { strategy: "jwt" },
   callbacks: {
-    async jwt({ token, account, profile }) {
+    async jwt({ token: initialToken, account, profile }) {
+      // id_token nur im JWT-Cookie (für id_token_hint beim Keycloak-Logout), nie in der Session.
+      const token = storeIdToken(initialToken, account);
       if (account?.access_token) {
         token.accessToken = account.access_token;
         const accessTokenClaims = decodeJwtPayload(account.access_token) ?? {};
