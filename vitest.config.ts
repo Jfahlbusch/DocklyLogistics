@@ -10,7 +10,12 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "node",
-    include: ["lib/**/*.test.ts", "tests/unit/**/*.test.ts", "tests/integration/**/*.test.ts"],
+    include: [
+      "lib/**/*.test.ts",
+      "components/**/*.test.tsx",
+      "tests/unit/**/*.test.ts",
+      "tests/integration/**/*.test.ts",
+    ],
     coverage: {
       provider: "v8",
       reporter: ["text-summary", "text"],
