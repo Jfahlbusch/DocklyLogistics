@@ -49,3 +49,6 @@ next-env.d.ts
 
 # Allow committed env template
 !.env.example
+
+# Agent-Worktrees (lokal, nie committen)
+.claude/worktrees/
