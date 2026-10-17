@@ -91,6 +91,19 @@ describe("/api/v1/order-suggestions (Ist-Verhalten)", () => {
     expect(body.data.every((s) => s.tenantId === T)).toBe(true);
   });
 
+  it("GET filtert nach articleId und status (offener Vorschlag eines Artikels)", async () => {
+    const url = `${listUrl}?status=PENDING&articleId=${ownArticleId}`;
+    const res = await GET(makeRequest(url, { headers: await sessionHeaders("VIEWER", T) }));
+    expect(res.status).toBe(200);
+    const body = await readJson<{ data: { id: string; articleId: string }[] }>(res);
+    expect(body.data.map((s) => s.id)).toEqual([ownSuggestionId]);
+    // fremder Artikel: tenant-isoliert leer
+    const foreign = await GET(
+      makeRequest(`${listUrl}?articleId=${foreignArticleId}`, { headers: await sessionHeaders("VIEWER", T) }),
+    );
+    expect((await readJson<{ data: unknown[] }>(foreign)).data).toEqual([]);
+  });
+
   it("POST als VIEWER liefert 403", async () => {
     const res = await POST(
       makeRequest(listUrl, {

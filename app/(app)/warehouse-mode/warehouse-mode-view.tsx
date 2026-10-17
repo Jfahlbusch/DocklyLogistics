@@ -6,6 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Camera, KeyRound, Upload } from "lucide-react";
+import { ArticleOrderCard } from "@/components/warehouse/article-order-card";
 import {
   addToOfflineQueue,
   getOfflineQueueSize,
@@ -22,6 +23,8 @@ type Article = {
   orderUnit: string;
   packFactor: number;
   minStock: number;
+  targetStock: number | null;
+  maxStock: number | null;
   defaultLocationId: string | null;
 };
 
@@ -229,46 +232,6 @@ export function WarehouseModeView({
     });
   }
 
-  async function createSuggestionFromArticle() {
-    if (!article) return;
-    setBusy(true);
-    try {
-      const shortfall = Math.max(0, article.minStock - (stock?.total ?? 0));
-      const qty = Math.max(
-        1,
-        Math.ceil(shortfall / Math.max(1, article.packFactor)),
-      );
-      const r = await fetch(`/api/v1/order-suggestions`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          articleId: article.id,
-          qtyOrderUnit: qty,
-          reason: "MANUAL_SCAN",
-          note: "Aus Lagermodus erstellt",
-        }),
-      });
-      const body = await r.json();
-      if (r.ok) {
-        setMessage({
-          ok: true,
-          text: `Vorschlag erstellt: ${qty}x ${article.orderUnit}`,
-        });
-        await loadSuggestions();
-      } else {
-        setMessage({
-          ok: false,
-          text: body.detail ?? body.title ?? "Fehler",
-        });
-      }
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const shortfall =
-    article && stock ? Math.max(0, article.minStock - stock.total) : 0;
-
   return (
     <div className="space-y-4 max-w-app">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -401,81 +364,47 @@ export function WarehouseModeView({
               </div>
             ) : (
               <>
-                <div className="flex justify-between items-start gap-3">
-                  <div className="min-w-0 flex-1">
-                    <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">
-                      {article.sku}
-                    </div>
-                    <h2 className="font-display text-xl text-foreground mt-1">
-                      {article.name}
-                    </h2>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      {article.category ?? "—"} · {article.orderUnit} (
-                      {article.packFactor} × {article.baseUnit})
-                    </div>
-                  </div>
-                  {busy && (
-                    <span className="text-xs text-muted-foreground">Lade…</span>
-                  )}
-                </div>
-
-                <div className="grid grid-cols-2 gap-3 mt-4">
-                  <Kpi
-                    label="Aktueller Bestand"
-                    value={String(stock?.total ?? 0)}
-                    variant={shortfall > 0 ? "rose" : "default"}
-                  />
-                  <Kpi
-                    label="Mindestbestand"
-                    value={String(article.minStock)}
-                  />
-                  <Kpi
-                    label="Unterdeckung"
-                    value={String(shortfall)}
-                    variant={shortfall > 0 ? "rose" : "default"}
-                  />
-                  <Kpi label="Bestelleinheit" value={article.orderUnit} />
-                </div>
-
-                {stock && stock.perLocation.length > 0 && (
-                  <div className="mt-4 border border-border rounded-lg p-3">
-                    <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-2">
-                      Bestand pro Lagerplatz
-                    </div>
-                    <ul className="space-y-1 text-sm">
-                      {stock.perLocation.map((l) => (
-                        <li
-                          key={l.locationId}
-                          className="flex justify-between"
-                        >
-                          <span className="font-mono text-xs">
-                            {l.locationCode}
-                          </span>
-                          <span>
-                            {l.quantity} {article.baseUnit}
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
+                {busy && (
+                  <div className="mb-2 text-right text-xs text-muted-foreground">Lade…</div>
                 )}
+                <ArticleOrderCard
+                  key={article.id}
+                  article={article}
+                  stockTotal={stock?.total ?? 0}
+                  disabled={!canAdjust}
+                  onSaved={loadSuggestions}
+                >
+                  {stock && stock.perLocation.length > 0 && (
+                    <div className="border border-border rounded-lg p-3">
+                      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-2">
+                        Bestand pro Lagerplatz
+                      </div>
+                      <ul className="space-y-1 text-sm">
+                        {stock.perLocation.map((l) => (
+                          <li
+                            key={l.locationId}
+                            className="flex justify-between"
+                          >
+                            <span className="font-mono text-xs">
+                              {l.locationCode}
+                            </span>
+                            <span>
+                              {l.quantity} {article.baseUnit}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </ArticleOrderCard>
 
-                <div className="grid grid-cols-2 gap-2 mt-5">
-                  <Button
-                    onClick={() => setAdjustOpen(true)}
-                    disabled={!canAdjust}
-                    className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm"
-                  >
-                    Bestand korrigieren
-                  </Button>
-                  <Button
-                    onClick={createSuggestionFromArticle}
-                    disabled={!canAdjust || busy}
-                    className="bg-gold-500 hover:bg-gold-400 text-foreground text-sm font-medium"
-                  >
-                    Bestellvorschlag
-                  </Button>
-                </div>
+                <Button
+                  onClick={() => setAdjustOpen(true)}
+                  disabled={!canAdjust}
+                  className="mt-3 w-full bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm"
+                >
+                  Bestand korrigieren
+                </Button>
               </>
             )}
           </CardContent>
@@ -536,32 +465,6 @@ export function WarehouseModeView({
           }}
         />
       )}
-    </div>
-  );
-}
-
-function Kpi({
-  label,
-  value,
-  variant,
-}: {
-  label: string;
-  value: string;
-  variant?: "default" | "rose";
-}) {
-  return (
-    <div className="border border-border rounded-lg p-3">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground">
-        {label}
-      </div>
-      <div
-        className={
-          "font-display text-2xl mt-1 " +
-          (variant === "rose" ? "text-rose-600" : "text-foreground")
-        }
-      >
-        {value}
-      </div>
     </div>
   );
 }

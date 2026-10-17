@@ -100,6 +100,20 @@
       "inBaseUnit": "= {amount} {unit}",
       "freeCapacity": "frei bis Kapazität: {amount} {unit}",
       "capacityWarning": "Achtung: Mit dieser Menge wird die Maximalmenge überschritten ({amount} {unit} frei)."
+    },
+    "card": {
+      "stock": "Bestand",
+      "min": "Mindest",
+      "target": "Empfohlen",
+      "max": "Maximal",
+      "pending": "Offener Vorschlag: {qty}",
+      "submit": "In Bestellvorschläge übernehmen",
+      "saving": "Speichere…",
+      "saved": "Bestellvorschlag gespeichert: {qty} {unit}",
+      "capacityHint": "Kapazitätshinweis: Die Maximalmenge wird überschritten.",
+      "dismissed": "Offener Vorschlag verworfen.",
+      "nothingToOrder": "Nichts zu bestellen – es gibt keinen offenen Vorschlag.",
+      "saveFailed": "Der Vorschlag konnte nicht gespeichert werden. Bitte erneut versuchen."
     }
   }
 }
