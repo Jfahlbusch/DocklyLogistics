@@ -33,6 +33,7 @@ Vor neuer UI/Logik prüfen, ob es den Baustein schon gibt:
 ## Pflichten bei jeder Änderung
 - Neue Route/Repo/Service/Channel → **Test** dazu (`*.test.ts` daneben). DB-Tests räumen ihren Tenant auf.
 - Verhalten/Optik nie unbemerkt ändern. Bugfix und Refactoring getrennt committen.
+- **Mobil & Tablet (Regeltest `tests/unit/mobile-rules.test.ts`):** Dialoge nur über `ResponsiveDialog` (`components/ui/responsive-dialog.tsx`: ab `md` Dialog, darunter Bottom-Sheet; nie `@/components/ui/dialog` direkt, keine eigenen `fixed inset-0`-Overlays). Native `select`/`textarea` nur mit den Klassen aus `components/ui/native-field.ts` (16 px mobil, kein iOS-Zoom); an `<Input>` nie nacktes `text-sm` (→ `md:text-sm`). Checkboxen/Chips: `CHECKBOX_CLASS`, `CHECK_LABEL_CLASS`, `CHIP_CLASS`. Breite Tabellen (passen nicht in ~660 px) zeigen Karten bis `xl` (`hidden xl:block` / `xl:hidden`); ab `xl` passen sie ohne internes Scrollen, sonst Nebenspalten `hidden 2xl:table-cell`. Passende `inputMode`/`type`/`autoCapitalize` setzen. Prüfgrößen: 375 × 812, 768 × 1024, 1024 × 768.
 - **Mobil:** Neue Daten-`<table>` braucht eine Karten-Variante — Tabelle `hidden overflow-x-auto md:block`, darunter eine `md:hidden` Karten-Liste, die dieselben Handler/Daten nutzt (Muster: articles-/orders-/suggestions-/api-keys-View). Ausgenommen: schmale Tabellen im responsiven Grid und die Detail-Modals.
 - Schema-Änderung → Prisma-Migration; Prod-Deploy fährt `migrate deploy` vor dem Image-Swap.
 - Offene Funde/Architekturbewertung stehen in `CODE_REVIEW.md`.
