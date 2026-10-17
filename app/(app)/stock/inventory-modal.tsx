@@ -1,9 +1,19 @@
 "use client";
 
 import { useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { MD_QUERY, useMediaQuery } from "@/hooks/use-media-query";
+import { NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 
 type LocationOpt = { id: string; code: string; name: string };
 type Balance = { id: string; articleId: string; quantity: number; article: { sku: string; name: string } };
@@ -23,6 +33,11 @@ export function InventoryModal({
   const [loading, setLoading] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const isDesktop = useMediaQuery(MD_QUERY, true);
+
+  function setCounted(i: number, value: string) {
+    setRows((prev) => prev.map((x, j) => (j === i ? { ...x, counted: value } : x)));
+  }
 
   async function loadLocation(id: string) {
     setLocationId(id);
@@ -59,23 +74,20 @@ export function InventoryModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <Card
-        className="w-full max-w-2xl shadow-soft max-h-[85vh] overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <CardContent className="p-5 space-y-3 overflow-auto">
-          <h3 className="font-display text-xl text-foreground">Inventur</h3>
-          <p className="text-sm text-muted-foreground">
+    <ResponsiveDialog open onOpenChange={(o) => !o && onClose()}>
+      <ResponsiveDialogContent size="lg">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="font-display text-xl text-foreground">Inventur</ResponsiveDialogTitle>
+          <ResponsiveDialogDescription>
             Lagerplatz wählen, gezählte Mengen erfassen, buchen. Abweichungen werden als
             INVENTORY-Bewegung verbucht.
-          </p>
+          </ResponsiveDialogDescription>
+        </ResponsiveDialogHeader>
 
+        <ResponsiveDialogBody className="space-y-3">
           <select
-            className="h-9 w-full rounded-md border border-input bg-card px-3 text-sm text-foreground"
+            aria-label="Lagerplatz"
+            className={`${NATIVE_SELECT_CLASS} w-full`}
             value={locationId}
             onChange={(e) => loadLocation(e.target.value)}
           >
@@ -93,60 +105,83 @@ export function InventoryModal({
             <div className="py-6 text-center text-muted-foreground text-sm">
               Keine Bestände an diesem Lagerplatz.
             </div>
+          ) : rows.length > 0 && !isDesktop ? (
+            <ul data-testid="inventory-cards" className="divide-y divide-border rounded-lg border border-border">
+              {rows.map((r, i) => (
+                <li key={r.id} className="space-y-2 p-3">
+                  <div>
+                    <div className="break-words text-foreground">{r.article.name}</div>
+                    <div className="font-mono text-xs text-muted-foreground">{r.article.sku}</div>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="text-sm text-muted-foreground">
+                      Soll <span className="font-mono tabular-nums text-foreground">{r.quantity}</span>
+                    </div>
+                    <Input
+                      type="number"
+                      inputMode="numeric"
+                      min={0}
+                      aria-label={`Gezählt: ${r.article.name}`}
+                      value={r.counted}
+                      onChange={(e) => setCounted(i, e.target.value)}
+                      className="h-11 w-28 text-right text-base"
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
           ) : rows.length > 0 ? (
             <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
-                  <th className="text-left font-medium px-3 py-2">Artikel</th>
-                  <th className="text-right font-medium px-3 py-2">Soll</th>
-                  <th className="text-right font-medium px-3 py-2">Gezählt</th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((r, i) => (
-                  <tr key={r.id} className="border-t border-border">
-                    <td className="px-3 py-2">
-                      <div className="text-foreground">{r.article.name}</div>
-                      <div className="font-mono text-xs text-muted-foreground">{r.article.sku}</div>
-                    </td>
-                    <td className="px-3 py-2 text-right font-mono tabular-nums">{r.quantity}</td>
-                    <td className="px-3 py-2 text-right">
-                      <Input
-                        type="number"
-                        min={0}
-                        value={r.counted}
-                        onChange={(e) =>
-                          setRows((prev) =>
-                            prev.map((x, j) => (j === i ? { ...x, counted: e.target.value } : x)),
-                          )
-                        }
-                        className="h-8 w-24 text-right ml-auto"
-                      />
-                    </td>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-muted/40 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">
+                    <th className="text-left font-medium px-3 py-2">Artikel</th>
+                    <th className="text-right font-medium px-3 py-2">Soll</th>
+                    <th className="text-right font-medium px-3 py-2">Gezählt</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {rows.map((r, i) => (
+                    <tr key={r.id} className="border-t border-border">
+                      <td className="px-3 py-2">
+                        <div className="text-foreground">{r.article.name}</div>
+                        <div className="font-mono text-xs text-muted-foreground">{r.article.sku}</div>
+                      </td>
+                      <td className="px-3 py-2 text-right font-mono tabular-nums">{r.quantity}</td>
+                      <td className="px-3 py-2 text-right">
+                        <Input
+                          type="number"
+                          inputMode="numeric"
+                          min={0}
+                          aria-label={`Gezählt: ${r.article.name}`}
+                          value={r.counted}
+                          onChange={(e) => setCounted(i, e.target.value)}
+                          className="h-8 w-24 text-right ml-auto"
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           ) : null}
 
-          {error && <div className="text-sm text-danger">{error}</div>}
+          {error && <div role="alert" className="text-sm text-danger">{error}</div>}
+        </ResponsiveDialogBody>
 
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={onClose}>
-              Abbrechen
-            </Button>
-            <Button
-              onClick={submit}
-              disabled={busy || !locationId || rows.length === 0}
-              className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
-            >
-              {busy ? "Buche…" : "Inventur buchen"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        <ResponsiveDialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Abbrechen
+          </Button>
+          <Button
+            onClick={submit}
+            disabled={busy || !locationId || rows.length === 0}
+            className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
+          >
+            {busy ? "Buche…" : "Inventur buchen"}
+          </Button>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

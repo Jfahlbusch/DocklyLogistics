@@ -10,12 +10,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import {
   LocationForm,
   defaultLocationValues,
@@ -41,6 +42,12 @@ type ArticleRow = {
   stock: number;
   minStock: number;
 };
+
+function occupancy(l: Location) {
+  const pct = l.capacity && l.capacity > 0 ? Math.round((l.used / l.capacity) * 100) : 0;
+  const barClass = pct >= 95 ? "bg-rose-600" : pct >= 70 ? "bg-gold-500" : "bg-navy-900";
+  return { pct, barClass };
+}
 
 const ZONE_STYLES: Record<string, string> = {
   Trocken: "bg-muted text-foreground",
@@ -162,13 +169,64 @@ export function StockView({
           <TabsTrigger value="zones" className="h-11 px-3 md:h-8">{tz("zones")}</TabsTrigger>
         </TabsList>
         <TabsContent value="stock">
-          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {/* Lagerplätze */}
             <Card className="shadow-soft">
               <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <h2 className="font-display text-lg text-foreground">Lagerplätze</h2>
               </div>
-              <div className="overflow-x-auto">
+              {/* Unter xl (Tablet/Handy) Karten: die Tabelle braucht ~700 px */}
+              <ul data-testid="location-cards" className="divide-y divide-border xl:hidden">
+                {locations.length === 0 && (
+                  <li className="text-center text-muted-foreground py-8 text-sm">Keine Lagerplätze.</li>
+                )}
+                {locations.map((l) => {
+                  const { pct, barClass } = occupancy(l);
+                  return (
+                    <li key={l.id} className="space-y-3 px-4 py-3">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="min-w-0">
+                          <div className="font-mono text-xs">{l.code}</div>
+                          <div className="break-words text-foreground">{l.name}</div>
+                        </div>
+                        <StatusPill style={ZONE_STYLES[l.zone]}>{l.zone}</StatusPill>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
+                          <div className={`h-full ${barClass}`} style={{ width: `${pct}%` }} />
+                        </div>
+                        <div className="w-16 text-right text-xs tabular-nums text-muted-foreground">
+                          {l.used}/{l.capacity ?? "—"}
+                        </div>
+                      </div>
+                      {canManage && (
+                        <div className="flex gap-2">
+                          <Button
+                            variant="outline"
+                            className="min-h-11 flex-1"
+                            aria-label={`Lagerplatz ${l.code} bearbeiten`}
+                            onClick={() => {
+                              setEditingId(l.id);
+                              setFormError(null);
+                            }}
+                          >
+                            Bearbeiten
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            className="min-h-11 flex-1"
+                            aria-label={`Lagerplatz ${l.code} löschen`}
+                            onClick={() => handleDelete(l)}
+                          >
+                            Löschen
+                          </Button>
+                        </div>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="hidden overflow-x-auto xl:block">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -193,12 +251,7 @@ export function StockView({
                       </tr>
                     )}
                     {locations.map((l) => {
-                      const pct =
-                        l.capacity && l.capacity > 0
-                          ? Math.round((l.used / l.capacity) * 100)
-                          : 0;
-                      const barClass =
-                        pct >= 95 ? "bg-rose-600" : pct >= 70 ? "bg-gold-500" : "bg-navy-900";
+                      const { pct, barClass } = occupancy(l);
                       return (
                         <tr key={l.id} className="border-t border-border">
                           <td className="px-4 py-3 font-mono text-xs">{l.code}</td>
@@ -251,7 +304,35 @@ export function StockView({
               <div className="px-5 py-4 border-b border-border flex items-center justify-between">
                 <h2 className="font-display text-lg text-foreground">Bestände je Artikel</h2>
               </div>
-              <div className="overflow-x-auto">
+              <ul data-testid="article-cards" className="divide-y divide-border md:hidden">
+                {articles.length === 0 && (
+                  <li className="text-center text-muted-foreground py-8 text-sm">Keine Artikel.</li>
+                )}
+                {articles.map((a) => {
+                  const belowMin = a.stock < a.minStock && a.minStock > 0;
+                  return (
+                    <li key={a.id} className="space-y-1 px-4 py-3">
+                      <div className="break-words font-medium text-foreground">{a.name}</div>
+                      <div className="font-mono text-xs text-muted-foreground">{a.sku}</div>
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+                        <span>
+                          <span className="text-xs text-muted-foreground">Platz </span>
+                          <span className="font-mono text-xs">{a.locationCode}</span>
+                        </span>
+                        <span>
+                          <span className="text-xs text-muted-foreground">Bestand </span>
+                          <span className={belowMin ? "text-rose-600 font-medium" : ""}>{a.stock}</span>
+                        </span>
+                        <span>
+                          <span className="text-xs text-muted-foreground">Min </span>
+                          {a.minStock}
+                        </span>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+              <div className="hidden overflow-x-auto md:block">
                 <table className="w-full text-sm">
                   <thead>
                     <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -314,7 +395,7 @@ export function StockView({
         </TabsContent>
       </Tabs>
 
-      <Dialog
+      <ResponsiveDialog
         open={dialogOpen}
         onOpenChange={(o) => {
           if (!o) {
@@ -324,13 +405,13 @@ export function StockView({
           }
         }}
       >
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-foreground">
+        <ResponsiveDialogContent size="lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display text-2xl text-foreground">
               {isCreate ? "Neuer Lagerplatz" : "Lagerplatz bearbeiten"}
-            </DialogTitle>
-            <DialogDescription>Pflichtfelder sind mit * markiert.</DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>Pflichtfelder sind mit * markiert.</ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           {dialogOpen && initial && (
             <LocationForm
               initial={initial}
@@ -385,10 +466,12 @@ export function StockView({
             />
           )}
           {dialogOpen && !initial && !isCreate && (
-            <div className="py-10 text-center text-muted-foreground">Lade…</div>
+            <ResponsiveDialogBody>
+              <div className="py-10 text-center text-muted-foreground">Lade…</div>
+            </ResponsiveDialogBody>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {inventory && (
         <InventoryModal

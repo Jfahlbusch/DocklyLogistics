@@ -6,6 +6,8 @@ import { useState } from "react";
 import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ResponsiveDialogBody, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
+import { CHECKBOX_CLASS, CHECK_LABEL_CLASS, NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
 
 export type LocationFormValues = {
   code: string;
@@ -56,7 +58,8 @@ export function LocationForm({ initial, isCreate, busy, zones, errorMessage, onS
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <ResponsiveDialogBody className="space-y-4 py-2">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Code" required>
           <Input
@@ -65,6 +68,9 @@ export function LocationForm({ initial, isCreate, busy, zones, errorMessage, onS
             required
             maxLength={60}
             disabled={!isCreate}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className="font-mono"
           />
           {!isCreate && (
@@ -85,7 +91,7 @@ export function LocationForm({ initial, isCreate, busy, zones, errorMessage, onS
           <select
             value={v.zoneId ?? ""}
             onChange={(e) => set("zoneId", e.target.value || null)}
-            className="h-11 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm dark:bg-input/30"
+            className={`${NATIVE_SELECT_CLASS} w-full min-w-0`}
           >
             <option value="">{t("none")}</option>
             {zones.map((z) => (
@@ -100,11 +106,15 @@ export function LocationForm({ initial, isCreate, busy, zones, errorMessage, onS
             value={v.bin ?? ""}
             onChange={(e) => set("bin", e.target.value)}
             maxLength={40}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
           />
         </Field>
         <Field label="Kapazität">
           <Input
             type="number"
+            inputMode="numeric"
             min={0}
             step={1}
             value={v.capacity ?? ""}
@@ -114,9 +124,10 @@ export function LocationForm({ initial, isCreate, busy, zones, errorMessage, onS
           />
         </Field>
       </div>
-      <label className="flex items-center gap-2 text-sm">
+      <label className={`${CHECK_LABEL_CLASS} text-sm`}>
         <input
           type="checkbox"
+          className={CHECKBOX_CLASS}
           checked={v.active}
           onChange={(e) => set("active", e.target.checked)}
         />
@@ -128,15 +139,16 @@ export function LocationForm({ initial, isCreate, busy, zones, errorMessage, onS
           {errorMessage}
         </div>
       )}
+      </ResponsiveDialogBody>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <ResponsiveDialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
           Abbrechen
         </Button>
         <Button type="submit" disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900">
           {busy ? "Speichere…" : isCreate ? "Anlegen" : "Speichern"}
         </Button>
-      </div>
+      </ResponsiveDialogFooter>
     </form>
   );
 }
