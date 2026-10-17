@@ -40,7 +40,7 @@ describe("Input", () => {
   it("ist mobil 44 px hoch und bleibt text-base; Desktop unverändert", () => {
     render(<Input aria-label="a" />);
     const el = screen.getByLabelText("a");
-    expect(el).toHaveClass("h-11", "text-base", "md:h-8", "md:text-sm");
+    expect(el).toHaveClass("h-11", "text-base", "md:pointer-fine:h-8", "md:pointer-fine:text-sm");
   });
 });
 
@@ -90,24 +90,24 @@ describe("Tabs", () => {
 });
 
 describe("native-field-Konstanten", () => {
-  it("Select/Textarea: text-base mobil, md:text-sm, 44 px", () => {
+  it("Select/Textarea: text-base mobil, md:pointer-fine:text-sm, 44 px", () => {
     for (const c of [NATIVE_SELECT_CLASS, NATIVE_TEXTAREA_CLASS]) {
       expect(c).toContain("text-base");
-      expect(c).toContain("md:text-sm");
+      expect(c).toContain("md:pointer-fine:text-sm");
     }
     expect(NATIVE_SELECT_CLASS).toContain("min-h-11");
-    expect(NATIVE_SELECT_CLASS).toContain("md:min-h-9");
+    expect(NATIVE_SELECT_CLASS).toContain("md:pointer-fine:min-h-9");
   });
   it("Mono-Textarea", () => {
     expect(NATIVE_TEXTAREA_MONO_CLASS).toContain("font-mono");
     expect(NATIVE_TEXTAREA_MONO_CLASS).toContain("text-base");
-    expect(NATIVE_TEXTAREA_MONO_CLASS).toContain("md:text-xs");
+    expect(NATIVE_TEXTAREA_MONO_CLASS).toContain("md:pointer-fine:text-xs");
   });
   it("Checkbox, Label, Chip", () => {
-    expect(CHECKBOX_CLASS).toBe("size-5 md:size-4");
-    expect(CHECK_LABEL_CLASS).toBe("flex min-h-11 items-center gap-3 md:min-h-0");
+    expect(CHECKBOX_CLASS).toBe("size-5 md:pointer-fine:size-4");
+    expect(CHECK_LABEL_CLASS).toBe("flex min-h-11 items-center gap-3 md:pointer-fine:min-h-0");
     expect(CHIP_CLASS).toContain("min-h-11");
-    expect(CHIP_CLASS).toContain("md:min-h-0");
+    expect(CHIP_CLASS).toContain("md:pointer-fine:min-h-0");
   });
 });
 

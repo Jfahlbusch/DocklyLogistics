@@ -45,6 +45,6 @@ describe("AuditView mobil/tablet", () => {
     setup();
     const sel = screen.getByRole("combobox");
     expect(sel.className).toContain("min-h-11");
-    expect(sel.className).toContain("md:text-sm");
+    expect(sel.className).toContain("md:pointer-fine:text-sm");
   });
 });

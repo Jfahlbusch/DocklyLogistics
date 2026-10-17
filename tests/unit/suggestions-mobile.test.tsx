@@ -50,7 +50,7 @@ describe("SuggestionsView mobil/tablet", () => {
     expect(cb.closest("label")).toHaveClass("min-h-11");
     const sel = within(card).getByRole("combobox");
     expect(sel.className).toContain("min-h-11");
-    expect(sel.className).toContain("md:text-sm");
+    expect(sel.className).toContain("md:pointer-fine:text-sm");
     const qty = within(card).getByRole("spinbutton");
     expect(qty).toHaveAttribute("inputmode", "numeric");
     expect(qty.className).not.toMatch(/(^| )text-sm/);

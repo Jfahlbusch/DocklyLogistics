@@ -53,7 +53,7 @@ describe("OrdersView mobil/tablet", () => {
     expect(search).toHaveAttribute("enterkeyhint", "search");
     for (const s of screen.getAllByRole("combobox")) {
       expect(s.className).toContain("min-h-11");
-      expect(s.className).toContain("md:text-sm");
+      expect(s.className).toContain("md:pointer-fine:text-sm");
       expect(s.className).not.toMatch(/(^| )text-sm/);
     }
   });

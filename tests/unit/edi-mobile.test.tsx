@@ -50,7 +50,7 @@ describe("EdiView mobil/tablet", () => {
     expect(chip.className).toContain("min-h-11");
     const sel = screen.getByRole("combobox");
     expect(sel.className).toContain("min-h-11");
-    expect(sel.className).toContain("md:text-sm");
+    expect(sel.className).toContain("md:pointer-fine:text-sm");
     expect(sel.className).not.toMatch(/(^| )text-sm/);
     expect(screen.getByRole("button", { name: "Zurück" }).className).toContain("max-md:h-11");
     expect(screen.getByRole("button", { name: "Weiter" }).className).toContain("max-md:h-11");
