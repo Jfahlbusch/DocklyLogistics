@@ -8,6 +8,16 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
+import { CHECKBOX_CLASS, CHECK_LABEL_CLASS, CHIP_CLASS } from "@/components/ui/native-field";
+import { cn } from "@/lib/utils";
 
 export type WebhookRow = {
   id: string;
@@ -323,21 +333,24 @@ function CreateWebhookDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <Card
-        className="w-full max-w-lg shadow-soft"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <CardContent className="p-5 space-y-3">
-          <h3 className="font-display text-xl text-foreground">Neuer Webhook</h3>
+    <ResponsiveDialog open onOpenChange={(o) => !o && onClose()}>
+      <ResponsiveDialogContent size="md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="font-display text-xl text-foreground">
+            Neuer Webhook
+          </ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <ResponsiveDialogBody className="space-y-3 pb-4">
           <label className="block text-sm">
             <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
               URL
             </div>
             <Input
+              type="url"
+              inputMode="url"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               placeholder="https://example.com/hooks/dockly"
@@ -351,12 +364,13 @@ function CreateWebhookDialog({
               {ALL_EVENTS.map((e) => (
                 <label
                   key={e}
-                  className={
-                    "px-3 py-1.5 rounded-lg border text-xs cursor-pointer " +
-                    (events.includes(e)
+                  className={cn(
+                    CHIP_CLASS,
+                    "cursor-pointer has-focus-visible:ring-3 has-focus-visible:ring-ring/50",
+                    events.includes(e)
                       ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 border-navy-900"
-                      : "bg-card text-foreground border-border")
-                  }
+                      : "bg-card text-foreground border-border",
+                  )}
                 >
                   <input
                     type="checkbox"
@@ -379,12 +393,13 @@ function CreateWebhookDialog({
               placeholder="z.B. Slack-Notify, ERP-Sync"
             />
           </label>
-          <label className="flex items-center gap-2 text-sm">
+          <label className={cn(CHECK_LABEL_CLASS, "text-sm")}>
             <input
               type="checkbox"
+              className={CHECKBOX_CLASS}
               checked={active}
               onChange={(e) => setActive(e.target.checked)}
-            />{" "}
+            />
             Webhook aktivieren
           </label>
           {err && (
@@ -392,21 +407,21 @@ function CreateWebhookDialog({
               {err}
             </div>
           )}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={onClose} disabled={busy}>
-              Abbrechen
-            </Button>
-            <Button
-              onClick={submit}
-              disabled={busy || !url || events.length === 0}
-              className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
-            >
-              {busy ? "Speichere…" : "Anlegen"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>
+            Abbrechen
+          </Button>
+          <Button
+            onClick={submit}
+            disabled={busy || !url || events.length === 0}
+            className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
+          >
+            {busy ? "Speichere…" : "Anlegen"}
+          </Button>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
 
@@ -444,18 +459,14 @@ function DeliveryDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <Card
-        className="w-full max-w-3xl shadow-soft max-h-[80vh] overflow-hidden flex flex-col"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <CardContent className="p-5 space-y-3 overflow-auto">
-          <h3 className="font-display text-xl text-foreground">
+    <ResponsiveDialog open onOpenChange={(o) => !o && onClose()}>
+      <ResponsiveDialogContent size="xl">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="font-display text-xl text-foreground">
             Letzte Auslieferungen
-          </h3>
+          </ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <ResponsiveDialogBody className="space-y-3 pb-4">
           {rows.length === 0 ? (
             <div className="py-6 text-center text-muted-foreground text-sm">
               Noch keine Auslieferungen.
@@ -552,7 +563,7 @@ function DeliveryDialog({
                   {(d.status === "FAILED" || d.status === "GIVEN_UP") && (
                     <Button
                       variant="outline"
-                      className="shrink-0 px-2 py-1 text-xs"
+                      className="shrink-0 text-xs"
                       disabled={retrying === d.id}
                       onClick={() => retry(d.id)}
                     >
@@ -564,13 +575,13 @@ function DeliveryDialog({
             </div>
             </>
           )}
-          <div className="flex justify-end pt-2">
-            <Button variant="outline" onClick={onClose}>
-              Schließen
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <Button variant="outline" onClick={onClose}>
+            Schließen
+          </Button>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
