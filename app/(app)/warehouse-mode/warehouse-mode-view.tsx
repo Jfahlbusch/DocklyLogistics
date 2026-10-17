@@ -2,10 +2,13 @@
 
 import { useEffect, useRef, useState, useCallback } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Camera, KeyRound, Upload } from "lucide-react";
+import { parseScan } from "@/lib/warehouse/parse-scan";
 import { ArticleOrderCard } from "@/components/warehouse/article-order-card";
 import {
   addToOfflineQueue,
@@ -43,10 +46,15 @@ type ResetReader = { reset?: () => void };
 
 export function WarehouseModeView({
   role,
+  zoneId,
 }: {
   role: string;
   tenant: string;
+  /** Aus dem Deep-Link `/warehouse-mode?zone=<id>` (Zonen-QR); T14 ersetzt den Platzhalter durch den Rundgang. */
+  zoneId?: string;
 }) {
+  const t = useTranslations("warehouse.walk");
+  const router = useRouter();
   const videoRef = useRef<HTMLVideoElement>(null);
   const readerRef = useRef<ResetReader | null>(null);
   const [scanning, setScanning] = useState(false);
@@ -187,6 +195,19 @@ export function WarehouseModeView({
     [loadArticleDetail],
   );
 
+  /** Jedes Scan-/Eingabeergebnis läuft hier durch: Zonen-QR des eigenen Hosts → Rundgang, sonst Artikelcode. */
+  const handleScan = useCallback(
+    (raw: string) => {
+      const scan = parseScan(raw, window.location.origin);
+      if (scan.kind === "zone") {
+        router.push(`/warehouse-mode?zone=${encodeURIComponent(scan.zoneId)}`);
+        return Promise.resolve();
+      }
+      return handleCodeDetected(scan.code);
+    },
+    [handleCodeDetected, router],
+  );
+
   const startScanner = useCallback(async () => {
     setCameraError(null);
     try {
@@ -202,7 +223,7 @@ export function WarehouseModeView({
           if (result) {
             const code = result.getText();
             stopScanner();
-            handleCodeDetected(code);
+            handleScan(code);
           }
         },
       );
@@ -210,7 +231,7 @@ export function WarehouseModeView({
       setCameraError((e as Error).message);
       setScanning(false);
     }
-  }, [handleCodeDetected, stopScanner]);
+  }, [handleScan, stopScanner]);
 
   useEffect(() => () => stopScanner(), [stopScanner]);
 
@@ -267,6 +288,16 @@ export function WarehouseModeView({
         >
           {message.text}
         </div>
+      )}
+
+      {zoneId && (
+        <Card className="shadow-soft" data-testid="zone-walk">
+          <CardContent className="p-5 space-y-1">
+            <h2 className="font-display text-lg text-foreground">{t("title")}</h2>
+            <div className="text-sm text-foreground">{t("zone", { id: zoneId })}</div>
+            <p className="text-sm text-muted-foreground">{t("placeholder")}</p>
+          </CardContent>
+        </Card>
       )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -329,7 +360,7 @@ export function WarehouseModeView({
               onSubmit={(e) => {
                 e.preventDefault();
                 if (manualValue.trim()) {
-                  handleCodeDetected(manualValue.trim());
+                  handleScan(manualValue.trim());
                   setManualValue("");
                 }
               }}

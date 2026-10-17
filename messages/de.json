@@ -122,6 +122,11 @@
       "dismissed": "Offener Vorschlag verworfen.",
       "nothingToOrder": "Nichts zu bestellen – es gibt keinen offenen Vorschlag.",
       "saveFailed": "Der Vorschlag konnte nicht gespeichert werden. Bitte erneut versuchen."
+    },
+    "walk": {
+      "title": "Zonen-Rundgang",
+      "zone": "Zone: {id}",
+      "placeholder": "Der Rundgang durch die Artikel dieser Zone wird hier angezeigt."
     }
   },
   "zones": {
