@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
 
 type Row = {
   id: string;
@@ -107,7 +108,7 @@ export function AuditView({
 
       <Card className="shadow-soft">
         <div className="px-5 py-4 border-b border-border flex flex-wrap items-end justify-between gap-3">
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-end gap-2">
             <label className="text-sm">
               <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
                 Tag verifizieren
@@ -122,7 +123,7 @@ export function AuditView({
             <Button
               onClick={runVerify}
               disabled={verifying}
-              className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm"
+              className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
             >
               {verifying ? "Prüfe…" : "Verifizieren"}
             </Button>
@@ -167,7 +168,7 @@ export function AuditView({
 
         <div className="px-5 py-3 border-b border-border flex flex-wrap gap-2 items-center text-sm">
           <select
-            className="px-3 py-2 rounded-lg border border-border bg-card"
+            className={NATIVE_SELECT_CLASS + " max-md:w-full"}
             value={filters.entity}
             onChange={(e) => applyFilter("entity", e.target.value)}
           >
@@ -178,7 +179,7 @@ export function AuditView({
               </option>
             ))}
           </select>
-          <label className="text-xs text-muted-foreground">
+          <label className="text-xs text-muted-foreground max-md:w-full">
             Von:
             <Input
               type="datetime-local"
@@ -186,10 +187,10 @@ export function AuditView({
               onChange={(e) =>
                 applyFilter("from", e.target.value ? new Date(e.target.value).toISOString() : "")
               }
-              className="inline-block ml-1 w-48"
+              className="ml-1 inline-block w-48 max-md:mt-1 max-md:ml-0 max-md:w-full"
             />
           </label>
-          <label className="text-xs text-muted-foreground">
+          <label className="text-xs text-muted-foreground max-md:w-full">
             Bis:
             <Input
               type="datetime-local"
@@ -197,12 +198,12 @@ export function AuditView({
               onChange={(e) =>
                 applyFilter("to", e.target.value ? new Date(e.target.value).toISOString() : "")
               }
-              className="inline-block ml-1 w-48"
+              className="ml-1 inline-block w-48 max-md:mt-1 max-md:ml-0 max-md:w-full"
             />
           </label>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="hidden xl:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -248,7 +249,9 @@ export function AuditView({
                     </td>
                     <td className="px-4 py-3 text-right">
                       <button
+                        type="button"
                         onClick={() => toggleExpand(r.id)}
+                        aria-expanded={expanded.has(r.id)}
                         className="text-xs text-foreground underline hover:text-navy-700"
                       >
                         {expanded.has(r.id) ? "ausblenden" : "anzeigen"}
@@ -258,29 +261,7 @@ export function AuditView({
                   {expanded.has(r.id) && (
                     <tr className="border-t border-border bg-muted/40">
                       <td colSpan={6} className="px-4 py-3 text-xs">
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          <div>
-                            <div className="text-[10px] tracking-[0.16em] uppercase text-muted-foreground mb-1">
-                              Vorher
-                            </div>
-                            <pre className="font-mono text-xs whitespace-pre-wrap bg-card border border-border rounded p-2">
-                              {r.before ? JSON.stringify(r.before, null, 2) : "—"}
-                            </pre>
-                          </div>
-                          <div>
-                            <div className="text-[10px] tracking-[0.16em] uppercase text-muted-foreground mb-1">
-                              Nachher
-                            </div>
-                            <pre className="font-mono text-xs whitespace-pre-wrap bg-card border border-border rounded p-2">
-                              {r.after ? JSON.stringify(r.after, null, 2) : "—"}
-                            </pre>
-                          </div>
-                        </div>
-                        <div className="mt-2 text-[10px] text-muted-foreground font-mono">
-                          hash:     {r.hash}
-                          <br />
-                          prevHash: {r.prevHash}
-                        </div>
+                        <AuditDetail r={r} />
                       </td>
                     </tr>
                   )}
@@ -289,7 +270,68 @@ export function AuditView({
             </tbody>
           </table>
         </div>
+
+        {/* Mobil/Tablet (< xl): Karten mit aufklappbarem Detail */}
+        <div data-slot="audit-cards" className="divide-y divide-border xl:hidden">
+          {rows.length === 0 && (
+            <div className="px-4 py-10 text-center text-muted-foreground">Keine Einträge.</div>
+          )}
+          {rows.map((r) => (
+            <div key={r.id} className="space-y-1.5 px-4 py-3 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <Badge className={ACTION_STYLES[r.action] ?? "bg-muted text-foreground"}>{r.action}</Badge>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(r.createdAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "medium" })}
+                </span>
+              </div>
+              <div className="font-medium text-foreground">{r.entity}</div>
+              <div className="break-all font-mono text-xs text-muted-foreground">{r.entityId}</div>
+              <div className="break-all text-xs">{r.actorEmail}</div>
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-mono text-[10px]">{r.hash.slice(0, 12)}…</span>
+                <button
+                  type="button"
+                  onClick={() => toggleExpand(r.id)}
+                  aria-expanded={expanded.has(r.id)}
+                  className="inline-flex min-h-11 items-center px-2 text-xs text-foreground underline hover:text-navy-700"
+                >
+                  {expanded.has(r.id) ? "ausblenden" : "anzeigen"}
+                </button>
+              </div>
+              {expanded.has(r.id) && (
+                <div className="rounded-lg bg-muted/40 p-3 text-xs">
+                  <AuditDetail r={r} />
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </Card>
     </div>
+  );
+}
+
+function AuditDetail({ r }: { r: Row }) {
+  return (
+    <>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div>
+          <div className="text-[10px] tracking-[0.16em] uppercase text-muted-foreground mb-1">Vorher</div>
+          <pre className="font-mono text-xs whitespace-pre-wrap break-all bg-card border border-border rounded p-2">
+            {r.before ? JSON.stringify(r.before, null, 2) : "—"}
+          </pre>
+        </div>
+        <div>
+          <div className="text-[10px] tracking-[0.16em] uppercase text-muted-foreground mb-1">Nachher</div>
+          <pre className="font-mono text-xs whitespace-pre-wrap break-all bg-card border border-border rounded p-2">
+            {r.after ? JSON.stringify(r.after, null, 2) : "—"}
+          </pre>
+        </div>
+      </div>
+      <div className="mt-2 space-y-0.5 font-mono text-[10px] text-muted-foreground">
+        <div className="break-all">hash: {r.hash}</div>
+        <div className="break-all">prevHash: {r.prevHash}</div>
+      </div>
+    </>
   );
 }
