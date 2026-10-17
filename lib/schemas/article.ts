@@ -7,7 +7,9 @@ export const UnitKindSchema = z.enum([
 
 export const BarcodeSourceSchema = z.enum(["SKU", "EAN"]);
 
-export const ArticleCreateSchema = z.object({
+// Basis ohne Defaults: `.partial()` würde unter Zod 4 Defaults sonst im Update anwenden
+// (ein PATCH {name} setzte minStock auf 0 und barcodeSource auf SKU zurück).
+const ArticleBaseSchema = z.object({
   sku: z.string().min(1).max(64),
   name: z.string().min(1).max(200),
   shortDesc: z.string().max(500).optional(),
@@ -17,13 +19,18 @@ export const ArticleCreateSchema = z.object({
   baseUnit: UnitKindSchema,
   orderUnit: UnitKindSchema,
   packFactor: z.number().int().min(1),
-  barcodeSource: BarcodeSourceSchema.default("SKU"),
-  minStock: z.number().int().min(0).default(0),
+  barcodeSource: BarcodeSourceSchema,
+  minStock: z.number().int().min(0),
   defaultLocationId: z.string().cuid().optional(),
   vatRate: z.number().min(0).max(100).optional(),
+});
+
+export const ArticleCreateSchema = ArticleBaseSchema.extend({
+  barcodeSource: BarcodeSourceSchema.default("SKU"),
+  minStock: z.number().int().min(0).default(0),
 }).openapi("ArticleCreate");
 
-export const ArticleUpdateSchema = ArticleCreateSchema.partial().openapi("ArticleUpdate");
+export const ArticleUpdateSchema = ArticleBaseSchema.partial().openapi("ArticleUpdate");
 
 export const ArticleListQuerySchema = z.object({
   q: z.string().optional(),
