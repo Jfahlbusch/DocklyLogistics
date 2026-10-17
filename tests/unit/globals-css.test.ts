@@ -33,6 +33,14 @@ describe("app/globals.css", () => {
     expect(block(".print-surface")).toMatch(/color-scheme:\s*light/);
   });
 
+  // Feste Status-Farben (Hex) im @theme passten sich dem Dunkelmodus nicht an — wie in der Design-Vorlage hängen sie an --status-*.
+  it("mappt --color-success/-warning/-danger/-info auf die Status-Tokens (hell/dunkel)", () => {
+    for (const name of ["success", "warning", "danger", "info"]) {
+      expect(css).toMatch(new RegExp(`--color-${name}:\\s*var\\(--status-${name}\\)`));
+      expect(css).not.toMatch(new RegExp(`--color-${name}:\\s*#`));
+    }
+  });
+
   it("definiert --font-sans mit DM Sans", () => {
     expect(css).toMatch(/--font-sans:\s*var\(--font-dm-sans\)/);
   });

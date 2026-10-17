@@ -23,10 +23,10 @@
   --color-gold-700: #D9A000;
 
   /* Status (DocklyInsurance) */
-  --color-success: #1A7A4A;
-  --color-warning: #C47A1A;
-  --color-danger: #B8312F;
-  --color-info: #0693E3;
+  --color-success: var(--status-success);
+  --color-warning: var(--status-warning);
+  --color-danger: var(--status-danger);
+  --color-info: var(--status-info);
 
   /* Fonts (unverändert: Playfair Display + DM Sans) */
   --font-display: var(--font-playfair), "Playfair Display", Georgia, serif;
