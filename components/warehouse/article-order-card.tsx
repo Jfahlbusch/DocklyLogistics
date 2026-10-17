@@ -184,14 +184,18 @@ export function ArticleOrderCard({ article, stockTotal, onSaved, children, disab
         </p>
       )}
 
-      <Button
-        type="button"
-        onClick={save}
-        disabled={disabled || busy}
-        className="h-14 w-full bg-gold-500 text-base font-medium text-foreground hover:bg-gold-400"
-      >
-        {busy ? t("saving") : (submitLabel ?? t("submit"))}
-      </Button>
+      {/* Unter 992 px schwebt unten die Tab-Leiste: Der Hauptknopf bleibt sticky knapp darüber, damit er beim Scan und im
+          Rundgang nie verdeckt ist (Tab-Leiste: 1 rem + Safe-Area Abstand, ~54 px hoch → 5 rem). */}
+      <div className="max-nav:sticky max-nav:bottom-[calc(env(safe-area-inset-bottom)+5rem)] max-nav:z-10 max-nav:rounded-md max-nav:shadow-lg">
+        <Button
+          type="button"
+          onClick={save}
+          disabled={disabled || busy}
+          className="h-14 w-full bg-gold-500 text-base font-medium text-foreground hover:bg-gold-400"
+        >
+          {busy ? t("saving") : (submitLabel ?? t("submit"))}
+        </Button>
+      </div>
     </div>
   );
 }

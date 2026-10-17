@@ -160,3 +160,22 @@ describe("ArticleOrderCard", () => {
     await waitFor(() => expect(onNothing).toHaveBeenCalledTimes(1));
   });
 });
+
+describe("ArticleOrderCard — Hauptknopf über der Tab-Leiste", () => {
+  it("bleibt unter 992 px sticky knapp über der schwebenden Tab-Leiste (nie verdeckt)", async () => {
+    const { ArticleOrderCard } = await import("@/components/warehouse/article-order-card");
+    const { renderWithIntl } = await import("../helpers/intl");
+    const { screen } = await import("@testing-library/react");
+    vi.stubGlobal("fetch", vi.fn(async () => new Response(JSON.stringify({ data: [] }), { status: 200 })));
+    renderWithIntl(
+      <ArticleOrderCard
+        article={{ id: "a1", sku: "S", name: "N", baseUnit: "KG", orderUnit: "SACK", packFactor: 25, minStock: 0, targetStock: null, maxStock: null }}
+        stockTotal={0}
+        submitLabel="Übernehmen & weiter"
+      />,
+    );
+    const wrap = screen.getByRole("button", { name: "Übernehmen & weiter" }).parentElement!;
+    expect(wrap).toHaveClass("max-nav:sticky", "max-nav:bottom-[calc(env(safe-area-inset-bottom)+5rem)]", "max-nav:z-10");
+    vi.unstubAllGlobals();
+  });
+});
