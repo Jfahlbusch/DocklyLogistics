@@ -8,12 +8,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { SupplierDetailModal } from "./supplier-detail-modal";
 import { useOpenParam } from "@/lib/search/use-open-param";
 import { SupplierForm, defaultSupplierValues } from "./supplier-form";
@@ -107,16 +107,21 @@ export function SuppliersView({
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder="Suche nach Name, Kontakt, Email, Stadt…"
+            type="search"
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className="flex-1 min-w-[240px]"
           />
-          <div className="flex gap-1">
+          <div className="flex flex-wrap gap-1">
             {(["ALL", "EMAIL", "API", "EDI"] as const).map((c) => (
               <button
                 key={c}
                 type="button"
                 onClick={() => onChannelFilter(c)}
                 className={
-                  "px-3 py-1.5 rounded-lg text-xs border transition-colors " +
+                  "px-3 py-1.5 rounded-lg text-xs border transition-colors max-md:inline-flex max-md:min-h-11 max-md:items-center max-md:text-sm " +
                   (currentChannel === c
                     ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 border-navy-900"
                     : "bg-card text-foreground border-border hover:bg-muted/40")
@@ -126,7 +131,7 @@ export function SuppliersView({
               </button>
             ))}
           </div>
-          <Button type="submit" variant="outline" className="text-sm">
+          <Button type="submit" variant="outline">
             Suchen
           </Button>
         </form>
@@ -190,7 +195,7 @@ export function SuppliersView({
         }}
       />
 
-      <Dialog
+      <ResponsiveDialog
         open={creating}
         onOpenChange={(o) => {
           if (!o) {
@@ -199,13 +204,13 @@ export function SuppliersView({
           }
         }}
       >
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-foreground">
+        <ResponsiveDialogContent size="lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display text-2xl text-foreground">
               Neuer Lieferant
-            </DialogTitle>
-            <DialogDescription>Pflichtfelder sind mit * markiert.</DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>Pflichtfelder sind mit * markiert.</ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <SupplierForm
             initial={defaultSupplierValues}
             isCreate
@@ -237,8 +242,8 @@ export function SuppliersView({
               }
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

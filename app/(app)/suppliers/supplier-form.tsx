@@ -5,6 +5,13 @@ import { FormField as Field } from "@/components/ui/form-field";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ResponsiveDialogBody, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
+import {
+  CHECKBOX_CLASS,
+  CHECK_LABEL_CLASS,
+  NATIVE_SELECT_CLASS,
+  NATIVE_TEXTAREA_MONO_CLASS,
+} from "@/components/ui/native-field";
 
 const CHANNELS = ["EMAIL", "API", "EDI"] as const;
 
@@ -76,7 +83,8 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <ResponsiveDialogBody className="space-y-4">
       <Field label="Name" required>
         <Input
           value={v.name}
@@ -96,6 +104,10 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
         <Field label="E-Mail">
           <Input
             type="email"
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             value={v.email ?? ""}
             onChange={(e) => set("email", e.target.value)}
             className="font-mono"
@@ -105,6 +117,9 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Telefon">
           <Input
+            type="tel"
+            inputMode="tel"
+            autoComplete="tel"
             value={v.phone ?? ""}
             onChange={(e) => set("phone", e.target.value)}
             maxLength={60}
@@ -118,7 +133,7 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
           />
         </Field>
       </div>
-      <div className="grid grid-cols-[2fr_1fr_1fr] gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-[2fr_1fr_1fr] gap-3">
         <Field label="Straße">
           <Input
             value={v.street ?? ""}
@@ -128,6 +143,8 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
         </Field>
         <Field label="PLZ">
           <Input
+            inputMode="numeric"
+            autoComplete="postal-code"
             value={v.postalCode ?? ""}
             onChange={(e) => set("postalCode", e.target.value)}
             maxLength={20}
@@ -146,7 +163,7 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
           <select
             value={v.channel}
             onChange={(e) => set("channel", e.target.value as SupplierFormValues["channel"])}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
+            className={`w-full ${NATIVE_SELECT_CLASS}`}
           >
             {CHANNELS.map((c) => (
               <option key={c} value={c}>
@@ -156,9 +173,10 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
           </select>
         </Field>
         <Field label="Aktiv">
-          <label className="flex items-center gap-2 mt-2 text-sm">
+          <label className={`${CHECK_LABEL_CLASS} text-sm`}>
             <input
               type="checkbox"
+              className={CHECKBOX_CLASS}
               checked={v.active}
               onChange={(e) => set("active", e.target.checked)}
             />
@@ -171,7 +189,7 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
           value={configText}
           onChange={(e) => setConfigText(e.target.value)}
           rows={5}
-          className="w-full px-3 py-2 border border-border rounded-lg bg-card text-xs font-mono"
+          className={`w-full ${NATIVE_TEXTAREA_MONO_CLASS}`}
           placeholder='{"to": "orders@example.com"}'
         />
         {configError && <p className="text-xs text-rose-700 mt-1">{configError}</p>}
@@ -186,15 +204,16 @@ export function SupplierForm({ initial, isCreate, busy, errorMessage, onSubmit, 
           {errorMessage}
         </div>
       )}
+      </ResponsiveDialogBody>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <ResponsiveDialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
           Abbrechen
         </Button>
         <Button type="submit" disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900">
           {busy ? "Speichere…" : isCreate ? "Anlegen" : "Speichern"}
         </Button>
-      </div>
+      </ResponsiveDialogFooter>
     </form>
   );
 }

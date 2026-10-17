@@ -4,14 +4,15 @@ import { DetailField as Field } from "@/components/ui/detail-field";
 
 import { useEffect, useState } from "react";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -67,32 +68,33 @@ export function SupplierDetailModal({
   }, [supplierId]);
 
   return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl">
+    <ResponsiveDialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <ResponsiveDialogContent size="xl" className="sm:max-w-3xl">
         {loading || !supplier ? (
           <>
-            <DialogHeader className="sr-only">
-              <DialogTitle>Lieferanten-Detail wird geladen</DialogTitle>
-            </DialogHeader>
-            <div className="py-10 text-center text-muted-foreground">Lade…</div>
+            <ResponsiveDialogHeader className="sr-only">
+              <ResponsiveDialogTitle>Lieferanten-Detail wird geladen</ResponsiveDialogTitle>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogBody className="py-10 text-center text-muted-foreground">Lade…</ResponsiveDialogBody>
           </>
         ) : (
           <>
-            <DialogHeader>
+            <ResponsiveDialogHeader>
               <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">
                 {supplier.id}
               </div>
-              <DialogTitle className="font-display text-2xl text-foreground">
+              <ResponsiveDialogTitle className="font-display text-2xl text-foreground">
                 {supplier.name}
-              </DialogTitle>
-              <DialogDescription className="text-muted-foreground">
+              </ResponsiveDialogTitle>
+              <ResponsiveDialogDescription className="text-muted-foreground break-words">
                 {[supplier.contactName, supplier.city, supplier.email]
                   .filter(Boolean)
                   .join(" · ")}
-              </DialogDescription>
-            </DialogHeader>
+              </ResponsiveDialogDescription>
+            </ResponsiveDialogHeader>
 
             {!editing && (
+              <ResponsiveDialogBody>
               <Tabs defaultValue="stamm">
                 <TabsList>
                   <TabsTrigger value="stamm">Stamm</TabsTrigger>
@@ -116,7 +118,7 @@ export function SupplierDetailModal({
                 </TabsContent>
 
                 <TabsContent value="kanal" className="space-y-4 mt-4">
-                  <div className="flex gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row">
                     {(["EMAIL", "API", "EDI"] as const).map((c) => (
                       <div
                         key={c}
@@ -164,6 +166,7 @@ export function SupplierDetailModal({
                   <ApiKeysPanel supplierId={supplier.id} canManage={canManage} />
                 </TabsContent>
               </Tabs>
+              </ResponsiveDialogBody>
             )}
 
             {editing && supplier && (
@@ -204,7 +207,7 @@ export function SupplierDetailModal({
             )}
 
             {!editing && supplier && canManage && (
-              <div className="flex justify-end gap-2 pt-4 border-t border-border">
+              <ResponsiveDialogFooter>
                 <Button
                   variant="outline"
                   className="text-rose-600 border-rose-200 hover:bg-rose-50"
@@ -230,12 +233,12 @@ export function SupplierDetailModal({
                 >
                   Bearbeiten
                 </Button>
-              </div>
+              </ResponsiveDialogFooter>
             )}
           </>
         )}
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
 
@@ -298,7 +301,24 @@ function SupplierOrdersPanel({ supplierId }: { supplierId: string }) {
   }
 
   return (
-    <div className="border border-border rounded-xl overflow-hidden">
+    <>
+    <ul data-testid="supplier-order-cards" className="space-y-2 md:hidden">
+      {orders.map((o) => (
+        <li key={o.id} className="space-y-1.5 rounded-xl border border-border p-3 text-sm">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <span className="font-mono text-xs">{o.orderNo}</span>
+            <span className={"inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-medium " + (STATUS_STYLES[o.status] ?? "bg-muted text-foreground")}>
+              <span className="w-1.5 h-1.5 rounded-full bg-current opacity-70" />{o.status}
+            </span>
+          </div>
+          <div className="flex flex-wrap items-baseline justify-between gap-x-3 text-xs text-muted-foreground">
+            <span>{new Date(o.createdAt).toLocaleDateString("de-DE")} · {o._count?.items ?? "—"} Pos.</span>
+            <span className="text-sm font-medium text-foreground">{Number(o.total).toFixed(2)} {o.currency}</span>
+          </div>
+        </li>
+      ))}
+    </ul>
+    <div className="hidden border border-border rounded-xl overflow-hidden md:block">
       <div className="overflow-x-auto">
       <table className="w-full text-sm">
         <thead>
@@ -328,6 +348,7 @@ function SupplierOrdersPanel({ supplierId }: { supplierId: string }) {
       </table>
       </div>
     </div>
+    </>
   );
 }
 
@@ -511,13 +532,12 @@ function CreateKeyDialog({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <Card className="w-full max-w-md shadow-soft" onClick={(e) => e.stopPropagation()}>
-        <CardContent className="p-5 space-y-3">
-          <h3 className="font-display text-lg text-foreground">Neuer API-Key</h3>
+    <ResponsiveDialog open onOpenChange={(o) => !o && onClose()}>
+      <ResponsiveDialogContent size="md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="font-display text-lg text-foreground">Neuer API-Key</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <ResponsiveDialogBody className="space-y-3">
           <label className="block text-sm">
             <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
               Bezeichnung
@@ -535,7 +555,7 @@ function CreateKeyDialog({
                 <label
                   key={s}
                   className={
-                    "px-3 py-1.5 rounded-lg border text-xs cursor-pointer " +
+                    "px-3 py-1.5 rounded-lg border text-xs cursor-pointer max-md:inline-flex max-md:min-h-11 max-md:items-center max-md:text-sm " +
                     (scopes.includes(s)
                       ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 border-navy-900"
                       : "bg-card text-foreground border-border")
@@ -552,7 +572,8 @@ function CreateKeyDialog({
               ))}
             </div>
           </div>
-          <div className="flex justify-end gap-2 pt-2">
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
             <Button variant="outline" onClick={onClose} disabled={busy}>
               Abbrechen
             </Button>
@@ -563,9 +584,8 @@ function CreateKeyDialog({
             >
               {busy ? "Erstelle…" : "Erstellen"}
             </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
