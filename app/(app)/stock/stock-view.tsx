@@ -3,6 +3,7 @@
 import { FlashBanner } from "@/components/ui/flash-banner";
 
 import { useEffect, useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,8 @@ import {
   type LocationFormValues,
 } from "./location-form";
 import { InventoryModal } from "./inventory-modal";
+import { ZonesPanel, type ZoneRow } from "./zones-panel";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 type Location = {
   id: string;
@@ -48,12 +51,21 @@ export function StockView({
   articles,
   totalUnits,
   role,
+  zones = [],
+  initialTab = "stock",
+  openZoneId,
 }: {
   locations: Location[];
   articles: ArticleRow[];
   totalUnits: number;
   role: string;
+  zones?: ZoneRow[];
+  initialTab?: "stock" | "zones";
+  openZoneId?: string;
 }) {
+  const tz = useTranslations("zones.tabs");
+  const [tab, setTab] = useState<string>(initialTab);
+  const activeZones = zones.filter((z) => z.active).map((z) => ({ id: z.id, name: z.name }));
   const router = useRouter();
   const [, startTransition] = useTransition();
   const canManage = role === "MANAGER" || role === "GLOBAL_ADMIN";
@@ -81,7 +93,7 @@ export function StockView({
           setEditInitial({
             code: l.code,
             name: l.name,
-            zone: l.zone ?? undefined,
+            zoneId: l.zoneId ?? null,
             bin: l.bin ?? undefined,
             capacity: l.capacity ?? null,
             active: l.active,
@@ -142,136 +154,147 @@ export function StockView({
 
       <FlashBanner flash={flash} />
 
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
-        {/* Lagerplätze */}
-        <Card className="shadow-soft">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="font-display text-lg text-foreground">Lagerplätze</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
-                  <th className="text-left font-medium px-4 py-3">Code</th>
-                  <th className="text-left font-medium px-4 py-3">Name</th>
-                  <th className="text-left font-medium px-4 py-3">Zone</th>
-                  <th className="text-left font-medium px-4 py-3">Belegung</th>
-                  {canManage && (
-                    <th className="text-right font-medium px-4 py-3">Aktionen</th>
-                  )}
-                </tr>
-              </thead>
-              <tbody>
-                {locations.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={canManage ? 5 : 4}
-                      className="text-center text-muted-foreground py-8"
-                    >
-                      Keine Lagerplätze.
-                    </td>
-                  </tr>
-                )}
-                {locations.map((l) => {
-                  const pct =
-                    l.capacity && l.capacity > 0
-                      ? Math.round((l.used / l.capacity) * 100)
-                      : 0;
-                  const barClass =
-                    pct >= 95 ? "bg-rose-600" : pct >= 70 ? "bg-gold-500" : "bg-navy-900";
-                  return (
-                    <tr key={l.id} className="border-t border-border">
-                      <td className="px-4 py-3 font-mono text-xs">{l.code}</td>
-                      <td className="px-4 py-3 text-foreground">{l.name}</td>
-                      <td className="px-4 py-3">
-                        <StatusPill style={ZONE_STYLES[l.zone]}>{l.zone}</StatusPill>
-                      </td>
-                      <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <div className="flex-1 min-w-[80px] h-2 bg-muted rounded-full overflow-hidden">
-                            <div
-                              className={`h-full ${barClass}`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <div className="text-muted-foreground text-xs w-16 text-right tabular-nums">
-                            {l.used}/{l.capacity ?? "—"}
-                          </div>
-                        </div>
-                      </td>
+      <Tabs value={tab} onValueChange={setTab} className="gap-4">
+        <TabsList variant="line" aria-label={tz("label")} className="h-11 md:h-9">
+          <TabsTrigger value="stock" className="h-11 px-3 md:h-8">{tz("stock")}</TabsTrigger>
+          <TabsTrigger value="zones" className="h-11 px-3 md:h-8">{tz("zones")}</TabsTrigger>
+        </TabsList>
+        <TabsContent value="stock">
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+            {/* Lagerplätze */}
+            <Card className="shadow-soft">
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                <h2 className="font-display text-lg text-foreground">Lagerplätze</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
+                      <th className="text-left font-medium px-4 py-3">Code</th>
+                      <th className="text-left font-medium px-4 py-3">Name</th>
+                      <th className="text-left font-medium px-4 py-3">Zone</th>
+                      <th className="text-left font-medium px-4 py-3">Belegung</th>
                       {canManage && (
-                        <td className="px-4 py-3 text-right whitespace-nowrap">
-                          <button
-                            onClick={() => {
-                              setEditingId(l.id);
-                              setFormError(null);
-                            }}
-                            className="text-xs text-foreground underline hover:text-navy-700 mr-3"
-                          >
-                            Bearbeiten
-                          </button>
-                          <button
-                            onClick={() => handleDelete(l)}
-                            className="text-xs text-rose-700 underline hover:text-rose-900"
-                          >
-                            Löschen
-                          </button>
-                        </td>
+                        <th className="text-right font-medium px-4 py-3">Aktionen</th>
                       )}
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </Card>
+                  </thead>
+                  <tbody>
+                    {locations.length === 0 && (
+                      <tr>
+                        <td
+                          colSpan={canManage ? 5 : 4}
+                          className="text-center text-muted-foreground py-8"
+                        >
+                          Keine Lagerplätze.
+                        </td>
+                      </tr>
+                    )}
+                    {locations.map((l) => {
+                      const pct =
+                        l.capacity && l.capacity > 0
+                          ? Math.round((l.used / l.capacity) * 100)
+                          : 0;
+                      const barClass =
+                        pct >= 95 ? "bg-rose-600" : pct >= 70 ? "bg-gold-500" : "bg-navy-900";
+                      return (
+                        <tr key={l.id} className="border-t border-border">
+                          <td className="px-4 py-3 font-mono text-xs">{l.code}</td>
+                          <td className="px-4 py-3 text-foreground">{l.name}</td>
+                          <td className="px-4 py-3">
+                            <StatusPill style={ZONE_STYLES[l.zone]}>{l.zone}</StatusPill>
+                          </td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 min-w-[80px] h-2 bg-muted rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full ${barClass}`}
+                                  style={{ width: `${pct}%` }}
+                                />
+                              </div>
+                              <div className="text-muted-foreground text-xs w-16 text-right tabular-nums">
+                                {l.used}/{l.capacity ?? "—"}
+                              </div>
+                            </div>
+                          </td>
+                          {canManage && (
+                            <td className="px-4 py-3 text-right whitespace-nowrap">
+                              <button
+                                onClick={() => {
+                                  setEditingId(l.id);
+                                  setFormError(null);
+                                }}
+                                className="text-xs text-foreground underline hover:text-navy-700 mr-3"
+                              >
+                                Bearbeiten
+                              </button>
+                              <button
+                                onClick={() => handleDelete(l)}
+                                className="text-xs text-rose-700 underline hover:text-rose-900"
+                              >
+                                Löschen
+                              </button>
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
 
-        {/* Bestände je Artikel */}
-        <Card className="shadow-soft">
-          <div className="px-5 py-4 border-b border-border flex items-center justify-between">
-            <h2 className="font-display text-lg text-foreground">Bestände je Artikel</h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
-                  <th className="text-left font-medium px-4 py-3">Artikel</th>
-                  <th className="text-left font-medium px-4 py-3">Platz</th>
-                  <th className="text-left font-medium px-4 py-3">Bestand</th>
-                  <th className="text-left font-medium px-4 py-3">Min</th>
-                </tr>
-              </thead>
-              <tbody>
-                {articles.length === 0 && (
-                  <tr>
-                    <td colSpan={4} className="text-center text-muted-foreground py-8">
-                      Keine Artikel.
-                    </td>
-                  </tr>
-                )}
-                {articles.map((a) => {
-                  const belowMin = a.stock < a.minStock && a.minStock > 0;
-                  return (
-                    <tr key={a.id} className="border-t border-border">
-                      <td className="px-4 py-3">
-                        <div className="font-medium text-foreground">{a.name}</div>
-                        <div className="text-muted-foreground font-mono text-xs">{a.sku}</div>
-                      </td>
-                      <td className="px-4 py-3 font-mono text-xs">{a.locationCode}</td>
-                      <td className="px-4 py-3">
-                        <span className={belowMin ? "text-rose-600 font-medium" : ""}>
-                          {a.stock}
-                        </span>
-                      </td>
-                      <td className="px-4 py-3">{a.minStock}</td>
+            {/* Bestände je Artikel */}
+            <Card className="shadow-soft">
+              <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+                <h2 className="font-display text-lg text-foreground">Bestände je Artikel</h2>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
+                      <th className="text-left font-medium px-4 py-3">Artikel</th>
+                      <th className="text-left font-medium px-4 py-3">Platz</th>
+                      <th className="text-left font-medium px-4 py-3">Bestand</th>
+                      <th className="text-left font-medium px-4 py-3">Min</th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {articles.length === 0 && (
+                      <tr>
+                        <td colSpan={4} className="text-center text-muted-foreground py-8">
+                          Keine Artikel.
+                        </td>
+                      </tr>
+                    )}
+                    {articles.map((a) => {
+                      const belowMin = a.stock < a.minStock && a.minStock > 0;
+                      return (
+                        <tr key={a.id} className="border-t border-border">
+                          <td className="px-4 py-3">
+                            <div className="font-medium text-foreground">{a.name}</div>
+                            <div className="text-muted-foreground font-mono text-xs">{a.sku}</div>
+                          </td>
+                          <td className="px-4 py-3 font-mono text-xs">{a.locationCode}</td>
+                          <td className="px-4 py-3">
+                            <span className={belowMin ? "text-rose-600 font-medium" : ""}>
+                              {a.stock}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3">{a.minStock}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </Card>
           </div>
-        </Card>
-      </div>
+        </TabsContent>
+        <TabsContent value="zones">
+          <ZonesPanel initialZones={zones} canManage={canManage} openId={openZoneId} />
+        </TabsContent>
+      </Tabs>
 
       <Dialog
         open={dialogOpen}
@@ -293,6 +316,7 @@ export function StockView({
           {dialogOpen && initial && (
             <LocationForm
               initial={initial}
+              zones={activeZones}
               isCreate={isCreate}
               busy={formBusy}
               errorMessage={formError}

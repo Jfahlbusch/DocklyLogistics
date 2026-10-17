@@ -3,13 +3,15 @@
 import { FormField as Field } from "@/components/ui/form-field";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
 export type LocationFormValues = {
   code: string;
   name: string;
-  zone?: string;
+  /** Zone (ID) oder null = keine. */
+  zoneId?: string | null;
   bin?: string;
   capacity?: number | null;
   active: boolean;
@@ -25,12 +27,15 @@ type Props = {
   initial: LocationFormValues;
   isCreate: boolean;
   busy: boolean;
+  /** Aktive Zonen für das Dropdown. */
+  zones: { id: string; name: string }[];
   errorMessage?: string | null;
   onSubmit: (values: LocationFormValues) => Promise<void>;
   onCancel: () => void;
 };
 
-export function LocationForm({ initial, isCreate, busy, errorMessage, onSubmit, onCancel }: Props) {
+export function LocationForm({ initial, isCreate, busy, zones, errorMessage, onSubmit, onCancel }: Props) {
+  const t = useTranslations("zones.locationForm");
   const [v, setV] = useState<LocationFormValues>(initial);
 
   function set<K extends keyof LocationFormValues>(k: K, val: LocationFormValues[K]) {
@@ -41,7 +46,7 @@ export function LocationForm({ initial, isCreate, busy, errorMessage, onSubmit, 
     e.preventDefault();
     onSubmit({
       ...v,
-      zone: v.zone?.trim() || undefined,
+      zoneId: v.zoneId || null,
       bin: v.bin?.trim() || undefined,
       capacity:
         v.capacity === null || v.capacity === undefined || Number.isNaN(v.capacity)
@@ -76,13 +81,19 @@ export function LocationForm({ initial, isCreate, busy, errorMessage, onSubmit, 
         </Field>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <Field label="Zone">
-          <Input
-            value={v.zone ?? ""}
-            onChange={(e) => set("zone", e.target.value)}
-            maxLength={80}
-            placeholder="z.B. Trocken, Kühl"
-          />
+        <Field label={t("label")}>
+          <select
+            value={v.zoneId ?? ""}
+            onChange={(e) => set("zoneId", e.target.value || null)}
+            className="h-11 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 text-base outline-none transition-colors focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 md:h-8 md:text-sm dark:bg-input/30"
+          >
+            <option value="">{t("none")}</option>
+            {zones.map((z) => (
+              <option key={z.id} value={z.id}>
+                {z.name}
+              </option>
+            ))}
+          </select>
         </Field>
         <Field label="Bin">
           <Input

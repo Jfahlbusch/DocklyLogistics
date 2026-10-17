@@ -90,6 +90,14 @@
       "maxStock": "Maximalmenge (Lagerkapazität)",
       "notSet": "—",
       "optionalHint": "Optional – leer lassen, wenn nicht gesetzt."
+    },
+    "zone": {
+      "label": "Zone",
+      "none": "— keine —",
+      "filterAll": "Alle Zonen",
+      "filterLabel": "Nach Zone filtern",
+      "column": "Zone",
+      "notSet": "—"
     }
   },
   "warehouse": {
@@ -114,6 +122,65 @@
       "dismissed": "Offener Vorschlag verworfen.",
       "nothingToOrder": "Nichts zu bestellen – es gibt keinen offenen Vorschlag.",
       "saveFailed": "Der Vorschlag konnte nicht gespeichert werden. Bitte erneut versuchen."
+    }
+  },
+  "zones": {
+    "tabs": {
+      "stock": "Lagerplätze & Bestand",
+      "zones": "Zonen",
+      "label": "Bereiche von Lager & Bestand"
+    },
+    "title": "Zonen",
+    "subtitle": "{count} Zonen",
+    "columns": {
+      "name": "Name",
+      "locations": "Lagerplätze",
+      "articles": "Artikel",
+      "active": "Aktiv",
+      "actions": "Aktionen"
+    },
+    "cardCounts": "{locations} Lagerplätze · {articles} Artikel",
+    "actions": {
+      "create": "+ Zone",
+      "createFirst": "Erste Zone anlegen",
+      "rename": "Umbenennen",
+      "delete": "Löschen",
+      "toggleActive": "Zone „{name}“ aktiv"
+    },
+    "status": {
+      "active": "aktiv",
+      "inactive": "inaktiv"
+    },
+    "empty": {
+      "text": "Noch keine Zonen. Zonen gliedern das Lager, z. B. Trocken, Kühl oder Tiefkühl.",
+      "readOnly": "Noch keine Zonen angelegt."
+    },
+    "form": {
+      "createTitle": "Neue Zone",
+      "editTitle": "Zone bearbeiten",
+      "description": "Pflichtfelder sind mit * markiert.",
+      "name": "Name",
+      "active": "Zone ist aktiv",
+      "cancel": "Abbrechen",
+      "create": "Anlegen",
+      "save": "Speichern",
+      "saving": "Speichere…"
+    },
+    "flash": {
+      "created": "Zone „{name}“ angelegt",
+      "updated": "Zone „{name}“ aktualisiert",
+      "deleted": "Zone „{name}“ gelöscht"
+    },
+    "confirmDelete": "Zone „{name}“ wirklich löschen?",
+    "errors": {
+      "nameExists": "Name existiert bereits.",
+      "inUse": "Zone ist noch Lagerplätzen oder Artikeln zugeordnet.",
+      "generic": "Aktion fehlgeschlagen. Bitte erneut versuchen.",
+      "loadFailed": "Zonen konnten nicht geladen werden."
+    },
+    "locationForm": {
+      "label": "Zone",
+      "none": "— keine —"
     }
   }
 }

@@ -33,7 +33,7 @@ describe("next-intl ohne URL-Sprache", () => {
     expect(getPathname({ href: "/orders", locale: "de" })).toBe("/orders");
   });
 
-  it("de.json hat die Namespaces articles, common, nav, shell und warehouse", () => {
-    expect(Object.keys(de).sort()).toEqual(["articles", "common", "nav", "shell", "warehouse"]);
+  it("de.json hat die Namespaces articles, common, nav, shell, warehouse und zones", () => {
+    expect(Object.keys(de).sort()).toEqual(["articles", "common", "nav", "shell", "warehouse", "zones"]);
   });
 });

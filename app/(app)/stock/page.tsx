@@ -3,21 +3,28 @@ import { redirect } from "next/navigation";
 import { storageLocationRepo } from "@/lib/db/repos/storage-location";
 import { articleRepo } from "@/lib/db/repos/article";
 import { stockRepo } from "@/lib/db/repos/stock";
+import { zoneRepo } from "@/lib/db/repos/zone";
 import { prisma } from "@/lib/db/client";
 import { StockView } from "./stock-view";
 
 export const dynamic = "force-dynamic";
 
-export default async function StockPage() {
+export default async function StockPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ tab?: string; open?: string }>;
+}) {
+  const sp = await searchParams;
   const session = await auth();
   if (!session?.role || !session.tenant) redirect("/login");
 
   const tenantId = session.tenant;
 
-  const [locResult, artResult, balanceResult] = await Promise.all([
+  const [locResult, artResult, balanceResult, zones] = await Promise.all([
     storageLocationRepo.list({ tenantId, page: 1, pageSize: 200 }),
     articleRepo.list({ tenantId, page: 1, pageSize: 200 }),
     stockRepo.listBalances({ tenantId, page: 1, pageSize: 500 }),
+    zoneRepo.list(tenantId),
   ]);
 
   // Aggregate per location: total used quantity = sum of quantities of all balances at that location
@@ -74,6 +81,16 @@ export default async function StockPage() {
       articles={articleRows}
       totalUnits={totalUnits}
       role={session.role}
+      zones={zones.map((z) => ({
+        id: z.id,
+        name: z.name,
+        sortOrder: z.sortOrder,
+        active: z.active,
+        locationCount: z.locationCount,
+        articleCount: z.articleCount,
+      }))}
+      initialTab={sp.tab === "zones" ? "zones" : "stock"}
+      openZoneId={sp.open}
     />
   );
 }
