@@ -22,6 +22,6 @@ WHERE z."tenantId" = sl."tenantId" AND z."name" = btrim(sl."zone")
 UPDATE "Article" a
 SET "zoneId" = sl."zoneId"
 FROM "StorageLocation" sl
-WHERE a."defaultLocationId" = sl."id" AND sl."zoneId" IS NOT NULL
+WHERE a."defaultLocationId" = sl."id" AND a."tenantId" = sl."tenantId" AND sl."zoneId" IS NOT NULL
   AND a."zoneId" IS NULL
   AND ($1::text IS NULL OR a."tenantId" = $1::text);

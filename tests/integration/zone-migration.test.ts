@@ -34,6 +34,8 @@ describe("Datenmigration Freitext-Zonen", () => {
     await prisma.article.create({ data: art(T, "A-K", k1.id) });
     await prisma.article.create({ data: art(T, "A-NONE") });
     await prisma.article.create({ data: art(OTHER, "A-O", o1.id) });
+    // Inkonsistenter Altbestand: Artikel verweist auf den Lagerplatz eines FREMDEN Mandanten.
+    await prisma.article.create({ data: art(T, "A-FOREIGN-LOC", o1.id) });
   });
   afterAll(async () => {
     await cleanup();
@@ -78,6 +80,9 @@ describe("Datenmigration Freitext-Zonen", () => {
     // Zonen sind je Mandant getrennt, auch bei gleichem Namen
     const tz = await prisma.zone.findFirstOrThrow({ where: { tenantId: T, name: "Kühlraum" } });
     expect(o.zoneId).not.toBe(tz.id);
+    // Nie eine Zone über Mandantengrenzen erben — auch nicht bei inkonsistentem defaultLocationId.
+    const foreign = await prisma.article.findFirstOrThrow({ where: { tenantId: T, sku: "A-FOREIGN-LOC" } });
+    expect(foreign.zoneId).toBeNull();
     expect((await prisma.article.findFirstOrThrow({ where: { tenantId: OTHER } })).zoneId).toBe(o.zoneId);
   });
 
