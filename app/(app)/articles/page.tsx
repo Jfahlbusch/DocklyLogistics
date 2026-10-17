@@ -2,6 +2,7 @@ import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { articleRepo } from "@/lib/db/repos/article";
 import { stockRepo } from "@/lib/db/repos/stock";
+import { zoneRepo } from "@/lib/db/repos/zone";
 import { prisma } from "@/lib/db/client";
 import { ArticlesView } from "./articles-view";
 
@@ -11,6 +12,7 @@ type SearchParams = Promise<{
   q?: string;
   category?: string;
   supplierId?: string;
+  zoneId?: string;
   page?: string;
 }>;
 
@@ -26,6 +28,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
     q: sp.q,
     category: sp.category,
     supplierId: sp.supplierId,
+    zoneId: sp.zoneId,
     page,
     pageSize: 50,
   });
@@ -63,6 +66,10 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
     items.map((a) => a.id),
   );
 
+  const zones = (await zoneRepo.list(session.tenant))
+    .filter((z) => z.active || z.id === sp.zoneId)
+    .map((z) => ({ id: z.id, name: z.name }));
+
   const categories = Array.from(
     new Set(items.map((a) => a.category).filter((c): c is string => Boolean(c))),
   );
@@ -77,6 +84,7 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
       eanGtin: a.eanGtin,
       category: a.category,
       locationCode: locByArticle.get(a.id) ?? "—",
+      zoneName: a.zone?.name ?? null,
       stock,
       minStock: a.minStock,
       orderUnit: a.orderUnit,
@@ -99,6 +107,8 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
       belowMinCount={belowMinCount}
       canCreate={canCreate}
       q={sp.q ?? ""}
+      zones={zones}
+      zoneId={sp.zoneId ?? ""}
     />
   );
 }

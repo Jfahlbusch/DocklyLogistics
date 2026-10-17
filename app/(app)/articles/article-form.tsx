@@ -26,10 +26,12 @@ export type ArticleFormValues = {
   targetStock?: number | null;
   maxStock?: number | null;
   defaultLocationId?: string | null;
+  zoneId?: string | null;
   vatRate?: number | null;
 };
 
-type Location = { id: string; code: string; name: string };
+type Location = { id: string; code: string; name: string; zoneId: string | null };
+type ZoneOption = { id: string; name: string };
 
 export const defaultArticleValues: ArticleFormValues = {
   sku: "",
@@ -54,11 +56,13 @@ type Props = {
 
 export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors, onSubmit, onCancel }: Props) {
   const t = useTranslations("articles.quantities");
+  const tz = useTranslations("articles.zone");
   const [v, setV] = useState<ArticleFormValues>(initial);
   const [minText, setMinText] = useState(String(initial.minStock ?? 0));
   const [targetText, setTargetText] = useState(initial.targetStock == null ? "" : String(initial.targetStock));
   const [maxText, setMaxText] = useState(initial.maxStock == null ? "" : String(initial.maxStock));
   const [locations, setLocations] = useState<Location[]>([]);
+  const [zones, setZones] = useState<ZoneOption[]>([]);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,17 +71,47 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
       .then((body) => {
         if (cancelled) return;
         setLocations(
-          (body.data ?? []).map((l: { id: string; code: string; name: string }) => ({
+          (Array.isArray(body.data) ? body.data : []).map((l: { id: string; code: string; name: string; zoneId?: string | null }) => ({
             id: l.id,
             code: l.code,
             name: l.name,
+            zoneId: l.zoneId ?? null,
           })),
+        );
+      });
+    fetch("/api/v1/zones")
+      .then((r) => r.json())
+      .then((body) => {
+        if (cancelled) return;
+        setZones(
+          (Array.isArray(body.data) ? body.data : [])
+            .filter((z: { active?: boolean }) => z.active !== false)
+            .map((z: { id: string; name: string }) => ({ id: z.id, name: z.name })),
         );
       });
     return () => {
       cancelled = true;
     };
   }, []);
+
+  /** Zonenwechsel leert einen Lagerplatz, der nicht zur neuen Zone passt. */
+  function changeZone(zoneId: string) {
+    setV((cur) => {
+      const loc = locations.find((l) => l.id === cur.defaultLocationId);
+      const keep = !zoneId || !loc || loc.zoneId === zoneId;
+      return { ...cur, zoneId: zoneId || null, defaultLocationId: keep ? cur.defaultLocationId : null };
+    });
+  }
+
+  /** Wahl eines Lagerplatzes mit Zone setzt dessen Zone. */
+  function changeLocation(locationId: string) {
+    setV((cur) => {
+      const loc = locations.find((l) => l.id === locationId);
+      return { ...cur, defaultLocationId: locationId || null, zoneId: loc?.zoneId ?? cur.zoneId ?? null };
+    });
+  }
+
+  const visibleLocations = v.zoneId ? locations.filter((l) => l.zoneId === v.zoneId) : locations;
 
   function set<K extends keyof ArticleFormValues>(k: K, val: ArticleFormValues[K]) {
     setV((cur) => ({ ...cur, [k]: val }));
@@ -102,7 +136,8 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
       longDesc: v.longDesc?.trim() ? v.longDesc.trim() : undefined,
       category: v.category?.trim() ? v.category.trim() : undefined,
       eanGtin: v.eanGtin?.trim() ? v.eanGtin.trim() : undefined,
-      defaultLocationId: v.defaultLocationId ? v.defaultLocationId : undefined,
+      defaultLocationId: v.defaultLocationId ? v.defaultLocationId : null,
+      zoneId: v.zoneId ? v.zoneId : null,
       vatRate:
         v.vatRate === null || v.vatRate === undefined || Number.isNaN(v.vatRate)
           ? undefined
@@ -255,13 +290,28 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
       </div>
       <p className="text-xs text-muted-foreground -mt-2">{t("optionalHint")}</p>
 
+      <Field label={tz("label")}>
+        <Select
+          testId="field-zone"
+          value={v.zoneId ?? ""}
+          onChange={changeZone}
+          options={["", ...zones.map((z) => z.id)]}
+          labels={[tz("none"), ...zones.map((z) => z.name)]}
+          errors={qtyErrors("zoneId")}
+        />
+        <FieldErrors id="zone-error" errors={qtyErrors("zoneId")} />
+      </Field>
+
       <Field label="Standard-Lagerplatz">
         <Select
+          testId="field-location"
           value={v.defaultLocationId ?? ""}
-          onChange={(val) => set("defaultLocationId", val || null)}
-          options={["", ...locations.map((l) => l.id)]}
-          labels={["— kein —", ...locations.map((l) => `${l.code} · ${l.name}`)]}
+          onChange={changeLocation}
+          options={["", ...visibleLocations.map((l) => l.id)]}
+          labels={["— kein —", ...visibleLocations.map((l) => `${l.code} · ${l.name}`)]}
+          errors={qtyErrors("defaultLocationId")}
         />
+        <FieldErrors id="location-error" errors={qtyErrors("defaultLocationId")} />
       </Field>
 
       {errorMessage && (
@@ -337,22 +387,39 @@ function QtyField({
   );
 }
 
+function FieldErrors({ id, errors }: { id: string; errors: string[] }) {
+  if (errors.length === 0) return null;
+  return (
+    <div id={id} role="alert" className="mt-1 text-xs text-destructive">
+      {errors.map((m) => (
+        <p key={m}>{m}</p>
+      ))}
+    </div>
+  );
+}
+
 function Select({
   value,
   onChange,
   options,
   labels,
+  testId,
+  errors,
 }: {
   value: string;
   onChange: (v: string) => void;
   options: readonly string[];
   labels?: readonly string[];
+  testId?: string;
+  errors?: string[];
 }) {
   return (
     <select
+      data-testid={testId}
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
+      aria-invalid={errors && errors.length > 0 ? true : undefined}
+      className="w-full min-h-11 px-3 py-2 border border-border rounded-lg bg-card text-base md:min-h-0 md:text-sm"
     >
       {options.map((opt, i) => (
         <option key={`${opt}-${i}`} value={opt}>

@@ -3,6 +3,7 @@
 import { FlashBanner } from "@/components/ui/flash-banner";
 
 import { useState, useTransition } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -25,6 +26,7 @@ type Row = {
   eanGtin: string | null;
   category: string | null;
   locationCode: string;
+  zoneName: string | null;
   stock: number;
   minStock: number;
   orderUnit: string;
@@ -40,6 +42,8 @@ export function ArticlesView({
   belowMinCount,
   canCreate,
   q,
+  zones,
+  zoneId,
 }: {
   rows: Row[];
   total: number;
@@ -47,7 +51,10 @@ export function ArticlesView({
   belowMinCount: number;
   canCreate: boolean;
   q: string;
+  zones: { id: string; name: string }[];
+  zoneId: string;
 }) {
+  const tz = useTranslations("articles.zone");
   const router = useRouter();
   const sp = useSearchParams();
   const [, startTransition] = useTransition();
@@ -65,6 +72,14 @@ export function ArticlesView({
     const params = new URLSearchParams(sp.toString());
     if (searchValue) params.set("q", searchValue);
     else params.delete("q");
+    router.push(`/articles?${params.toString()}`);
+  }
+
+  function onZoneChange(next: string) {
+    const params = new URLSearchParams(sp.toString());
+    if (next) params.set("zoneId", next);
+    else params.delete("zoneId");
+    params.delete("page");
     router.push(`/articles?${params.toString()}`);
   }
 
@@ -106,6 +121,20 @@ export function ArticlesView({
               <option key={c}>{c}</option>
             ))}
           </select>
+          <select
+            data-testid="filter-zone"
+            aria-label={tz("filterLabel")}
+            value={zoneId}
+            onChange={(e) => onZoneChange(e.target.value)}
+            className="min-h-11 px-3 py-2 rounded-lg border border-border bg-card text-base md:min-h-0 md:text-sm"
+          >
+            <option value="">{tz("filterAll")}</option>
+            {zones.map((z) => (
+              <option key={z.id} value={z.id}>
+                {z.name}
+              </option>
+            ))}
+          </select>
           <Button type="submit" variant="outline" className="text-sm">
             Suchen
           </Button>
@@ -117,6 +146,7 @@ export function ArticlesView({
               <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
                 <th className="text-left font-medium px-4 py-3">SKU</th>
                 <th className="text-left font-medium px-4 py-3">Name</th>
+                <th className="text-left font-medium px-4 py-3">{tz("column")}</th>
                 <th className="text-left font-medium px-4 py-3">Lagerplatz</th>
                 <th className="text-left font-medium px-4 py-3">Bestand</th>
                 <th className="text-left font-medium px-4 py-3">Min</th>
@@ -128,7 +158,7 @@ export function ArticlesView({
             <tbody>
               {rows.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center text-muted-foreground py-10">
+                  <td colSpan={9} className="text-center text-muted-foreground py-10">
                     Keine Artikel gefunden.
                   </td>
                 </tr>
@@ -148,6 +178,7 @@ export function ArticlesView({
                         <div className="text-muted-foreground text-xs">EAN {r.eanGtin}</div>
                       )}
                     </td>
+                    <td className="px-4 py-3" data-testid={`row-zone-${r.id}`}>{r.zoneName ?? tz("notSet")}</td>
                     <td className="px-4 py-3">{r.locationCode}</td>
                     <td className="px-4 py-3">
                       <span className={belowMin ? "text-rose-600 font-medium" : ""}>{r.stock}</span>
@@ -188,6 +219,7 @@ export function ArticlesView({
                 <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                   <span className="font-mono">{r.sku}</span>
                   <span>Min {r.minStock}</span>
+                  <span data-testid={`card-zone-${r.id}`}>{r.zoneName ?? tz("notSet")}</span>
                   <span>{r.locationCode}</span>
                   {r.ek !== null && <span>EK € {Number(r.ek).toFixed(2)}</span>}
                   <span>{r.primarySupplierName}</span>

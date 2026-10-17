@@ -3,21 +3,25 @@ import type { Prisma } from "@prisma/client";
 import type { ArticleCreate, ArticleUpdate } from "@/lib/schemas/article";
 import { stockRepo } from "./stock";
 
+const WITH_ZONE = { zone: { select: { id: true, name: true } } } satisfies Prisma.ArticleInclude;
+
 type ListArgs = {
   tenantId: string;
   q?: string;
   category?: string;
   supplierId?: string;
+  zoneId?: string;
   belowMin?: boolean;
   page: number;
   pageSize: number;
 };
 
 export const articleRepo = {
-  async list({ tenantId, q, category, supplierId, belowMin, page, pageSize }: ListArgs) {
+  async list({ tenantId, q, category, supplierId, zoneId, belowMin, page, pageSize }: ListArgs) {
     const where: Prisma.ArticleWhereInput = {
       tenantId,
       ...(category ? { category } : {}),
+      ...(zoneId ? { zoneId } : {}),
       ...(supplierId
         ? { suppliers: { some: { supplierId } } }
         : {}),
@@ -54,6 +58,7 @@ export const articleRepo = {
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { name: "asc" },
+        include: WITH_ZONE,
       });
       return { items, total: belowIds.length };
     }
@@ -64,6 +69,7 @@ export const articleRepo = {
         skip: (page - 1) * pageSize,
         take: pageSize,
         orderBy: { name: "asc" },
+        include: WITH_ZONE,
       }),
       prisma.article.count({ where }),
     ]);
@@ -72,7 +78,7 @@ export const articleRepo = {
   },
 
   async findById(tenantId: string, id: string) {
-    return prisma.article.findFirst({ where: { tenantId, id } });
+    return prisma.article.findFirst({ where: { tenantId, id }, include: WITH_ZONE });
   },
 
   async findBySku(tenantId: string, sku: string) {
@@ -81,6 +87,7 @@ export const articleRepo = {
 
   async create(tx: Prisma.TransactionClient, tenantId: string, input: ArticleCreate) {
     return tx.article.create({
+      include: WITH_ZONE,
       data: {
         tenantId,
         sku: input.sku,
@@ -97,6 +104,7 @@ export const articleRepo = {
         maxStock: input.maxStock,
         targetStock: input.targetStock,
         defaultLocationId: input.defaultLocationId,
+        zoneId: input.zoneId,
         vatRate: input.vatRate,
       },
     });
@@ -105,6 +113,7 @@ export const articleRepo = {
   async update(tx: Prisma.TransactionClient, tenantId: string, id: string, input: ArticleUpdate) {
     return tx.article.update({
       where: { id },
+      include: WITH_ZONE,
       data: {
         ...(input.sku !== undefined ? { sku: input.sku } : {}),
         ...(input.name !== undefined ? { name: input.name } : {}),
@@ -120,6 +129,7 @@ export const articleRepo = {
         ...(input.maxStock !== undefined ? { maxStock: input.maxStock } : {}),
         ...(input.targetStock !== undefined ? { targetStock: input.targetStock } : {}),
         ...(input.defaultLocationId !== undefined ? { defaultLocationId: input.defaultLocationId } : {}),
+        ...(input.zoneId !== undefined ? { zoneId: input.zoneId } : {}),
         ...(input.vatRate !== undefined ? { vatRate: input.vatRate } : {}),
       },
     });

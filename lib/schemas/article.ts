@@ -23,7 +23,9 @@ const ArticleBaseSchema = z.object({
   minStock: z.number().int().min(0),
   maxStock: z.number().int().min(0).nullable().optional(),
   targetStock: z.number().int().min(0).nullable().optional(),
-  defaultLocationId: z.string().cuid().optional(),
+  defaultLocationId: z.string().cuid().nullable().optional(),
+  // Bewusst kein cuid(): die Zugehörigkeit zum Mandanten prüft die Route (422 am Feld zoneId).
+  zoneId: z.string().min(1).max(64).nullable().optional(),
   vatRate: z.number().min(0).max(100).optional(),
 });
 
@@ -38,6 +40,7 @@ export const ArticleListQuerySchema = z.object({
   q: z.string().optional(),
   category: z.string().optional(),
   supplierId: z.string().cuid().optional(),
+  zoneId: z.string().min(1).max(64).optional(),
   belowMin: z.coerce.boolean().optional(),
   page: z.coerce.number().int().min(1).default(1),
   pageSize: z.coerce.number().int().min(1).max(200).default(25),
@@ -60,6 +63,8 @@ export const ArticleSchema = z.object({
   maxStock: z.number().nullable(),
   targetStock: z.number().nullable(),
   defaultLocationId: z.string().nullable(),
+  zoneId: z.string().nullable(),
+  zone: z.object({ id: z.string(), name: z.string() }).nullable(),
   vatRate: z.string().nullable(), // Prisma Decimal returns as string
   active: z.boolean(),
   createdAt: z.string(),
@@ -73,7 +78,7 @@ export type ArticleUpdate = z.infer<typeof ArticleUpdateSchema>;
 registry.registerPath({
   method: "get",
   path: "/articles",
-  summary: "Artikel auflisten",
+  summary: "Artikel auflisten (optional nach Zone gefiltert: `zoneId`)",
   tags: ["Articles"],
   request: {
     query: ArticleListQuerySchema,
@@ -107,7 +112,7 @@ registry.registerPath({
   },
   responses: {
     201: { description: "Artikel angelegt", content: { "application/json": { schema: z.object({ data: ArticleSchema }) } } },
-    422: { description: "Validierungsfehler (u. a. Mindestmenge ≤ empfohlene Menge ≤ Maximalmenge; Feldfehler unter `errors`)" },
+    422: { description: "Validierungsfehler (u. a. Mindestmenge ≤ empfohlene Menge ≤ Maximalmenge; `zoneId` muss eine Zone des Mandanten sein; `defaultLocationId` muss ein Lagerplatz des Mandanten sein und zur Zone passen; Feldfehler unter `errors`). Ohne `zoneId` übernimmt der Artikel die Zone des Standard-Lagerplatzes." },
   },
 });
 
@@ -135,7 +140,7 @@ registry.registerPath({
   responses: {
     200: { description: "Aktualisiert" },
     404: { description: "Nicht gefunden" },
-    422: { description: "Validierungsfehler. `maxStock`/`targetStock`: `null` löscht den Wert; Teil-Updates werden gegen die gespeicherten Werte geprüft (Mindestmenge ≤ empfohlene Menge ≤ Maximalmenge), Feldfehler unter `errors`." },
+    422: { description: "Validierungsfehler. `maxStock`/`targetStock`: `null` löscht den Wert; Teil-Updates werden gegen die gespeicherten Werte geprüft (Mindestmenge ≤ empfohlene Menge ≤ Maximalmenge). `zoneId`: `null` löscht die Zone; Zone und Standard-Lagerplatz müssen zusammenpassen, ein Lagerplatz mit Zone setzt die Zone automatisch, wenn keine angegeben ist. Feldfehler unter `errors`." },
   },
 });
 

@@ -38,6 +38,8 @@ type Article = {
   targetStock?: number | null;
   maxStock?: number | null;
   defaultLocationId: string | null;
+  zoneId?: string | null;
+  zone?: { id: string; name: string } | null;
   vatRate: string | null;
 };
 
@@ -65,6 +67,7 @@ export function ArticleDetailModal({
 }) {
   const router = useRouter();
   const tq = useTranslations("articles.quantities");
+  const tz = useTranslations("articles.zone");
   const open = articleId !== null;
   const [article, setArticle] = useState<Article | null>(null);
   const [suppliers, setSuppliers] = useState<ArticleSupplierLink[]>([]);
@@ -244,6 +247,9 @@ export function ArticleDetailModal({
                 <Field label="SKU" value={article.sku} mono />
                 <Field label="EAN/GTIN" value={article.eanGtin ?? "—"} mono />
                 <Field label="Kategorie" value={article.category ?? "—"} />
+                <div data-testid="detail-zone">
+                  <Field label={tz("label")} value={article.zone?.name ?? tz("notSet")} />
+                </div>
                 <Field
                   label="Verpackungsfaktor"
                   value={`${article.packFactor} ${article.baseUnit} / ${article.orderUnit}`}
@@ -602,6 +608,7 @@ function articleToFormValues(a: Article): ArticleFormValues {
     targetStock: a.targetStock ?? null,
     maxStock: a.maxStock ?? null,
     defaultLocationId: a.defaultLocationId ?? undefined,
+    zoneId: a.zoneId ?? null,
     vatRate: a.vatRate === null ? undefined : Number(a.vatRate),
   };
 }

@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
-import { storageLocationRepo } from "@/lib/db/repos/storage-location";
+import { resolveArticleZone } from "@/lib/services/article-zone";
 import { articleRepo } from "@/lib/db/repos/article";
 import { appendAudit } from "@/lib/audit/append";
 import { auth } from "@/lib/auth";
@@ -36,9 +36,14 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
   });
   if (levelErrors.length) return failFields(levelErrors);
 
-  if (body.defaultLocationId && !(await storageLocationRepo.findById(ctx.tenantId, body.defaultLocationId))) {
-    return failFields([{ field: "defaultLocationId", message: "Lagerplatz nicht gefunden" }]);
-  }
+  // Zone und Lagerplatz gegen die gespeicherten Werte zusammenführen.
+  const zone = await resolveArticleZone(ctx.tenantId, {
+    zoneId: body.zoneId !== undefined ? body.zoneId : existing.zoneId,
+    defaultLocationId: body.defaultLocationId !== undefined ? body.defaultLocationId : existing.defaultLocationId,
+  });
+  if (zone.errors.length) return failFields(zone.errors);
+  const zonePatch =
+    body.zoneId !== undefined || zone.zoneId !== existing.zoneId ? { zoneId: zone.zoneId } : {};
 
   const session = await auth();
   if (!session?.user) throw new UnauthenticatedError();
@@ -46,7 +51,7 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
   const actorId = (session.user as { id?: string }).id ?? actorEmail;
 
   const updated = await prisma.$transaction(async (tx) => {
-    const u = await articleRepo.update(tx, ctx.tenantId, id, body);
+    const u = await articleRepo.update(tx, ctx.tenantId, id, { ...body, ...zonePatch });
     await appendAudit(tx, {
       tenantId: ctx.tenantId,
       entity: "Article",

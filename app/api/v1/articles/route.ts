@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
-import { storageLocationRepo } from "@/lib/db/repos/storage-location";
+import { resolveArticleZone } from "@/lib/services/article-zone";
 import { articleRepo } from "@/lib/db/repos/article";
 import { appendAudit } from "@/lib/audit/append";
 import { auth } from "@/lib/auth";
@@ -24,9 +24,8 @@ export const POST = handler(async (req: NextRequest) => {
   const levelErrors = validateStockLevels(body);
   if (levelErrors.length) return failFields(levelErrors);
 
-  if (body.defaultLocationId && !(await storageLocationRepo.findById(ctx.tenantId, body.defaultLocationId))) {
-    return failFields([{ field: "defaultLocationId", message: "Lagerplatz nicht gefunden" }]);
-  }
+  const zone = await resolveArticleZone(ctx.tenantId, body);
+  if (zone.errors.length) return failFields(zone.errors);
 
   const dup = await articleRepo.findBySku(ctx.tenantId, body.sku);
   if (dup) return fail(409, "SKU already exists", `Article with SKU '${body.sku}' already exists.`);
@@ -37,7 +36,7 @@ export const POST = handler(async (req: NextRequest) => {
   const actorId = (session.user as { id?: string }).id ?? actorEmail;
 
   const article = await prisma.$transaction(async (tx) => {
-    const c = await articleRepo.create(tx, ctx.tenantId, body);
+    const c = await articleRepo.create(tx, ctx.tenantId, { ...body, zoneId: zone.zoneId });
     await appendAudit(tx, {
       tenantId: ctx.tenantId,
       entity: "Article",
