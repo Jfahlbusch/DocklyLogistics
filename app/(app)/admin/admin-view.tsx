@@ -8,8 +8,10 @@ import { Input } from "@/components/ui/input";
 import { FlashBanner } from "@/components/ui/flash-banner";
 import { cn } from "@/lib/utils";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog, ResponsiveDialogBody, ResponsiveDialogContent, ResponsiveDialogDescription,
+  ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
+import { CHECKBOX_CLASS, CHECK_LABEL_CLASS, NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
 
 type FeatureDef = { key: string; label: string; group: string };
 type TenantRow = {
@@ -256,14 +258,14 @@ export function AdminView({
               return (
                 <Card key={p.id} className="shadow-soft">
                   <CardContent className="space-y-2 p-5">
-                    <div className="flex items-start justify-between gap-2">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                       <div className="min-w-0">
                         <div className="font-display text-lg text-foreground">{p.name}</div>
                         {p.description && <div className="text-sm text-muted-foreground">{p.description}</div>}
                       </div>
                       <div className="flex shrink-0 gap-2">
-                        <Button variant="outline" className="px-2 py-1 text-xs" onClick={() => editProfileDraft(p)}>Bearbeiten</Button>
-                        <Button variant="outline" className="px-2 py-1 text-xs text-danger" onClick={() => deleteProfile(p)}>Löschen</Button>
+                        <Button variant="outline" className="text-xs" onClick={() => editProfileDraft(p)}>Bearbeiten</Button>
+                        <Button variant="outline" className="text-xs text-danger" onClick={() => deleteProfile(p)}>Löschen</Button>
                       </div>
                     </div>
                     <div className="text-xs text-muted-foreground">
@@ -279,23 +281,23 @@ export function AdminView({
       </Tabs>
 
       {/* ---------------- Tenant-Detail ---------------- */}
-      <Dialog open={detailOpen} onOpenChange={(o) => { if (!o) { setDetailOpen(false); setDetail(null); } }}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display">Funktionen · {detail?.tenant.name ?? "…"}</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={detailOpen} onOpenChange={(o) => { if (!o) { setDetailOpen(false); setDetail(null); } }}>
+        <ResponsiveDialogContent size="lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display">Funktionen · {detail?.tenant.name ?? "…"}</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Sperren wirken für alle Benutzer des Tenants. Reihenfolge: Einzel-Regel → Profil → Standard (verfügbar).
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
           {!detail ? (
             <div className="py-8 text-center text-sm text-muted-foreground">Lade…</div>
           ) : (
-            <div className="space-y-4 text-sm">
+            <ResponsiveDialogBody className="space-y-4 pb-4 text-sm">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Funktionsprofil</span>
                 <select
-                  className="rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                  className={NATIVE_SELECT_CLASS}
                   value={detail.profile?.id ?? ""}
                   disabled={busy}
                   onChange={(e) => putTenant(detail.tenant.id, { profileId: e.target.value || null })}
@@ -326,7 +328,7 @@ export function AdminView({
                                 {fromProfile === undefined ? "Standard: verfügbar" : `Profil: ${fromProfile ? "verfügbar" : "gesperrt"}`}
                               </span>
                             </span>
-                            <div className="inline-flex shrink-0 self-start rounded-md border border-border sm:self-auto">
+                            <div className="inline-flex shrink-0 self-stretch rounded-md border border-border sm:self-auto">
                               {([
                                 ["inherit", detail.profile ? "Profil" : "Standard", null],
                                 ["on", "Erlaubt", true],
@@ -337,7 +339,7 @@ export function AdminView({
                                   disabled={busy}
                                   onClick={() => putTenant(detail.tenant.id, { features: { [f.key]: value } })}
                                   className={cn(
-                                    "px-2.5 py-1.5 text-xs transition-colors first:rounded-l-md last:rounded-r-md",
+                                    "px-2.5 py-1.5 text-xs transition-colors first:rounded-l-md last:rounded-r-md max-md:min-h-11 max-sm:flex-1",
                                     state === key
                                       ? key === "off"
                                         ? "bg-rose-600 text-white"
@@ -358,25 +360,26 @@ export function AdminView({
                   </div>
                 ))}
               </div>
-            </div>
+            </ResponsiveDialogBody>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {/* ---------------- Profil-Dialog ---------------- */}
-      <Dialog open={profileDialog !== null} onOpenChange={(o) => { if (!o) setProfileDialog(null); }}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display">
+      <ResponsiveDialog open={profileDialog !== null} onOpenChange={(o) => { if (!o) setProfileDialog(null); }}>
+        <ResponsiveDialogContent size="lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display">
               {profileDialog?.id ? "Funktionsprofil bearbeiten" : "Neues Funktionsprofil"}
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Häkchen = Funktion verfügbar. Änderungen wirken sofort auf alle zugeordneten Tenants.
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
           {profileDialog && (
-            <div className="space-y-4 text-sm">
+            <>
+            <ResponsiveDialogBody className="space-y-4 pb-4 text-sm">
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
                   <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Name</label>
@@ -402,7 +405,7 @@ export function AdminView({
                     <div className="mb-1 text-[11px] uppercase tracking-[0.16em] text-muted-foreground">{g.group}</div>
                     <div className="divide-y divide-border rounded-lg border border-border">
                       {g.items.map((f) => (
-                        <label key={f.key} className="flex cursor-pointer items-center justify-between gap-3 px-3 py-2.5">
+                        <label key={f.key} className={cn(CHECK_LABEL_CLASS, "cursor-pointer justify-between px-3 py-2.5")}>
                           <span className="text-foreground">{f.label}</span>
                           <input
                             type="checkbox"
@@ -413,7 +416,7 @@ export function AdminView({
                                 features: { ...profileDialog.features, [f.key]: e.target.checked },
                               })
                             }
-                            className="h-4 w-4 accent-navy-900 dark:accent-gold-500"
+                            className={cn(CHECKBOX_CLASS, "shrink-0 accent-navy-900 dark:accent-gold-500")}
                           />
                         </label>
                       ))}
@@ -422,7 +425,8 @@ export function AdminView({
                 ))}
               </div>
 
-              <div className="flex justify-end gap-2">
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
                 <Button variant="outline" onClick={() => setProfileDialog(null)}>Abbrechen</Button>
                 <Button
                   disabled={busy || profileDialog.name.trim().length === 0}
@@ -431,11 +435,11 @@ export function AdminView({
                 >
                   {busy ? "Speichere…" : "Speichern"}
                 </Button>
-              </div>
-            </div>
+            </ResponsiveDialogFooter>
+            </>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }
