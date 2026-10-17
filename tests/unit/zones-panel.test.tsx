@@ -239,3 +239,13 @@ describe("LocationForm: Zone", () => {
     expect(onSubmit).toHaveBeenCalledWith(expect.objectContaining({ zoneId: null }));
   });
 });
+
+describe("Zonen-Zähler (Plural)", () => {
+  it("schreibt „1 Lagerplatz“ im Singular und „2 Lagerplätze“ im Plural", async () => {
+    const { createTranslator } = await import("next-intl");
+    const de = (await import("../../messages/de.json")).default;
+    const t = createTranslator({ locale: "de", messages: de, namespace: "zones" });
+    expect(t("cardCounts", { locations: 1, articles: 0 })).toBe("1 Lagerplatz · 0 Artikel");
+    expect(t("cardCounts", { locations: 2, articles: 8 })).toBe("2 Lagerplätze · 8 Artikel");
+  });
+});

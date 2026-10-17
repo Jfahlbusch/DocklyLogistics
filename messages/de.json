@@ -139,7 +139,7 @@
       "active": "Aktiv",
       "actions": "Aktionen"
     },
-    "cardCounts": "{locations} Lagerplätze · {articles} Artikel",
+    "cardCounts": "{locations, plural, one {# Lagerplatz} other {# Lagerplätze}} · {articles} Artikel",
     "qr": {
       "action": "QR drucken",
       "actionAria": "QR-Code der Zone „{name}“ drucken",
