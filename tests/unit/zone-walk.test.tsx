@@ -1,6 +1,8 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import fs from "node:fs";
+import path from "node:path";
 import { renderWithIntl } from "../helpers/intl";
 
 const replace = vi.fn();
@@ -165,5 +167,13 @@ describe("ZoneWalk", () => {
     const before = fetchMock.mock.calls.length;
     fireEvent.click(retry);
     await waitFor(() => expect(fetchMock.mock.calls.length).toBeGreaterThan(before));
+  });
+});
+
+describe("ZoneWalk — Karte lässt den sticky Hauptknopf zu", () => {
+  it("hebt unter 992 px das overflow-hidden der Card auf", () => {
+    const src = fs.readFileSync(path.join(__dirname, "../../components/warehouse/zone-walk.tsx"), "utf8");
+    expect(src).toMatch(/data-testid="walk-card"/);
+    expect(src).toMatch(/max-nav:overflow-visible[^>]*data-testid="walk-card"|data-testid="walk-card"[^>]*max-nav:overflow-visible/);
   });
 });

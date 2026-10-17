@@ -228,7 +228,8 @@ export function ZoneWalk({ zoneId, initialIndex }: { zoneId: string; initialInde
         </div>
       </div>
 
-      <Card className="shadow-soft">
+      {/* overflow-visible: sonst schaltet das overflow-hidden der Card das sticky des Hauptknopfs ab (ArticleOrderCard). */}
+      <Card className="shadow-soft max-nav:overflow-visible" data-testid="walk-card">
         <CardContent className="p-4 sm:p-5">
           <ArticleOrderCard
             key={item.article.id}

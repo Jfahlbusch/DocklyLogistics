@@ -396,8 +396,8 @@ export function WarehouseModeView({
           </div>
         </div>
 
-        {/* Detected article */}
-        <Card className="shadow-soft">
+        {/* Detected article — overflow-visible, damit der sticky Hauptknopf der Artikelkarte über der Tab-Leiste bleibt */}
+        <Card className="shadow-soft max-nav:overflow-visible" data-testid="scan-card">
           <CardContent className="p-5">
             {!article ? (
               <div className="py-10 text-center text-muted-foreground text-sm">
