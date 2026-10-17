@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardDescription } from "@/components/ui/card";
 import { Logo } from "@/components/layout/logo";
+import { safeCallbackUrl } from "@/lib/auth/callback-url";
 import { loginWithKeycloak } from "./actions";
 
 export default async function LoginPage({
@@ -9,7 +10,7 @@ export default async function LoginPage({
   searchParams: Promise<{ callbackUrl?: string; error?: string }>;
 }) {
   const params = await searchParams;
-  const callbackUrl = params.callbackUrl ?? "/dashboard";
+  const callbackUrl = safeCallbackUrl(params.callbackUrl);
   const error = params.error;
 
   return (

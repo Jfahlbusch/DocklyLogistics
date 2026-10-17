@@ -48,7 +48,8 @@ export default auth(async (req) => {
       return next();
     }
     const loginUrl = new URL("/login", req.url);
-    loginUrl.searchParams.set("callbackUrl", pathname);
+    // Query mitnehmen (z. B. /warehouse-mode?zone=<id> aus dem Zonen-QR), sonst geht der Deep-Link verloren.
+    loginUrl.searchParams.set("callbackUrl", `${pathname}${req.nextUrl.search}`);
     return NextResponse.redirect(loginUrl);
   }
 
