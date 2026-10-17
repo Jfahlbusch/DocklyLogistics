@@ -75,4 +75,16 @@ describe("TenantSwitcher", () => {
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(screen.getByText("Eigene Bäckerei")).toBeInTheDocument();
   });
+  it("hat Pager-Knöpfe mit 44-px-Touch-Ziel unterhalb der Desktop-Navigation (T17d)", () => {
+    const many: TenantNavigation = {
+      ...ADMIN,
+      tenants: Array.from({ length: 7 }, (_, i) => ({ id: `t${i}`, name: `Bäckerei ${i}` })),
+    };
+    renderWithIntl(<TenantSwitcher navigation={many} />);
+    fireEvent.click(screen.getByRole("button", { name: "Unternehmen wechseln" }));
+    for (const name of ["Vorherige Unternehmen", "Weitere Unternehmen"]) {
+      const btn = screen.getByRole("button", { name });
+      expect(btn.className).toMatch(/(^|\s)size-11(\s|$)/);
+    }
+  });
 });

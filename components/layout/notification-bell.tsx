@@ -155,7 +155,7 @@ export function NotificationBell() {
                 e.preventDefault(); // Panel bleibt offen, die Liste aktualisiert sich
                 void markAll();
               }}
-              className="w-auto px-2 py-1 text-xs text-muted-foreground hover:text-foreground"
+              className="min-h-11 w-auto px-3 py-1 text-xs text-muted-foreground hover:text-foreground md:min-h-0 md:px-2"
             >
               Alle als gelesen
             </DropdownMenuItem>

@@ -103,9 +103,9 @@ export function TenantSwitcher({ navigation, collapsed }: { navigation: TenantNa
               {!options.length && <p role="status" className="p-2 text-sm text-muted-foreground">{t("empty")}</p>}
             </div>
             {pages > 1 && <div className="mt-1 flex items-center justify-between gap-2">
-              <Button type="button" variant="ghost" size="icon" aria-label={t("previous")} disabled={page === 0} onClick={() => setPage(value => value - 1)}><ChevronLeft aria-hidden /></Button>
+              <Button type="button" variant="ghost" size="icon" className="size-11 nav:size-8" aria-label={t("previous")} disabled={page === 0} onClick={() => setPage(value => value - 1)}><ChevronLeft aria-hidden /></Button>
               <span className="text-xs text-muted-foreground">{t("page", { page: page + 1, pages })}</span>
-              <Button type="button" variant="ghost" size="icon" aria-label={t("next")} disabled={page + 1 >= pages} onClick={() => setPage(value => value + 1)}><ChevronRight aria-hidden /></Button>
+              <Button type="button" variant="ghost" size="icon" className="size-11 nav:size-8" aria-label={t("next")} disabled={page + 1 >= pages} onClick={() => setPage(value => value + 1)}><ChevronRight aria-hidden /></Button>
             </div>}
           </>}
         </PopoverContent>

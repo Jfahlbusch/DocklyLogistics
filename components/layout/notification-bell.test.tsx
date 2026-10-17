@@ -230,6 +230,15 @@ describe("NotificationBell: Interaktion", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
+  it("„Alle als gelesen“ hat ein Touch-Ziel von mindestens 44 px (min-h-11, T17d)", async () => {
+    mockApi([item({ id: "1" })]);
+    const ev = userEvent.setup();
+    render(<NotificationBell />);
+    await ev.click(trigger());
+    const all = await screen.findByRole("menuitem", { name: "Alle als gelesen" });
+    expect(all.className).toMatch(/(^|\s)min-h-11(\s|$)/);
+  });
+
   it("„Alle als gelesen“ quittiert alle, lädt neu und lässt das Panel offen", async () => {
     const api = mockApi([item({ id: "1" }), item({ id: "2" })]);
     const ev = userEvent.setup();
