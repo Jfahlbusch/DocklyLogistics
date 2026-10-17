@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { DEFAULT_OPEN_AREAS, navigationFlyouts, navigationListHeight, readNavigationPreference } from "@/lib/navigation-preference";
-import { NAV_ENTRIES, visibleEntries } from "@/lib/navigation";
+import { visibleEntries } from "@/lib/navigation";
 
 describe("Unabhängige Menüpräferenzen", () => {
   // Nutzerwunsch 18.10.2026: „Einstellungen“ (Verwaltung) steht direkt im Menü statt im Popup — Verwaltung ist standardmäßig offen.
