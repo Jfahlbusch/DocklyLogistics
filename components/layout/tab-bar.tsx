@@ -20,11 +20,11 @@ export const TAB_CLASS =
   "flex min-h-11 min-w-11 items-center justify-center gap-1 rounded-full px-2.5 py-1.5 text-xs font-medium leading-none transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-gold-400 motion-reduce:transition-none";
 
 /**
- * Klassen der Kapsel: 8 px Abstand zwischen den Tabs (L9), 4 px Innenabstand. Unter 400 px Bildschirmbreite rückt sie auf 8 px an den Rand
- * (sonst 16 px), damit das längste Label (DE „Stammdaten“, 73,5 px) bei 360 px samt 8 px Lücke in das Bild passt.
+ * Klassen der Kapsel: 8 px Abstand zwischen den Tabs (L9), 4 px Innenabstand. Mittig am unteren Rand (Nutzerwunsch 17.10.2026 — die
+ * Vorlage setzt sie linksbündig). Die Höchstbreite lässt unter 400 px Bildschirmbreite mindestens 8 px Rand je Seite (sonst 16 px).
  */
 export const TAB_BAR_CLASS =
-  "fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-2 min-[400px]:left-4 z-40 flex max-w-[calc(100vw-1rem)] min-[400px]:max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border border-sidebar-foreground/10 bg-sidebar p-1 text-sidebar-foreground shadow-lg transition-transform duration-200 motion-reduce:transition-none nav:hidden [@media(prefers-reduced-transparency:no-preference)]:bg-sidebar/95 [@media(prefers-reduced-transparency:no-preference)]:backdrop-blur";
+  "fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-1/2 -translate-x-1/2 z-40 flex max-w-[calc(100vw-1rem)] min-[400px]:max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border border-sidebar-foreground/10 bg-sidebar p-1 text-sidebar-foreground shadow-lg transition-transform duration-200 motion-reduce:transition-none nav:hidden [@media(prefers-reduced-transparency:no-preference)]:bg-sidebar/95 [@media(prefers-reduced-transparency:no-preference)]:backdrop-blur";
 
 /**
  * Schwebende Tab-Pill unterhalb `lg` = 992 px, dem Breakpoint des Portal-Menüs (A8.18): je sichtbarem Bereich ein Tab plus Such-Tab. Beim

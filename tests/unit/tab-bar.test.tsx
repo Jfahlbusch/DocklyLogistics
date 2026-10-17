@@ -52,6 +52,14 @@ describe("TabBar (unter 992 px)", () => {
     window.removeEventListener(SEARCH_OPEN_EVENT, listener);
   });
 
+  it("sitzt mittig am unteren Rand (Nutzerwunsch 17.10.2026, abweichend von der linksbündigen Vorlage)", () => {
+    renderWithIntl(<TabBar role="USER" />);
+    const bar = screen.getByRole("navigation", { name: "Bereiche" });
+    expect(bar).toHaveClass("left-1/2", "-translate-x-1/2");
+    expect(bar.className).not.toMatch(/(^|\s)left-2(\s|$)|min-\[400px\]:left-4/);
+    expect(bar.className).toContain("max-w-[calc(100vw-1rem)]");
+  });
+
   it("ist nur unter 992 px sichtbar und liegt über der Safe-Area", () => {
     renderWithIntl(<TabBar role="USER" />);
     const bar = screen.getByRole("navigation", { name: "Bereiche" });
