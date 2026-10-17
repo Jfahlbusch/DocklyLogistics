@@ -7,12 +7,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 
 type KeyRow = {
   id: string;
@@ -115,8 +117,8 @@ export function ApiKeysTab({ role }: { role: string }) {
           <div className="text-sm font-medium text-navy-900">
             Neuer API-Key — jetzt kopieren, er wird nicht erneut angezeigt:
           </div>
-          <div className="flex items-center gap-2">
-            <code className="flex-1 break-all rounded-md bg-card px-3 py-2 font-mono text-xs text-foreground border border-border">
+          <div className="flex flex-wrap items-center gap-2">
+            <code className="min-w-0 flex-1 basis-full break-all sm:basis-0 rounded-md bg-card px-3 py-2 font-mono text-xs text-foreground border border-border">
               {newKey}
             </code>
             <Button
@@ -171,7 +173,7 @@ export function ApiKeysTab({ role }: { role: string }) {
                     <td className="px-4 py-3 text-xs text-muted-foreground">{fmt(k.lastUsedAt)}</td>
                     <td className="px-4 py-3 text-xs text-muted-foreground">{fmt(k.expiresAt)}</td>
                     <td className="px-4 py-3 text-right">
-                      <Button variant="outline" className="text-xs px-2 py-1 text-danger" onClick={() => revoke(k)}>
+                      <Button variant="outline" className="text-xs text-danger" onClick={() => revoke(k)}>
                         Widerrufen
                       </Button>
                     </td>
@@ -201,7 +203,7 @@ export function ApiKeysTab({ role }: { role: string }) {
                   </div>
                   <Button
                     variant="outline"
-                    className="shrink-0 px-2 py-1 text-xs text-danger"
+                    className="shrink-0 text-xs text-danger"
                     onClick={() => revoke(k)}
                   >
                     Widerrufen
@@ -214,21 +216,21 @@ export function ApiKeysTab({ role }: { role: string }) {
         </CardContent>
       </Card>
 
-      <Dialog
+      <ResponsiveDialog
         open={creating}
         onOpenChange={(o) => {
           if (!o) setCreating(false);
         }}
       >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-foreground">Neuer API-Key</DialogTitle>
-            <DialogDescription>
+        <ResponsiveDialogContent size="md">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display text-2xl text-foreground">Neuer API-Key</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               Der Key erhält deine aktuellen Rechte ({role}). Nach dem Anlegen wird er einmalig
               angezeigt.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-3">
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className="space-y-3 pb-4">
             <div>
               <label className="text-sm font-medium text-foreground">Bezeichnung (optional)</label>
               <Input
@@ -244,6 +246,7 @@ export function ApiKeysTab({ role }: { role: string }) {
               </label>
               <Input
                 type="number"
+                inputMode="numeric"
                 min={1}
                 max={365}
                 value={expiresInDays}
@@ -252,21 +255,21 @@ export function ApiKeysTab({ role }: { role: string }) {
                 className="mt-1"
               />
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button variant="outline" onClick={() => setCreating(false)}>
-                Abbrechen
-              </Button>
-              <Button
-                onClick={create}
-                disabled={busy}
-                className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
-              >
-                {busy ? "Erstelle…" : "Erstellen"}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+          </ResponsiveDialogBody>
+          <ResponsiveDialogFooter>
+            <Button variant="outline" onClick={() => setCreating(false)}>
+              Abbrechen
+            </Button>
+            <Button
+              onClick={create}
+              disabled={busy}
+              className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
+            >
+              {busy ? "Erstelle…" : "Erstellen"}
+            </Button>
+          </ResponsiveDialogFooter>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }
