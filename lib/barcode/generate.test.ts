@@ -46,7 +46,7 @@ describe("generateBarcode", () => {
 
 describe("generateBarcode qrcode", () => {
   it("erzeugt SVG + PNG; PNG dekodiert (ZXing) zum Inhalt", async () => {
-    const { decodeQrPng } = await import("./decode-test-helper");
+    const { decodeQrPng } = await import("../../tests/helpers/decode-qr-png");
     const url = "https://logistics.dockly.de/warehouse-mode?zone=ckabc%20123&x=ä";
     const r = await generateBarcode({ format: "qrcode", source: "SKU", sku: url });
     expect(r.format).toBe("qrcode");
