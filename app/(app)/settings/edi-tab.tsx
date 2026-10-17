@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,6 +59,7 @@ function fmt(d: string | null) {
  */
 export function EdiTab({ canManage }: { canManage: boolean }) {
   const [settings, setSettings] = useState<EdiSettings | null>(null);
+  const confirm = useConfirm();
   const [partners, setPartners] = useState<PartnerRow[]>([]);
   const [suppliers, setSuppliers] = useState<SupplierOption[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -110,7 +112,7 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
   }
 
   async function rotateTenantToken() {
-    if (!confirm("Allgemeines Postfach rotieren? Der alte Endpunkt ist sofort ungültig — alle Partner, die ihn nutzen, brauchen die neue URL.")) return;
+    if (!(await confirm({ title: "Allgemeines Postfach rotieren?", description: "Der alte Endpunkt ist sofort ungültig — alle Partner, die ihn nutzen, brauchen die neue URL.", confirmLabel: "Rotieren", destructive: true }))) return;
     setBusy(true);
     try {
       const r = await fetch("/api/v1/settings/edi/rotate-token", { method: "POST" });
@@ -132,7 +134,7 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
   }
 
   async function generateAs2() {
-    if (as2 && !confirm("AS2-Identität erneuern? Das alte Zertifikat wird ungültig — alle AS2-Partner brauchen das neue.")) return;
+    if (as2 && !(await confirm({ title: "AS2-Identität erneuern?", description: "Das alte Zertifikat wird ungültig — alle AS2-Partner brauchen das neue.", confirmLabel: "Erneuern", destructive: true }))) return;
     setBusy(true);
     try {
       const r = await fetch("/api/v1/settings/edi/as2-identity", {
@@ -207,7 +209,7 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
   }
 
   async function rotatePartner(p: PartnerRow) {
-    if (!confirm(`Token für „${p.name}“ rotieren? Der alte Endpunkt ist sofort ungültig — nur dieser Partner braucht die neue URL.`)) return;
+    if (!(await confirm({ title: `Token für „${p.name}“ rotieren?`, description: "Der alte Endpunkt ist sofort ungültig — nur dieser Partner braucht die neue URL.", confirmLabel: "Rotieren", destructive: true }))) return;
     const r = await fetch(`/api/v1/settings/edi/partners/${p.id}/rotate-token`, { method: "POST" });
     if (r.ok) {
       setFlash({ ok: true, text: `Neuer Token für „${p.name}“` });
@@ -216,7 +218,7 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
   }
 
   async function deletePartner(p: PartnerRow) {
-    if (!confirm(`Partner-Postfach „${p.name}“ löschen? Der Token ist sofort ungültig.`)) return;
+    if (!(await confirm({ title: `Partner-Postfach „${p.name}“ löschen?`, description: "Der Token ist sofort ungültig.", confirmLabel: "Löschen", destructive: true }))) return;
     const r = await fetch(`/api/v1/settings/edi/partners/${p.id}`, { method: "DELETE" });
     if (r.status === 204) {
       setFlash({ ok: true, text: `„${p.name}“ gelöscht` });

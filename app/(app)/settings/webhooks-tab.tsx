@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { FlashBanner } from "@/components/ui/flash-banner";
 
 import { useState, useTransition } from "react";
@@ -67,6 +68,7 @@ export function WebhooksTab({
   const router = useRouter();
   const [, startTransition] = useTransition();
   const [creating, setCreating] = useState(false);
+  const confirm = useConfirm();
   const [newSecret, setNewSecret] = useState<{
     id: string;
     secret: string;
@@ -91,7 +93,7 @@ export function WebhooksTab({
   }
 
   async function deleteWebhook(w: WebhookRow) {
-    if (!confirm(`Webhook ${w.url} wirklich löschen?`)) return;
+    if (!(await confirm({ title: `Webhook ${w.url} wirklich löschen?`, confirmLabel: "Löschen", destructive: true }))) return;
     const r = await fetch(`/api/v1/settings/webhooks/${w.id}`, {
       method: "DELETE",
     });
@@ -102,12 +104,7 @@ export function WebhooksTab({
   }
 
   async function rotate(w: WebhookRow) {
-    if (
-      !confirm(
-        `Secret von ${w.url} rotieren? Alte Signaturen werden ungültig.`,
-      )
-    )
-      return;
+    if (!(await confirm({ title: `Secret von ${w.url} rotieren?`, description: "Alte Signaturen werden ungültig.", confirmLabel: "Rotieren", destructive: true }))) return;
     const r = await fetch(
       `/api/v1/settings/webhooks/${w.id}/rotate-secret`,
       { method: "POST" },

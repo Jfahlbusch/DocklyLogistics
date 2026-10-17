@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 import { DetailField as Field } from "@/components/ui/detail-field";
 
 import { useEffect, useState } from "react";
@@ -47,6 +49,7 @@ export function SupplierDetailModal({
   onUpdated?: (name: string) => void;
 }) {
   const open = supplierId !== null;
+  const confirm = useConfirm();
   const [supplier, setSupplier] = useState<Supplier | null>(null);
   const [loading, setLoading] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -212,7 +215,7 @@ export function SupplierDetailModal({
                   variant="outline"
                   className="text-rose-600 border-rose-200 hover:bg-rose-50"
                   onClick={async () => {
-                    if (!confirm(`Lieferant "${supplier.name}" wirklich löschen?`)) return;
+                    if (!(await confirm({ title: `Lieferant "${supplier.name}" wirklich löschen?`, confirmLabel: "Löschen", destructive: true }))) return;
                     const r = await fetch(`/api/v1/suppliers/${supplier.id}`, {
                       method: "DELETE",
                     });
@@ -221,7 +224,7 @@ export function SupplierDetailModal({
                       onClose();
                     } else {
                       const body = await r.json().catch(() => ({}));
-                      alert(body.detail ?? body.title ?? "Löschen fehlgeschlagen");
+                      toast.error(body.detail ?? body.title ?? "Löschen fehlgeschlagen");
                     }
                   }}
                 >
@@ -373,6 +376,7 @@ function ApiKeysPanel({
   canManage: boolean;
 }) {
   const [keys, setKeys] = useState<ApiKeyRow[]>([]);
+  const confirm = useConfirm();
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [newKey, setNewKey] = useState<{ prefix: string; fullKey: string } | null>(null);
@@ -405,7 +409,7 @@ function ApiKeysPanel({
   }
 
   async function revoke(id: string) {
-    if (!confirm("API-Key widerrufen? Lieferant kann diesen Key danach nicht mehr nutzen.")) return;
+    if (!(await confirm({ title: "API-Key widerrufen?", description: "Der Lieferant kann diesen Key danach nicht mehr nutzen.", confirmLabel: "Widerrufen", destructive: true }))) return;
     await fetch(`/api/v1/suppliers/${supplierId}/api-keys/${id}`, { method: "DELETE" });
     await load();
   }

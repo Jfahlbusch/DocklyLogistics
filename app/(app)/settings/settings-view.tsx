@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { FlashBanner } from "@/components/ui/flash-banner";
 
 import { useState, useTransition } from "react";
@@ -55,6 +56,7 @@ export function SettingsView({
   const canManage = role === "MANAGER" || role === "GLOBAL_ADMIN";
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const confirm = useConfirm();
   const [creating, setCreating] = useState<null | (typeof channelKeys)[number]>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [formBusy, setFormBusy] = useState(false);
@@ -64,12 +66,7 @@ export function SettingsView({
   const editingProfile = editingId ? channels.find((c) => c.id === editingId) ?? null : null;
 
   async function onDelete(profile: ChannelProfile) {
-    if (
-      !confirm(
-        `Versand-Profil "${profile.label}" (${profile.channel}) wirklich löschen?`,
-      )
-    )
-      return;
+    if (!(await confirm({ title: `Versand-Profil "${profile.label}" (${profile.channel}) wirklich löschen?`, confirmLabel: "Löschen", destructive: true }))) return;
     const r = await fetch(`/api/v1/settings/channels/${profile.id}`, { method: "DELETE" });
     if (r.status === 204) {
       setFlash({ ok: true, text: `Profil "${profile.label}" gelöscht` });

@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
@@ -49,6 +50,7 @@ export function AdminView({
   features: FeatureDef[];
 }) {
   const [tenants, setTenants] = useState(initialTenants);
+  const confirm = useConfirm();
   const [profiles, setProfiles] = useState(initialProfiles);
   const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
   const [busy, setBusy] = useState(false);
@@ -135,7 +137,7 @@ export function AdminView({
 
   async function deleteProfile(p: ProfileRow) {
     const hint = p.tenants > 0 ? ` ${p.tenants} Tenant(s) fallen auf „alles verfügbar“ zurück.` : "";
-    if (!confirm(`Profil „${p.name}“ wirklich löschen?${hint}`)) return;
+    if (!(await confirm({ title: `Profil „${p.name}“ wirklich löschen?`, description: hint.trim() || undefined, confirmLabel: "Löschen", destructive: true }))) return;
     const r = await fetch(`/api/v1/admin/feature-profiles/${p.id}`, { method: "DELETE" });
     if (r.status === 204) {
       setFlash({ ok: true, text: `Profil „${p.name}“ gelöscht` });

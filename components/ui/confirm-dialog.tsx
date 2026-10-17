@@ -31,7 +31,7 @@ type Pending = { options: ConfirmOptions; resolve: (ok: boolean) => void }
 const ConfirmContext = React.createContext<ConfirmFn | null>(null)
 
 /**
- * Ersatz für `window.confirm()`: `const confirm = useConfirm(); if (!(await confirm({ title, … }))) return;`
+ * Ersatz für das native Browser-Confirm: `const confirm = useConfirm(); if (!(await confirm({ title, … }))) return;`
  * Darstellung über `ResponsiveDialog` (ab md Dialog, darunter Bottom-Sheet), Semantik `alertdialog`.
  * „Abbrechen“ hat beim Öffnen den Fokus (sichere Voreinstellung); Escape, Schließen und Klick daneben liefern `false`.
  *
@@ -78,6 +78,8 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
           key={current ? `${o?.title}` : "closed"}
           size="sm"
           role="alertdialog"
+          // Ohne Beschreibung kein aria-describedby (Radix würde sonst warnen).
+          {...(o?.description ? {} : { "aria-describedby": undefined })}
           onOpenAutoFocus={(e) => {
             e.preventDefault()
             cancelRef.current?.focus()
@@ -85,9 +87,7 @@ export function ConfirmProvider({ children }: { children: React.ReactNode }) {
         >
           <ResponsiveDialogHeader>
             <ResponsiveDialogTitle>{o?.title}</ResponsiveDialogTitle>
-            <ResponsiveDialogDescription className={o?.description ? undefined : "sr-only"}>
-              {o?.description ?? o?.title}
-            </ResponsiveDialogDescription>
+            {o?.description && <ResponsiveDialogDescription>{o.description}</ResponsiveDialogDescription>}
           </ResponsiveDialogHeader>
           <ResponsiveDialogFooter>
             <Button ref={cancelRef} type="button" variant="outline" onClick={() => settle(false)}>

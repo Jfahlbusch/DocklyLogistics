@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { useState, useTransition, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -82,6 +83,7 @@ export function ZonesPanel({
   rowActions?: (zone: ZoneRow) => ReactNode;
 }) {
   const t = useTranslations("zones");
+  const confirm = useConfirm();
   const router = useRouter();
   const [, startTransition] = useTransition();
 
@@ -166,7 +168,7 @@ export function ZonesPanel({
   }
 
   async function remove(z: ZoneRow) {
-    if (!confirm(t("confirmDelete", { name: z.name }))) return;
+    if (!(await confirm({ title: t("confirmDelete", { name: z.name }), confirmLabel: "Löschen", destructive: true }))) return;
     setBusyId(z.id);
     try {
       const r = await fetch(`/api/v1/zones/${z.id}`, { method: "DELETE" });

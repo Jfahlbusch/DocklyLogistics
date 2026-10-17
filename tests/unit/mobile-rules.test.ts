@@ -17,7 +17,17 @@ function files(dir: string): string[] {
 }
 const pages = files(APP).map((f) => ({ file: path.relative(ROOT, f), src: fs.readFileSync(f, "utf8") }));
 
+const COMPONENTS = path.join(ROOT, "components");
+const sources = [...files(APP), ...files(COMPONENTS)].map((f) => ({ file: path.relative(ROOT, f), src: fs.readFileSync(f, "utf8") }));
+
 describe("Mobil-Regeln für app/(app)", () => {
+  it("nutzt keine nativen Browser-Dialoge confirm()/alert() — stattdessen useConfirm() bzw. toast (components/ui/confirm-dialog.tsx)", () => {
+    // Erlaubt bleibt `confirm({ … })` des Hooks; verboten: window.confirm(, confirm("…"), confirm(`…`), confirm(msg), alert(…).
+    const NATIVE = /\bwindow\.(confirm|alert)\(|(?<![\w$.])confirm\((?!\s*\{)|(?<![\w$.])alert\(/;
+    const offenders = sources.filter(({ src }) => NATIVE.test(src)).map((p) => p.file);
+    expect(offenders).toEqual([]);
+  });
+
   it("nutzt für Dialoge nur ResponsiveDialog (Bottom-Sheet unter md), nie den zentrierten Dialog direkt", () => {
     const offenders = pages.filter(({ src }) => /from\s+["']@\/components\/ui\/dialog["']/.test(src)).map((p) => p.file);
     expect(offenders).toEqual([]);

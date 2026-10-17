@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { FlashBanner } from "@/components/ui/flash-banner";
 
 import { useEffect, useState, useTransition } from "react";
@@ -77,6 +78,7 @@ export function StockView({
   const activeZones = zones.filter((z) => z.active).map((z) => ({ id: z.id, name: z.name }));
   const router = useRouter();
   const [, startTransition] = useTransition();
+  const confirm = useConfirm();
   const canManage = role === "MANAGER" || role === "GLOBAL_ADMIN";
 
   const [creating, setCreating] = useState(false);
@@ -115,7 +117,7 @@ export function StockView({
   }, [editingId]);
 
   async function handleDelete(l: Location) {
-    if (!confirm(`Lagerplatz "${l.code}" wirklich löschen?`)) return;
+    if (!(await confirm({ title: `Lagerplatz "${l.code}" wirklich löschen?`, confirmLabel: "Löschen", destructive: true }))) return;
     const r = await fetch(`/api/v1/locations/${l.id}`, { method: "DELETE" });
     if (r.status === 204) {
       setFlash({ ok: true, text: `Lagerplatz "${l.code}" gelöscht` });

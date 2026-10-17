@@ -1,5 +1,7 @@
 "use client";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
+import { toast } from "sonner";
 import { DetailField as Field } from "@/components/ui/detail-field";
 
 import { useCallback, useEffect, useState } from "react";
@@ -69,6 +71,7 @@ export function ArticleDetailModal({
 }) {
   const router = useRouter();
   const tq = useTranslations("articles.quantities");
+  const confirm = useConfirm();
   const tz = useTranslations("articles.zone");
   const open = articleId !== null;
   const [article, setArticle] = useState<Article | null>(null);
@@ -154,7 +157,7 @@ export function ArticleDetailModal({
 
   async function deleteLink(l: ArticleSupplierLink) {
     if (!articleId) return;
-    if (!confirm(`Zuordnung zu "${l.supplier.name}" wirklich entfernen?`)) return;
+    if (!(await confirm({ title: `Zuordnung zu "${l.supplier.name}" wirklich entfernen?`, confirmLabel: "Entfernen", destructive: true }))) return;
     const r = await fetch(`/api/v1/articles/${articleId}/suppliers/${l.id}`, { method: "DELETE" });
     if (r.status === 204) {
       await refetchSuppliers();
@@ -572,14 +575,14 @@ export function ArticleDetailModal({
                     variant="outline"
                     className="text-rose-600 border-rose-200 hover:bg-rose-50"
                     onClick={async () => {
-                      if (!confirm(`Artikel "${article.name}" (${article.sku}) wirklich löschen?`)) return;
+                      if (!(await confirm({ title: `Artikel "${article.name}" (${article.sku}) wirklich löschen?`, confirmLabel: "Löschen", destructive: true }))) return;
                       const r = await fetch(`/api/v1/articles/${article.id}`, { method: "DELETE" });
                       if (r.status === 204) {
                         onClose();
                         router.refresh();
                       } else {
                         const body = await r.json().catch(() => ({}));
-                        alert(body.detail ?? body.title ?? "Löschen fehlgeschlagen");
+                        toast.error(body.detail ?? body.title ?? "Löschen fehlgeschlagen");
                       }
                     }}
                   >

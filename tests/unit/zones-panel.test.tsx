@@ -100,7 +100,6 @@ describe("ZonesPanel", () => {
   });
 
   it("409 beim Löschen zeigt „noch zugeordnet“", async () => {
-    vi.stubGlobal("confirm", vi.fn(() => true));
     stubFetch((url, init) =>
       init?.method === "DELETE"
         ? json({ title: "Zone in use", status: 409 }, 409)
@@ -109,18 +108,19 @@ describe("ZonesPanel", () => {
     renderWithIntl(<ZonesPanel initialZones={[trocken]} canManage />);
     const row = within(screen.getByRole("table")).getByText("Trocken").closest("tr")!;
     fireEvent.click(within(row).getByRole("button", { name: "Löschen" }));
+    fireEvent.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Löschen" }));
     expect(await screen.findByText("Zone ist noch Lagerplätzen oder Artikeln zugeordnet.")).toBeTruthy();
   });
 
   it("Löschen fragt nach und sendet DELETE", async () => {
-    const confirmFn = vi.fn(() => true);
-    vi.stubGlobal("confirm", confirmFn);
     const fetchFn = stubFetch((url, init) => (init?.method === "DELETE" ? json(null, 204) : json({ data: [] })));
     renderWithIntl(<ZonesPanel initialZones={[kuehl]} canManage />);
     const row = within(screen.getByRole("table")).getByText("Kühl").closest("tr")!;
     fireEvent.click(within(row).getByRole("button", { name: "Löschen" }));
+    const dlg = await screen.findByRole("alertdialog");
+    expect(fetchFn.mock.calls.some(([, i]) => (i as RequestInit | undefined)?.method === "DELETE")).toBe(false);
+    fireEvent.click(within(dlg).getByRole("button", { name: "Löschen" }));
     await waitFor(() => expect(screen.queryAllByText("Kühl")).toHaveLength(0));
-    expect(confirmFn).toHaveBeenCalled();
     expect(fetchFn.mock.calls.some(([u, i]) => u === "/api/v1/zones/z2" && (i as RequestInit).method === "DELETE")).toBe(true);
   });
 

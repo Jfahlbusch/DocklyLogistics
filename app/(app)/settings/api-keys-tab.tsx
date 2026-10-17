@@ -1,5 +1,6 @@
 "use client";
 
+import { useConfirm } from "@/components/ui/confirm-dialog";
 import { FlashBanner } from "@/components/ui/flash-banner";
 
 import { useEffect, useState } from "react";
@@ -32,6 +33,7 @@ function fmt(d: string | null) {
 
 export function ApiKeysTab({ role }: { role: string }) {
   const [keys, setKeys] = useState<KeyRow[]>([]);
+  const confirm = useConfirm();
   const [loading, setLoading] = useState(true);
   const [creating, setCreating] = useState(false);
   const [label, setLabel] = useState("");
@@ -80,7 +82,7 @@ export function ApiKeysTab({ role }: { role: string }) {
   }
 
   async function revoke(k: KeyRow) {
-    if (!confirm(`API-Key ${k.prefix}… widerrufen? Anwendungen mit diesem Key verlieren sofort den Zugriff.`)) return;
+    if (!(await confirm({ title: `API-Key ${k.prefix}… widerrufen?`, description: "Anwendungen mit diesem Key verlieren sofort den Zugriff.", confirmLabel: "Widerrufen", destructive: true }))) return;
     const r = await fetch(`/api/v1/me/api-keys/${k.id}`, { method: "DELETE" });
     if (r.status === 204) {
       setFlash({ ok: true, text: "API-Key widerrufen" });
