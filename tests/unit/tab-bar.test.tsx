@@ -23,6 +23,7 @@ describe("TabBar (unter 992 px)", () => {
     expect(links.map((l) => [l.getAttribute("aria-label"), l.getAttribute("href")])).toEqual([
       ["Übersicht", "/dashboard"],
       ["Einkauf", "/order-suggestions"],
+      ["Lagermodus", "/warehouse-mode"],
       ["Lager", "/stock"],
       ["Verwaltung", "/audit"],
     ]);
@@ -30,17 +31,37 @@ describe("TabBar (unter 992 px)", () => {
   });
 
   it("markiert den Bereich der aktuellen Seite und zeigt nur dort das Label", () => {
-    nav.pathname = "/warehouse-mode/scan";
+    nav.pathname = "/articles/abc";
     renderWithIntl(<TabBar role="USER" />);
     const active = screen.getByRole("link", { current: "page" });
     expect(active).toHaveAttribute("aria-label", "Lager");
     expect(active).toHaveTextContent("Lager");
+    // mit Lagermodus-Taste: Label erst ab 430 px Breite sichtbar (6 Tasten passen sonst nicht in 375 px)
+    expect(active.querySelector("span")).toHaveClass("hidden", "min-[430px]:inline");
     expect(screen.getByRole("link", { name: "Einkauf" })).toHaveTextContent("");
   });
 
   it("respektiert die Feature-Rechte: Ziel = erster erlaubter Eintrag, leere Bereiche entfallen", () => {
-    renderWithIntl(<TabBar role="USER" allowed={["dashboard", "orders", "warehouse"]} />);
-    expect(screen.getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual(["/dashboard", "/orders", "/warehouse-mode"]);
+    renderWithIntl(<TabBar role="USER" allowed={["dashboard", "orders", "stock"]} />);
+    expect(screen.getAllByRole("link").map((l) => l.getAttribute("href"))).toEqual(["/dashboard", "/orders", "/stock"]);
+  });
+
+  // Nutzerwunsch 18.10.2026: Lagermodus als eigene, hervorgehobene Taste in der Mitte der mobilen Leiste.
+  it("zeigt den Lagermodus als hervorgehobene Taste in der Mitte und markiert ihn auf /warehouse-mode", () => {
+    nav.pathname = "/warehouse-mode";
+    renderWithIntl(<TabBar role="USER" />);
+    const scan = screen.getByRole("link", { name: "Lagermodus" });
+    expect(scan).toHaveAttribute("href", "/warehouse-mode");
+    expect(scan).toHaveAttribute("aria-current", "page");
+    expect(screen.getByRole("link", { name: "Lager" })).not.toHaveAttribute("aria-current");
+    expect(scan).toHaveAttribute("data-slot", "tab-scan");
+    expect(scan.className).toContain("rounded-full");
+  });
+
+  it("blendet den Lagermodus ohne Feature-Recht aus", () => {
+    renderWithIntl(<TabBar role="USER" allowed={["dashboard", "stock", "articles"]} />);
+    expect(screen.queryByRole("link", { name: "Lagermodus" })).not.toBeInTheDocument();
+    expect(screen.getAllByRole("link").map((l) => l.getAttribute("aria-label"))).toEqual(["Übersicht", "Lager"]);
   });
 
   it("öffnet über den Such-Tab die ⌘K-Palette", () => {

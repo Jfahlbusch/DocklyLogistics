@@ -1,12 +1,12 @@
 "use client";
 
-import { Search } from "lucide-react";
+import { ScanLine, Search } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { Link, usePathname } from "@/i18n/navigation";
 import { useScrollingDown } from "@/hooks/use-scroll-direction";
 import { openSearch } from "@/components/search/open-search";
 import type { UserRole } from "@/lib/auth/role";
-import { areaHref, findActiveEntry, visibleAreas } from "@/lib/navigation";
+import { areaHref, findActiveEntry, visibleAreas, visibleEntries } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 
 /** Symbolgröße der Tabs in px (Lucide `size`). */
@@ -27,7 +27,8 @@ export const TAB_BAR_CLASS =
   "fixed bottom-[calc(env(safe-area-inset-bottom)+1rem)] left-1/2 -translate-x-1/2 z-40 flex max-w-[calc(100vw-1rem)] min-[400px]:max-w-[calc(100vw-2rem)] items-center gap-2 rounded-full border border-sidebar-foreground/10 bg-sidebar p-1 text-sidebar-foreground shadow-lg transition-transform duration-200 motion-reduce:transition-none nav:hidden [@media(prefers-reduced-transparency:no-preference)]:bg-sidebar/95 [@media(prefers-reduced-transparency:no-preference)]:backdrop-blur";
 
 /**
- * Schwebende Tab-Pill unterhalb `lg` = 992 px, dem Breakpoint des Portal-Menüs (A8.18): je sichtbarem Bereich ein Tab plus Such-Tab. Beim
+ * Schwebende Tab-Pill unterhalb `lg` = 992 px, dem Breakpoint des Portal-Menüs (A8.18): je sichtbarem Bereich ein Tab, in der Mitte die
+ * hervorgehobene Lagermodus-Taste (Nutzerwunsch 18.10.2026, nur mit Feature-Recht), am Ende der Such-Tab. Beim
  * Herunterscrollen zeigt sie nur noch Icons (`data-minimized`); im Normalzustand trägt nur der aktive
  * Bereich sein Label in der Gold-Kapsel, alle Tabs haben einen übersetzten Namen (`aria-label`). Liegt unter Dialogen und Sheets (`z-50`).
  */
@@ -35,7 +36,30 @@ export function TabBar({ role, allowed }: { role: UserRole; allowed?: readonly s
   const t = useTranslations();
   const pathname = usePathname();
   const minimized = useScrollingDown();
-  const activeArea = findActiveEntry(pathname)?.area ?? "overview";
+  const activeEntry = findActiveEntry(pathname);
+  // Lagermodus ist eine eigene Taste (Nutzerwunsch 18.10.2026) — auf /warehouse-mode ist sie aktiv, nicht der Bereich „Lager“.
+  const scanEntry = visibleEntries(role, undefined, allowed).find((entry) => entry.id === "warehouse");
+  const scanActive = !!scanEntry && activeEntry?.id === scanEntry.id;
+  const activeArea = scanActive ? null : (activeEntry?.area ?? "overview");
+  const areaTabs = visibleAreas(role, undefined, allowed).filter((area) => areaHref(area.id, role, undefined, allowed));
+  const scanAt = Math.ceil(areaTabs.length / 2);
+
+  const scanTab = scanEntry ? (
+    <Link
+      key="scan"
+      href={scanEntry.href}
+      data-slot="tab-scan"
+      aria-current={scanActive ? "page" : undefined}
+      aria-label={t(scanEntry.labelKey)}
+      className={cn(
+        TAB_CLASS,
+        "size-11 shrink-0 rounded-full border-2 px-0",
+        scanActive ? "border-gold-500 bg-gold-500 text-navy-900" : "border-gold-400 text-gold-400 hover:bg-gold-400/15",
+      )}
+    >
+      <ScanLine size={TAB_ICON_PX} strokeWidth={1.75} aria-hidden />
+    </Link>
+  ) : null;
 
   return (
     <nav
@@ -43,16 +67,15 @@ export function TabBar({ role, allowed }: { role: UserRole; allowed?: readonly s
       data-minimized={minimized ? "true" : "false"}
       className={TAB_BAR_CLASS}
     >
-      {visibleAreas(role, undefined, allowed).map((area) => {
-        const href = areaHref(area.id, role, undefined, allowed);
-        if (!href) return null;
+      {areaTabs.flatMap((area, index) => {
+        const href = areaHref(area.id, role, undefined, allowed)!;
         const Icon = area.icon;
         const label = t(area.labelKey);
         // Kurzform nur für das sichtbare Label der Kapsel (8 px Abstand, 343 px nutzbar bei 375 px); der zugängliche Name
         // bleibt die volle Bezeichnung und enthält den sichtbaren Text (WCAG 2.5.3).
         const visibleLabel = area.id === "admin" ? t("shell.tabBar.adminShort") : label;
         const active = area.id === activeArea;
-        return (
+        const tab = (
           <Link
             key={area.id}
             href={href}
@@ -66,9 +89,12 @@ export function TabBar({ role, allowed }: { role: UserRole; allowed?: readonly s
             )}
           >
             <Icon size={TAB_ICON_PX} strokeWidth={1.5} aria-hidden />
-            {active && !minimized ? <span className="min-w-0 truncate">{visibleLabel}</span> : null}
+            {/* Mit Lagermodus-Taste sind es 6 Tasten (~380 px mit Label) — das Label erst ab 430 px, darunter nur das Symbol (Name bleibt aria-label). */}
+            {active && !minimized ? <span className={cn("min-w-0 truncate", scanTab && "hidden min-[430px]:inline")}>{visibleLabel}</span> : null}
           </Link>
         );
+        // Lagermodus-Taste in der Mitte der Bereichs-Tabs.
+        return index === scanAt - 1 && scanTab ? [tab, scanTab] : [tab];
       })}
       <button
         type="button"
