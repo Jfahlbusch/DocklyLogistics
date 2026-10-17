@@ -269,4 +269,55 @@ describe("regenerateAutoSuggestions", () => {
     });
     expect(open).toHaveLength(1);
   });
+
+  // --- An-B4: Auffuellen bis zur empfohlenen Menge --------------------------
+
+  it("fuellt bis zur empfohlenen Menge auf (min 100, empfohlen 300, Bestand 80, packFactor 25 -> 9)", async () => {
+    const t = await prisma.article.create({
+      data: { ...articleBase, sku: "ENG-TARGET", packFactor: 25, minStock: 100, targetStock: 300 },
+    });
+    await prisma.stockBalance.create({
+      data: { tenantId: TENANT_ID, articleId, locationId, quantity: 60 },
+    });
+    await prisma.stockBalance.create({
+      data: { tenantId: TENANT_ID, articleId: t.id, locationId, quantity: 80 },
+    });
+    try {
+      const r = await prisma.$transaction((tx) =>
+        regenerateAutoSuggestions(tx, TENANT_ID, "test"),
+      );
+      expect(r.created).toBe(1);
+      const s = await prisma.orderSuggestion.findMany({ where: { tenantId: TENANT_ID } });
+      expect(s).toHaveLength(1);
+      expect(s[0].articleId).toBe(t.id);
+      // (300 - 80) / 25 = 8,8 -> 9
+      expect(s[0].qtyOrderUnit).toBe(9);
+    } finally {
+      await prisma.orderSuggestion.deleteMany({ where: { tenantId: TENANT_ID } });
+      await prisma.stockBalance.deleteMany({ where: { articleId: t.id } });
+      await prisma.article.delete({ where: { id: t.id } });
+    }
+  });
+
+  it("loest bei Bestand ueber minStock nicht aus, auch wenn targetStock gesetzt ist", async () => {
+    const t = await prisma.article.create({
+      data: { ...articleBase, sku: "ENG-TARGET2", packFactor: 25, minStock: 100, targetStock: 300 },
+    });
+    await prisma.stockBalance.create({
+      data: { tenantId: TENANT_ID, articleId, locationId, quantity: 60 },
+    });
+    await prisma.stockBalance.create({
+      data: { tenantId: TENANT_ID, articleId: t.id, locationId, quantity: 150 },
+    });
+    try {
+      const r = await prisma.$transaction((tx) =>
+        regenerateAutoSuggestions(tx, TENANT_ID, "test"),
+      );
+      expect(r.created).toBe(0);
+      expect(r.skippedAtOrAboveMin).toBe(2);
+    } finally {
+      await prisma.stockBalance.deleteMany({ where: { articleId: t.id } });
+      await prisma.article.delete({ where: { id: t.id } });
+    }
+  });
 });

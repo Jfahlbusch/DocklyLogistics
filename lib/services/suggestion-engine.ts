@@ -1,4 +1,5 @@
 import type { Prisma } from "@prisma/client";
+import { suggestedOrderQty } from "@/lib/domain/article-quantities";
 
 type EngineResult = {
   created: number;
@@ -9,7 +10,8 @@ type EngineResult = {
 /**
  * Recompute AUTO_MIN_STOCK suggestions for every article whose total stock is below minStock.
  * For each such article, create a PENDING suggestion if the article has no open (PENDING) suggestion of any reason.
- * Quantity is ceil((minStock - currentStock) / packFactor), in OrderUnit.
+ * Trigger: stock < minStock. Quantity (OrderUnit) fills up to targetStock (else minStock) via
+ * suggestedOrderQty, at least 1.
  * Primary supplier (ArticleSupplier.isPrimary=true) is preselected, else null.
  */
 export async function regenerateAutoSuggestions(
@@ -19,7 +21,7 @@ export async function regenerateAutoSuggestions(
 ): Promise<EngineResult> {
   const articles = await tx.article.findMany({
     where: { tenantId, active: true },
-    select: { id: true, sku: true, name: true, minStock: true, packFactor: true },
+    select: { id: true, sku: true, name: true, minStock: true, targetStock: true, packFactor: true },
   });
 
   const ids = articles.map((a) => a.id);
@@ -65,8 +67,7 @@ export async function regenerateAutoSuggestions(
       continue;
     }
 
-    const shortfall = a.minStock - current;
-    const qty = Math.max(1, Math.ceil(shortfall / Math.max(1, a.packFactor)));
+    const qty = Math.max(1, suggestedOrderQty(a, current));
 
     await tx.orderSuggestion.create({
       data: {
