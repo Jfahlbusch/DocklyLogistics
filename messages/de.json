@@ -82,5 +82,15 @@
     "audit": "Audit",
     "settings": "Einstellungen",
     "admin": "Administration"
+  },
+  "articles": {
+    "quantities": {
+      "minStock": "Mindestmenge",
+      "targetStock": "Empfohlene Menge",
+      "maxStock": "Maximalmenge (Lagerkapazität)",
+      "notSet": "—",
+      "optionalHint": "Optional – leer lassen, wenn nicht gesetzt.",
+      "detailTitle": "Mengen"
+    }
   }
 }

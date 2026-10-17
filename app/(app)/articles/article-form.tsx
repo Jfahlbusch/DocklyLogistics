@@ -3,6 +3,8 @@
 import { FormField as Field } from "@/components/ui/form-field";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
+import { validateStockLevels } from "@/lib/domain/article-quantities";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +23,8 @@ export type ArticleFormValues = {
   packFactor: number;
   barcodeSource: typeof BARCODE_SOURCES[number];
   minStock: number;
+  targetStock?: number | null;
+  maxStock?: number | null;
   defaultLocationId?: string | null;
   vatRate?: number | null;
 };
@@ -42,12 +46,18 @@ type Props = {
   isCreate: boolean;
   busy: boolean;
   errorMessage?: string | null;
+  /** Feldfehler aus einer 422-Antwort (`errors: { feld: [meldung] }`). */
+  fieldErrors?: Record<string, string[]> | null;
   onSubmit: (values: ArticleFormValues) => Promise<void>;
   onCancel: () => void;
 };
 
-export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, onCancel }: Props) {
+export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors, onSubmit, onCancel }: Props) {
+  const t = useTranslations("articles.quantities");
   const [v, setV] = useState<ArticleFormValues>(initial);
+  const [minText, setMinText] = useState(String(initial.minStock ?? 0));
+  const [targetText, setTargetText] = useState(initial.targetStock == null ? "" : String(initial.targetStock));
+  const [maxText, setMaxText] = useState(initial.maxStock == null ? "" : String(initial.maxStock));
   const [locations, setLocations] = useState<Location[]>([]);
 
   useEffect(() => {
@@ -73,6 +83,16 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, o
     setV((cur) => ({ ...cur, [k]: val }));
   }
 
+  const minStock = parseQty(minText) ?? 0;
+  const targetStock = parseQty(targetText);
+  const maxStock = parseQty(maxText);
+  const liveErrors: Record<string, string[]> = {};
+  for (const err of validateStockLevels({ minStock, targetStock, maxStock })) {
+    (liveErrors[err.field] ??= []).push(err.message);
+  }
+  const qtyErrors = (field: string) => [...(fieldErrors?.[field] ?? []), ...(liveErrors[field] ?? [])]
+    .filter((m, i, all) => all.indexOf(m) === i);
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     // Strip empty optional strings before submitting (so backend Zod doesn't reject "" with min(1))
@@ -88,7 +108,9 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, o
           ? undefined
           : Number(v.vatRate),
       packFactor: Number(v.packFactor) || 1,
-      minStock: Number(v.minStock) || 0,
+      minStock,
+      targetStock,
+      maxStock,
     };
     onSubmit(clean);
   }
@@ -193,15 +215,6 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, o
             options={BARCODE_SOURCES}
           />
         </Field>
-        <Field label="Mindestbestand">
-          <Input
-            type="number"
-            min={0}
-            step={1}
-            value={v.minStock}
-            onChange={(e) => set("minStock", Math.max(0, Number(e.target.value)))}
-          />
-        </Field>
         <Field label="MwSt %">
           <Input
             type="number"
@@ -213,6 +226,34 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, o
           />
         </Field>
       </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <QtyField
+          name="minStock"
+          label={t("minStock")}
+          unit={v.baseUnit}
+          value={minText}
+          onChange={setMinText}
+          errors={qtyErrors("minStock")}
+        />
+        <QtyField
+          name="targetStock"
+          label={t("targetStock")}
+          unit={v.baseUnit}
+          value={targetText}
+          onChange={setTargetText}
+          errors={qtyErrors("targetStock")}
+        />
+        <QtyField
+          name="maxStock"
+          label={t("maxStock")}
+          unit={v.baseUnit}
+          value={maxText}
+          onChange={setMaxText}
+          errors={qtyErrors("maxStock")}
+        />
+      </div>
+      <p className="text-xs text-muted-foreground -mt-2">{t("optionalHint")}</p>
 
       <Field label="Standard-Lagerplatz">
         <Select
@@ -241,6 +282,60 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, onSubmit, o
   );
 }
 
+
+/** Leer oder ungültig = null, sonst ganze Zahl ≥ 0. */
+function parseQty(text: string): number | null {
+  const trimmed = text.trim();
+  if (trimmed === "") return null;
+  const n = Number(trimmed);
+  return Number.isFinite(n) && n >= 0 ? Math.floor(n) : null;
+}
+
+function QtyField({
+  name,
+  label,
+  unit,
+  value,
+  onChange,
+  errors,
+}: {
+  name: string;
+  label: string;
+  unit: string;
+  value: string;
+  onChange: (v: string) => void;
+  errors: string[];
+}) {
+  const invalid = errors.length > 0;
+  const errId = `qty-${name}-error`;
+  return (
+    <Field label={label}>
+      <div className="relative">
+        <Input
+          name={name}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
+          value={value}
+          onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
+          aria-invalid={invalid ? true : undefined}
+          aria-describedby={invalid ? errId : undefined}
+          className="pr-12 text-base"
+        />
+        <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">
+          {unit}
+        </span>
+      </div>
+      {invalid && (
+        <div id={errId} role="alert" className="mt-1 text-xs text-destructive">
+          {errors.map((m) => (
+            <p key={m}>{m}</p>
+          ))}
+        </div>
+      )}
+    </Field>
+  );
+}
 
 function Select({
   value,

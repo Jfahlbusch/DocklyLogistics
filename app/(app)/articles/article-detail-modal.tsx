@@ -4,6 +4,7 @@ import { DetailField as Field } from "@/components/ui/detail-field";
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import {
   Dialog,
   DialogContent,
@@ -34,6 +35,8 @@ type Article = {
   packFactor: number;
   barcodeSource: string;
   minStock: number;
+  targetStock?: number | null;
+  maxStock?: number | null;
   defaultLocationId: string | null;
   vatRate: string | null;
 };
@@ -61,6 +64,7 @@ export function ArticleDetailModal({
   onClose: () => void;
 }) {
   const router = useRouter();
+  const tq = useTranslations("articles.quantities");
   const open = articleId !== null;
   const [article, setArticle] = useState<Article | null>(null);
   const [suppliers, setSuppliers] = useState<ArticleSupplierLink[]>([]);
@@ -70,6 +74,7 @@ export function ArticleDetailModal({
   const [editing, setEditing] = useState(false);
   const [editBusy, setEditBusy] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [editFieldErrors, setEditFieldErrors] = useState<Record<string, string[]> | null>(null);
   const [linkDialog, setLinkDialog] = useState<
     null | { mode: "create" } | { mode: "edit"; link: ArticleSupplierLink }
   >(null);
@@ -93,6 +98,7 @@ export function ArticleDetailModal({
       setBarcode(null);
       setEditing(false);
       setEditError(null);
+      setEditFieldErrors(null);
       setLinkDialog(null);
       setLinkError(null);
       return;
@@ -242,7 +248,9 @@ export function ArticleDetailModal({
                   label="Verpackungsfaktor"
                   value={`${article.packFactor} ${article.baseUnit} / ${article.orderUnit}`}
                 />
-                <Field label="Mindestbestand" value={String(article.minStock)} />
+                <QtyDetail testId="qty-minStock" label={tq("minStock")} value={article.minStock} unit={article.baseUnit} notSet={tq("notSet")} />
+                <QtyDetail testId="qty-targetStock" label={tq("targetStock")} value={article.targetStock} unit={article.baseUnit} notSet={tq("notSet")} />
+                <QtyDetail testId="qty-maxStock" label={tq("maxStock")} value={article.maxStock} unit={article.baseUnit} notSet={tq("notSet")} />
                 {article.longDesc && <Field label="Beschreibung" value={article.longDesc} />}
               </TabsContent>
 
@@ -451,13 +459,16 @@ export function ArticleDetailModal({
                 isCreate={false}
                 busy={editBusy}
                 errorMessage={editError}
+                fieldErrors={editFieldErrors}
                 onCancel={() => {
                   setEditing(false);
                   setEditError(null);
+                  setEditFieldErrors(null);
                 }}
                 onSubmit={async (values) => {
                   setEditBusy(true);
                   setEditError(null);
+                  setEditFieldErrors(null);
                   try {
                     // Strip sku from PATCH (immutable per UX); also strip empty optionals.
                     const { sku: _sku, ...patch } = values;
@@ -475,6 +486,9 @@ export function ArticleDetailModal({
                       setArticle(fresh?.data ?? null);
                       router.refresh();
                     } else {
+                      if (r.status === 422 && body.errors && typeof body.errors === "object") {
+                        setEditFieldErrors(body.errors);
+                      }
                       setEditError(body.detail ?? body.title ?? "Fehler beim Speichern");
                     }
                   } finally {
@@ -585,9 +599,31 @@ function articleToFormValues(a: Article): ArticleFormValues {
     packFactor: a.packFactor,
     barcodeSource: a.barcodeSource as ArticleFormValues["barcodeSource"],
     minStock: a.minStock,
+    targetStock: a.targetStock ?? null,
+    maxStock: a.maxStock ?? null,
     defaultLocationId: a.defaultLocationId ?? undefined,
     vatRate: a.vatRate === null ? undefined : Number(a.vatRate),
   };
+}
+
+function QtyDetail({
+  testId,
+  label,
+  value,
+  unit,
+  notSet,
+}: {
+  testId: string;
+  label: string;
+  value: number | null | undefined;
+  unit: string;
+  notSet: string;
+}) {
+  return (
+    <div data-testid={testId}>
+      <Field label={label} value={value == null ? notSet : `${value} ${unit}`} />
+    </div>
+  );
 }
 
 function Kpi({ label, value }: { label: string; value: string }) {

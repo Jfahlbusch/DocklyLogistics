@@ -57,6 +57,7 @@ export function ArticlesView({
   const [creating, setCreating] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [createFieldErrors, setCreateFieldErrors] = useState<Record<string, string[]> | null>(null);
   const [createMessage, setCreateMessage] = useState<{ ok: boolean; text: string } | null>(null);
 
   function onSearch(e: React.FormEvent) {
@@ -222,13 +223,16 @@ export function ArticlesView({
             isCreate
             busy={createBusy}
             errorMessage={createError}
+            fieldErrors={createFieldErrors}
             onCancel={() => {
               setCreating(false);
               setCreateError(null);
+              setCreateFieldErrors(null);
             }}
             onSubmit={async (values: ArticleFormValues) => {
               setCreateBusy(true);
               setCreateError(null);
+              setCreateFieldErrors(null);
               try {
                 const r = await fetch("/api/v1/articles", {
                   method: "POST",
@@ -241,6 +245,9 @@ export function ArticlesView({
                   setCreating(false);
                   startTransition(() => router.refresh());
                 } else {
+                  if (r.status === 422 && body.errors && typeof body.errors === "object") {
+                    setCreateFieldErrors(body.errors);
+                  }
                   setCreateError(body.detail ?? body.title ?? "Fehler beim Anlegen");
                 }
               } finally {
