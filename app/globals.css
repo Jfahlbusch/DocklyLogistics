@@ -75,6 +75,9 @@
   --color-chart-3: var(--chart-3);
   --color-chart-2: var(--chart-2);
   --color-chart-1: var(--chart-1);
+  --color-chart-compare: var(--chart-compare);
+  --color-chart-reference: var(--chart-reference);
+  --color-chart-heatmap: var(--chart-heatmap);
   --color-ring: var(--ring);
   --color-input: var(--input);
   --color-border: var(--border);
@@ -122,11 +125,25 @@
   --border: hsl(220 13% 91%);
   --input: hsl(220 13% 91%);
   --ring: hsl(189 74% 8%);
+  /* Status-Text auf --card/--background (Kontrast auf Weiss, WCAG):
+     success 5,35:1 · warning 5,27:1 · danger 5,97:1 · info 5,36:1 (gerechnet) */
+  --status-success: #1A7A4A;
+  --status-warning: #9A5E12;
+  --status-danger: #B8312F;
+  --status-info: #0B6FB0;
   --chart-1: hsl(189 74% 18%);
   --chart-2: hsl(44 100% 49%);
   --chart-3: hsl(189 45% 35%);
   --chart-4: hsl(30 75% 50%);
   --chart-5: hsl(200 96% 46%);
+  /* Diagramm-Rollen (Design → Diagramme): Vergleich/Vorjahr, Ø-/Ziellinien,
+     Heatmap. Schrift auf Heatmap-Zellen: dunkel, auf kräftigen Zellen je nach
+     Heatmap-Farbe (branding-css.ts leitet --chart-heatmap-fg-strong ab). */
+  --chart-compare: hsl(220 9% 46%);
+  --chart-reference: #FCB900;
+  --chart-heatmap: #FCB900;
+  --chart-heatmap-fg: #041E24;
+  --chart-heatmap-fg-strong: #041E24;
   --sidebar: hsl(189 74% 8%);
   --sidebar-foreground: hsl(0 0% 100%);
   --sidebar-primary: hsl(44 100% 49%);
@@ -158,11 +175,22 @@
   --border: hsl(189 22% 20%);
   --input: hsl(189 22% 20%);
   --ring: hsl(44 100% 52%);
+  /* Status-Text auf --card dunkel (Kontrast, WCAG):
+     success 6,84:1 · warning 7,60:1 · danger 6,39:1 · info 7,58:1 (gerechnet) */
+  --status-success: #4CB77A;
+  --status-warning: #E0A048;
+  --status-danger: #F07B78;
+  --status-info: #5FB4EF;
   --chart-1: hsl(44 100% 52%);
   --chart-2: hsl(189 45% 55%);
   --chart-3: hsl(30 80% 58%);
   --chart-4: hsl(151 50% 46%);
   --chart-5: hsl(200 90% 60%);
+  --chart-compare: hsl(210 14% 66%);
+  --chart-reference: #FCB900;
+  --chart-heatmap: #FCB900;
+  --chart-heatmap-fg: #041E24;
+  --chart-heatmap-fg-strong: #041E24;
   --sidebar: hsl(189 40% 11%);
   --sidebar-foreground: hsl(48 33% 94%);
   --sidebar-primary: hsl(44 100% 52%);
