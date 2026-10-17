@@ -2,6 +2,7 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { MD_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import {
   ResponsiveContainer,
   BarChart,
@@ -14,6 +15,7 @@ import {
   Pie,
   Cell,
   Legend,
+  LabelList,
 } from "recharts";
 
 type Summary = {
@@ -54,6 +56,8 @@ export function ReportsView({
   bySupplier: SupplierRow[];
   yearStart: string;
 }) {
+  const isDesktop = useMediaQuery(MD_QUERY, true);
+  const topSuppliers = bySupplier.slice(0, 8);
   const totalSent =
     (summary.byStatus.SENT?.count ?? 0) +
     (summary.byStatus.CONFIRMED?.count ?? 0) +
@@ -110,18 +114,23 @@ export function ReportsView({
             {statusPie.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground text-sm">Keine Daten.</div>
             ) : (
-              <div style={{ width: "100%", height: 280 }}>
+              <>
+              <div style={{ width: "100%", height: isDesktop ? 280 : 220 }}>
                 <ResponsiveContainer>
                   <PieChart>
                     <Pie
                       data={statusPie}
                       dataKey="count"
                       nameKey="status"
-                      outerRadius={100}
-                      label={(e: unknown) => {
-                        const x = e as { status?: string; count?: number };
-                        return `${x.status}: ${x.count}`;
-                      }}
+                      outerRadius={isDesktop ? 100 : 80}
+                      label={
+                        isDesktop
+                          ? (e: unknown) => {
+                              const x = e as { status?: string; count?: number };
+                              return `${x.status}: ${x.count}`;
+                            }
+                          : false
+                      }
                     >
                       {statusPie.map((s) => (
                         <Cell key={s.status} fill={s.fill} />
@@ -131,6 +140,17 @@ export function ReportsView({
                   </PieChart>
                 </ResponsiveContainer>
               </div>
+              {/* Mobil: Legende mit Werten statt Außen-Labels */}
+              <ul data-slot="status-legend" className="mt-3 space-y-1.5 text-sm md:hidden">
+                {statusPie.map((s) => (
+                  <li key={s.status} className="flex items-center gap-2">
+                    <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: s.fill }} aria-hidden="true" />
+                    <span className="flex-1 text-foreground">{s.status}</span>
+                    <span className="font-medium">{s.count}</span>
+                  </li>
+                ))}
+              </ul>
+              </>
             )}
           </CardContent>
         </Card>
@@ -146,29 +166,56 @@ export function ReportsView({
             {bySupplier.length === 0 ? (
               <div className="py-10 text-center text-muted-foreground text-sm">Keine Daten.</div>
             ) : (
-              <div style={{ width: "100%", height: 280 }}>
+              <div style={{ width: "100%", height: isDesktop ? 280 : Math.max(220, topSuppliers.length * 44 + 40) }}>
                 <ResponsiveContainer>
-                  <BarChart
-                    data={bySupplier.slice(0, 8)}
-                    margin={{ top: 8, right: 24, bottom: 16, left: 8 }}
-                  >
-                    <CartesianGrid stroke="#E7E5E4" strokeDasharray="3 3" />
-                    <XAxis
-                      dataKey="supplierName"
-                      tick={{ fontSize: 11, fill: "#78716C" }}
-                      interval={0}
-                      angle={-12}
-                      textAnchor="end"
-                      height={56}
-                    />
-                    <YAxis
-                      tick={{ fontSize: 11, fill: "#78716C" }}
-                      tickFormatter={(v: number) => v.toLocaleString("de-DE")}
-                    />
-                    <Tooltip formatter={(v) => fmtEur(Number(v ?? 0))} />
-                    <Legend />
-                    <Bar name="Volume (EUR)" dataKey="volume" fill="#0F2A44" />
-                  </BarChart>
+                  {isDesktop ? (
+                    <BarChart
+                      data={topSuppliers}
+                      margin={{ top: 8, right: 24, bottom: 16, left: 8 }}
+                    >
+                      <CartesianGrid stroke="#E7E5E4" strokeDasharray="3 3" />
+                      <XAxis
+                        dataKey="supplierName"
+                        tick={{ fontSize: 11, fill: "#78716C" }}
+                        interval={0}
+                        angle={-12}
+                        textAnchor="end"
+                        height={56}
+                      />
+                      <YAxis
+                        tick={{ fontSize: 11, fill: "#78716C" }}
+                        tickFormatter={(v: number) => v.toLocaleString("de-DE")}
+                      />
+                      <Tooltip formatter={(v) => fmtEur(Number(v ?? 0))} />
+                      <Legend />
+                      <Bar name="Volume (EUR)" dataKey="volume" fill="#0F2A44" />
+                    </BarChart>
+                  ) : (
+                    <BarChart
+                      layout="vertical"
+                      data={topSuppliers}
+                      margin={{ top: 4, right: 56, bottom: 4, left: 0 }}
+                    >
+                      <CartesianGrid stroke="#E7E5E4" strokeDasharray="3 3" horizontal={false} />
+                      <XAxis type="number" hide />
+                      <YAxis
+                        type="category"
+                        dataKey="supplierName"
+                        width={96}
+                        interval={0}
+                        tick={{ fontSize: 11, fill: "#78716C" }}
+                      />
+                      <Tooltip formatter={(v) => fmtEur(Number(v ?? 0))} />
+                      <Bar name="Volume (EUR)" dataKey="volume" fill="#0F2A44">
+                        <LabelList
+                          dataKey="volume"
+                          position="right"
+                          formatter={(v: unknown) => Number(v ?? 0).toLocaleString("de-DE")}
+                          style={{ fontSize: 11, fill: "#78716C" }}
+                        />
+                      </Bar>
+                    </BarChart>
+                  )}
                 </ResponsiveContainer>
               </div>
             )}
@@ -180,7 +227,7 @@ export function ReportsView({
         <div className="px-5 py-4 border-b border-border">
           <h2 className="font-display text-lg text-foreground">Lieferanten-Tabelle</h2>
         </div>
-        <div className="overflow-x-auto">
+        <div className="hidden md:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -208,6 +255,24 @@ export function ReportsView({
               ))}
             </tbody>
           </table>
+        </div>
+
+        {/* Mobil: Karten statt Tabelle */}
+        <div data-slot="supplier-cards" className="divide-y divide-border md:hidden">
+          {bySupplier.length === 0 && (
+            <div className="py-8 text-center text-sm text-muted-foreground">Keine Daten.</div>
+          )}
+          {bySupplier.map((s) => (
+            <div key={s.supplierId} className="space-y-1 px-4 py-3 text-sm">
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="font-medium text-foreground">{s.supplierName}</span>
+                <span className="shrink-0 font-medium">{fmtEur(s.volume)}</span>
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {s.channel} · {s.orderCount} Bestellungen
+              </div>
+            </div>
+          ))}
         </div>
       </Card>
     </div>
