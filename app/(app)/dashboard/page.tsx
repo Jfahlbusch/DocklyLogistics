@@ -48,7 +48,7 @@ export default async function DashboardPage() {
         <Card className="shadow-soft">
           <div className="px-5 py-4 border-b border-border flex items-center justify-between">
             <h2 className="font-display text-lg text-foreground">Top Unterdeckungen</h2>
-            <Link href="/articles" className="text-xs text-foreground underline hover:text-navy-700">Alle Artikel</Link>
+            <Link href="/articles" className="inline-flex min-h-11 items-center text-xs text-foreground underline hover:text-navy-700 md:min-h-0">Alle Artikel</Link>
           </div>
           <CardContent className="p-0">
             {belowMin.length === 0 ? (
