@@ -9,7 +9,7 @@ export default async function PrintLayout({ children }: { children: React.ReactN
   const session = await auth();
   if (!session?.role || !session.tenant) redirect("/login");
   return (
-    <div className="min-h-dvh" style={{ background: "#fff", color: "#000", colorScheme: "light" }}>
+    <div className="print-surface min-h-dvh">
       {children}
     </div>
   );

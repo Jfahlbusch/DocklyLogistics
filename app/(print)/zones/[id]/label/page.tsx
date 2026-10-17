@@ -42,7 +42,7 @@ export default async function ZoneLabelPage({ params }: { params: Promise<{ id: 
           className="w-full max-w-[80mm] [&>svg]:h-auto [&>svg]:w-full"
           dangerouslySetInnerHTML={{ __html: svg }}
         />
-        <p className="text-xs" style={{ color: "#333" }}>
+        <p className="text-xs text-muted-foreground">
           {t("caption", { tenant: tenant?.name ?? session.tenant })}
         </p>
       </main>

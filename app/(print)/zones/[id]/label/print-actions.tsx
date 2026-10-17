@@ -13,16 +13,14 @@ export function PrintActions() {
       <button
         type="button"
         onClick={() => window.history.length > 1 ? window.history.back() : window.close()}
-        className={btn}
-        style={{ background: "#fff", color: "#000", borderColor: "#000" }}
+        className={`${btn} border-foreground bg-card text-foreground`}
       >
         {t("back")}
       </button>
       <button
         type="button"
         onClick={() => window.print()}
-        className={btn}
-        style={{ background: "#041E24", color: "#fff", borderColor: "#041E24" }}
+        className={`${btn} border-foreground bg-foreground text-card`}
       >
         <Printer aria-hidden className="size-4" />
         {t("print")}
