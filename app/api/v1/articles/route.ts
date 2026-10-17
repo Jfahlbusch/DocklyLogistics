@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
+import { storageLocationRepo } from "@/lib/db/repos/storage-location";
 import { articleRepo } from "@/lib/db/repos/article";
 import { appendAudit } from "@/lib/audit/append";
 import { auth } from "@/lib/auth";
@@ -22,6 +23,10 @@ export const POST = handler(async (req: NextRequest) => {
 
   const levelErrors = validateStockLevels(body);
   if (levelErrors.length) return failFields(levelErrors);
+
+  if (body.defaultLocationId && !(await storageLocationRepo.findById(ctx.tenantId, body.defaultLocationId))) {
+    return failFields([{ field: "defaultLocationId", message: "Lagerplatz nicht gefunden" }]);
+  }
 
   const dup = await articleRepo.findBySku(ctx.tenantId, body.sku);
   if (dup) return fail(409, "SKU already exists", `Article with SKU '${body.sku}' already exists.`);

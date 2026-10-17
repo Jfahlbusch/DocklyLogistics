@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
+import { storageLocationRepo } from "@/lib/db/repos/storage-location";
 import { articleRepo } from "@/lib/db/repos/article";
 import { appendAudit } from "@/lib/audit/append";
 import { auth } from "@/lib/auth";
@@ -34,6 +35,10 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
     maxStock: body.maxStock !== undefined ? body.maxStock : existing.maxStock,
   });
   if (levelErrors.length) return failFields(levelErrors);
+
+  if (body.defaultLocationId && !(await storageLocationRepo.findById(ctx.tenantId, body.defaultLocationId))) {
+    return failFields([{ field: "defaultLocationId", message: "Lagerplatz nicht gefunden" }]);
+  }
 
   const session = await auth();
   if (!session?.user) throw new UnauthenticatedError();
