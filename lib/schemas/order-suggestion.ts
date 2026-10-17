@@ -25,6 +25,11 @@ export const OrderSuggestionListQuerySchema = z.object({
   pageSize: z.coerce.number().int().min(1).max(500).default(100),
 });
 
+export const PendingSuggestionSetSchema = z.object({
+  qtyOrderUnit: z.number().int().min(0),
+  note: z.string().max(500).optional(),
+}).openapi("PendingSuggestionSet");
+
 export const BulkConfirmSchema = z.object({
   ids: z.array(z.string().cuid()).min(1).max(200),
 }).openapi("BulkConfirm");
@@ -97,4 +102,26 @@ registry.registerPath({
   summary: "Auto-Vorschläge neu berechnen",
   tags: ["Suggestions"],
   responses: { 200: { description: "Vorgangs-Statistik" } },
+});
+registry.registerPath({
+  method: "put",
+  path: "/articles/{id}/pending-suggestion",
+  summary: "Offenen Vorschlag eines Artikels setzen (ersetzen/anlegen/verwerfen)",
+  description:
+    "Menge > 0 ersetzt die Menge des offenen Vorschlags (Grund MANUAL_SCAN) oder legt einen an; Menge 0 verwirft einen offenen Vorschlag. " +
+    "Antwort enthält `capacityWarning` (Bestand + Menge × packFactor > maxStock); die Warnung lehnt nie ab.",
+  tags: ["Suggestions"],
+  request: {
+    params: z.object({ id: z.string().cuid() }),
+    body: { content: { "application/json": { schema: PendingSuggestionSetSchema } } },
+  },
+  responses: {
+    200: { description: "Offener Vorschlag aktualisiert bzw. verworfen: { data, capacityWarning }" },
+    201: { description: "Vorschlag angelegt: { data, capacityWarning }" },
+    204: { description: "Menge 0 ohne offenen Vorschlag – nichts zu tun" },
+    401: { description: "Nicht angemeldet" },
+    403: { description: "Rolle unzureichend (mind. USER)" },
+    404: { description: "Artikel nicht gefunden" },
+    422: { description: "Validierungsfehler" },
+  },
 });
