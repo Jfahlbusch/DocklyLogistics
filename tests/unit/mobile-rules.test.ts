@@ -48,7 +48,7 @@ describe("Mobil-Regeln für app/(app)", () => {
   it("setzt an <Input> kein nacktes text-sm/text-xs (hebt das mobile text-base auf, F-M45)", () => {
     const offenders: string[] = [];
     for (const { file, src } of pages) {
-      for (const m of src.matchAll(/<Input\b(?:=>|[^>])*>/gs)) {
+      for (const m of src.matchAll(/<Input\b(?:=>|[^>])*>/g)) {
         if (/className=/.test(m[0]) && /(^|[\s"'`])text-(sm|xs)\b/.test(m[0])) offenders.push(`${file}: ${m[0].slice(0, 80).replace(/\s+/g, " ")}`);
       }
     }
