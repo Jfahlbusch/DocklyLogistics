@@ -5,6 +5,7 @@ import { FlashBanner } from "@/components/ui/flash-banner";
 import { useEffect, useState, useTransition } from "react";
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
+import { QrCode } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
@@ -64,6 +65,7 @@ export function StockView({
   openZoneId?: string;
 }) {
   const tz = useTranslations("zones.tabs");
+  const tq = useTranslations("zones.qr");
   const [tab, setTab] = useState<string>(initialTab);
   const activeZones = zones.filter((z) => z.active).map((z) => ({ id: z.id, name: z.name }));
   const router = useRouter();
@@ -292,7 +294,23 @@ export function StockView({
           </div>
         </TabsContent>
         <TabsContent value="zones">
-          <ZonesPanel initialZones={zones} canManage={canManage} openId={openZoneId} />
+          <ZonesPanel
+            initialZones={zones}
+            canManage={canManage}
+            openId={openZoneId}
+            rowActions={(z) => (
+              <a
+                href={`/zones/${encodeURIComponent(z.id)}/label`}
+                target="_blank"
+                rel="noopener"
+                aria-label={tq("actionAria", { name: z.name })}
+                className="inline-flex min-h-11 items-center gap-1.5 rounded-lg border border-border px-3 text-sm text-foreground hover:bg-muted md:min-h-8 md:border-0 md:px-1 md:text-xs md:underline"
+              >
+                <QrCode aria-hidden className="size-4" />
+                {tq("action")}
+              </a>
+            )}
+          />
         </TabsContent>
       </Tabs>
 

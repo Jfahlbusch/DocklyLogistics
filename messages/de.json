@@ -140,6 +140,15 @@
       "actions": "Aktionen"
     },
     "cardCounts": "{locations} Lagerplätze · {articles} Artikel",
+    "qr": {
+      "action": "QR drucken",
+      "actionAria": "QR-Code der Zone „{name}“ drucken",
+      "print": "Drucken",
+      "back": "Zurück",
+      "caption": "Lagermodus-Rundgang · {tenant}",
+      "labelAria": "Etikett Zone {name}",
+      "qrAria": "QR-Code für den Rundgang der Zone {name}"
+    },
     "actions": {
       "create": "+ Zone",
       "createFirst": "Erste Zone anlegen",

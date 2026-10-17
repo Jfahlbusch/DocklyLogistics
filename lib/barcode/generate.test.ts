@@ -43,3 +43,18 @@ describe("generateBarcode", () => {
     })).rejects.toThrow();
   });
 });
+
+describe("generateBarcode qrcode", () => {
+  it("erzeugt SVG + PNG; PNG dekodiert (ZXing) zum Inhalt", async () => {
+    const { decodeQrPng } = await import("./decode-test-helper");
+    const url = "https://logistics.dockly.de/warehouse-mode?zone=ckabc%20123&x=ä";
+    const r = await generateBarcode({ format: "qrcode", source: "SKU", sku: url });
+    expect(r.format).toBe("qrcode");
+    expect(r.value).toBe(url);
+    expect(r.svg).toContain("<svg");
+    expect(decodeQrPng(Buffer.from(r.pngBase64, "base64"))).toBe(url);
+  });
+  it("verlangt einen Wert", async () => {
+    await expect(generateBarcode({ format: "qrcode", source: "SKU", sku: "" })).rejects.toThrow();
+  });
+});

@@ -39,3 +39,13 @@ registry.registerPath({
   request: { params: z.object({ id: ZoneIdSchema }) },
   responses: { 204: { description: "Gelöscht" }, 404: { description: "Nicht gefunden" }, 409: { description: "Zone ist Lagerplätzen oder Artikeln zugeordnet" } },
 });
+registry.registerPath({
+  method: "get", path: "/zones/{id}/qr", summary: "QR-Code der Zone (SVG) mit der Lagermodus-Rundgang-URL", tags: ["Zones"],
+  request: { params: z.object({ id: ZoneIdSchema }) },
+  responses: {
+    200: { description: "SVG (image/svg+xml); Inhalt: <APP_URL>/warehouse-mode?zone=<id>", content: { "image/svg+xml": { schema: z.string() } } },
+    401: { description: "Nicht angemeldet" },
+    404: { description: "Zone nicht gefunden" },
+    500: { description: "Basis-URL (NEXT_PUBLIC_APP_URL) nicht konfiguriert" },
+  },
+});

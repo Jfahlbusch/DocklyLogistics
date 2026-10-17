@@ -1,6 +1,6 @@
 import bwipjs from "bwip-js/node";
 
-export type BarcodeFormat = "code128" | "ean13";
+export type BarcodeFormat = "code128" | "ean13" | "qrcode";
 export type BarcodeSource = "SKU" | "EAN";
 
 export type BarcodeResult = {
@@ -42,7 +42,11 @@ export type GenerateInput = {
 export async function generateBarcode(input: GenerateInput): Promise<BarcodeResult> {
   let value: string;
 
-  if (input.format === "code128") {
+  if (input.format === "qrcode") {
+    // Freier Text (z. B. URL) — kommt über `sku`; EAN-Quelle wird nicht ausgewertet.
+    if (!input.sku) throw new Error("QR code requires a value");
+    value = input.sku;
+  } else if (input.format === "code128") {
     value = input.source === "SKU" ? input.sku : (input.eanGtin ?? input.sku);
   } else {
     // ean13
@@ -59,13 +63,24 @@ export async function generateBarcode(input: GenerateInput): Promise<BarcodeResu
     }
   }
 
-  const opts = {
-    bcid: input.format,
-    text: value,
-    scale: 3,
-    height: 12,
-    includetext: true,
-  };
+  const opts =
+    input.format === "qrcode"
+      ? {
+          bcid: "qrcode",
+          text: value,
+          scale: 4,
+          eclevel: "M", // ~15 % Fehlerkorrektur: robust genug für Druck/Kamera, Code bleibt grobmaschig
+          paddingwidth: 4, // Ruhezone (4 Module)
+          paddingheight: 4,
+          backgroundcolor: "FFFFFF",
+        }
+      : {
+          bcid: input.format,
+          text: value,
+          scale: 3,
+          height: 12,
+          includetext: true,
+        };
 
   const png = await bwipjs.toBuffer(opts);
   const svg = bwipjs.toSVG(opts);
