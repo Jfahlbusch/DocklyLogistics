@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, render, screen, waitFor, within } from "@testing-library/react";
 import { NextIntlClientProvider } from "next-intl";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import de from "../../messages/de.json";
@@ -113,13 +113,16 @@ describe("Navigation ohne Scrollfläche", () => {
     expect(screen.queryByRole("button", { name: "Einkauf" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Audit" })).not.toBeInTheDocument();
   });
-  it.each([true, false])("erreicht die Ziele im Popover (eingeklappt=%s)", (collapsed) => {
+  it.each([
+    { collapsed: true, area: "Verwaltung", link: "Einstellungen", href: "/settings", count: 3 },
+    { collapsed: false, area: "Lager", link: "Artikel / Rohstoffe", href: "/articles", count: 4 },
+  ])("erreicht die Ziele im Popover (eingeklappt=$collapsed)", ({ collapsed, area, link, href, count }) => {
     nav.short = !collapsed;
     renderNav({ collapsed });
-    fireEvent.click(screen.getByRole("button", { name: "Lager" }));
-    expect(screen.getByRole("dialog", { name: "Lager" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Artikel / Rohstoffe" })).toHaveAttribute("href", "/articles");
-    expect(screen.getAllByRole("link")).toHaveLength(4);
+    fireEvent.click(screen.getByRole("button", { name: area }));
+    const popup = screen.getByRole("dialog", { name: area });
+    expect(within(popup).getByRole("link", { name: link })).toHaveAttribute("href", href);
+    expect(within(popup).getAllByRole("link")).toHaveLength(count);
   });
   it("schließt den mobilen Drawer beim Navigieren", () => {
     const onNavigate = vi.fn();
@@ -192,16 +195,38 @@ describe("Portal-Aufbau der Bereiche (develop 1aff3fd)", () => {
     fireEvent.click(screen.getByRole("button", { name: "Verwaltung" }));
     expect(arrow()?.getAttribute("class")).toContain("rotate-180");
   });
-  it("zeigt eingeklappt (Rail) je Bereich eine Icon-Kachel ohne Überschrift und Pfeil, mit Trennlinie ab dem zweiten Bereich", () => {
+  it("zeigt eingeklappt (Rail) einen zugeklappten Bereich als Icon-Kachel ohne Überschrift und Pfeil, mit Trennlinie ab dem zweiten Bereich", () => {
     renderNav({ collapsed: true });
-    const trigger = screen.getByRole("button", { name: "Lager" });
+    const trigger = screen.getByRole("button", { name: "Verwaltung" });
     expect(trigger.textContent).toBe("");
     expect(trigger.querySelectorAll("svg")).toHaveLength(1);
-    expect(trigger).toHaveAttribute("title", "Lager");
+    expect(trigger).toHaveAttribute("title", "Verwaltung");
     expect(trigger).toHaveClass("justify-center", "rounded-[10px]", "border", "px-0");
     const groups = screen.getAllByRole("group");
     expect(groups[0]?.querySelector("[aria-hidden].border-t")).toBeNull();
     expect(groups[1]?.querySelector("[aria-hidden].border-t")).not.toBeNull();
+  });
+  // Nutzerwunsch 18.10.2026: Aufgeklappte Bereiche bleiben auch im eingeklappten Menü sichtbar — ihre Ziele stehen als Icon-Kacheln da.
+  it("zeigt eingeklappt die Ziele aufgeklappter Bereiche direkt als Icon-Kacheln (Name als Tooltip und aria-label)", () => {
+    renderNav({ collapsed: true, pathname: "/stock" });
+    expect(screen.queryByRole("button", { name: "Lager" })).not.toBeInTheDocument();
+    const stock = screen.getByRole("link", { name: "Lager & Bestand" });
+    expect(stock).toHaveAttribute("title", "Lager & Bestand");
+    expect(stock).toHaveAttribute("aria-current", "page");
+    expect(stock).toHaveClass("justify-center", "px-0");
+    expect(stock.querySelector("svg")?.parentElement?.className).toContain("text-gold-400");
+    for (const name of ["Dashboard", "Bestellvorschläge", "Bestellungen", "Lagermodus", "Artikel / Rohstoffe", "Lieferanten"]) {
+      expect(screen.getByRole("link", { name })).toHaveAttribute("title", name);
+    }
+    // zugeklappter Bereich bleibt Kachel mit Popover, seine Ziele sind nicht direkt sichtbar
+    expect(screen.queryByRole("link", { name: "Einstellungen" })).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Verwaltung" })).toBeInTheDocument();
+  });
+  it("lagert eingeklappt bei Platzmangel auch aufgeklappte Bereiche ins Popover aus (kein Scrollen)", () => {
+    nav.short = true;
+    renderNav({ collapsed: true });
+    expect(screen.getByRole("button", { name: "Lager" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Lagermodus" })).not.toBeInTheDocument();
   });
   it("gibt der Kachel die Maße des Portals: Rand 1 px, Radius 10 px, 16 px / 500, Abstand 12,8 px, Innenabstand 7,8 × 12,6 px", () => {
     renderNav({ pathname: "/articles" });

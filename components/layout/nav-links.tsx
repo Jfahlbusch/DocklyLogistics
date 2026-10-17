@@ -48,12 +48,14 @@ export function NavLinks({ role, allowed, collapsed, onNavigate }: {
 
   return (
     // Portal-Aufbau (.sidebar-scroll > .nav-sidebar): Bereiche mit Überschrift, Zielliste mit 1,6 px Abstand und 11,2 px Seitenrand.
-    // Eingeklappt (Rail) trennt eine Linie (16 px Rand) die Bereiche, jeder Bereich ist eine Kachel mit Popover.
+    // Eingeklappt (Rail) trennt eine Linie (16 px Rand) die Bereiche. Aufgeklappte Bereiche zeigen ihre Ziele als Icon-Kacheln (Nutzerwunsch
+    // 18.10.2026), zugeklappte sind eine Bereichskachel mit Popover; bei Platzmangel fällt jeder Bereich auf das Popover zurück.
     <nav ref={navRef} aria-label={t("shell.mainNavigation")} className="min-h-0 flex-1 overflow-hidden">
       {visibleAreas(role, undefined, allowed).map((area, index) => {
         const label = t(area.labelKey);
         const open = openAreas[area.id];
-        const flyout = collapsed || overflowAreas.has(area.id);
+        const flyout = overflowAreas.has(area.id) || (collapsed && !open);
+        const railOpen = collapsed && !flyout;
         const labelId = `${prefix}-${area.id}`;
         const trigger = (
           <NavAreaTrigger id={labelId} label={label} icon={area.icon} collapsed={collapsed} open={!flyout && open} current={active?.area === area.id}
@@ -63,7 +65,11 @@ export function NavLinks({ role, allowed, collapsed, onNavigate }: {
         return (
           <div key={area.id} role="group" aria-label={label} className="pt-2 short:pt-1 max-nav:pt-0 tiny:pt-0">
             {collapsed && index > 0 && <div aria-hidden className="mx-4 mb-1 border-t border-sidebar-border tiny:hidden" />}
-            {flyout ? (
+            {railOpen ? (
+              <div className="flex flex-col gap-[0.1rem] px-3 py-1 tiny:py-0.5">
+                <NavLinkList entries={entries} area={area.id} activeId={active?.id} inPopup={false} iconOnly onPick={pick} />
+              </div>
+            ) : flyout ? (
               <Popover open={popup === area.id} onOpenChange={(next) => setPopup(next ? area.id : null)}>
                 <div className={cn("relative", collapsed && "px-3 py-1 tiny:py-0.5")}>
                   <PopoverTrigger asChild>{trigger}</PopoverTrigger>

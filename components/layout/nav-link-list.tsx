@@ -6,14 +6,26 @@ import type { NavArea, NavEntry } from "@/lib/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_ICON_PX, navIconClass, navTileClass } from "./nav-item-class";
 
-/** Ziele eines Bereichs: im Menü Portal-Einträge, im Popover die hellen Popover-Zeilen. */
-export function NavLinkList({ entries, area, activeId, inPopup, onPick }: {
-  entries: readonly NavEntry[]; area: NavArea; activeId?: string; inPopup: boolean; onPick: () => void;
+/**
+ * Ziele eines Bereichs: im Menü Portal-Einträge, im Popover die hellen Popover-Zeilen. `iconOnly`: eingeklappte Leiste (Rail) —
+ * nur das Symbol als Kachel, Name als Tooltip (`title`) und zugänglicher Name (Nutzerwunsch 18.10.2026: aufgeklappte Bereiche bleiben sichtbar).
+ */
+export function NavLinkList({ entries, area, activeId, inPopup, iconOnly = false, onPick }: {
+  entries: readonly NavEntry[]; area: NavArea; activeId?: string; inPopup: boolean; iconOnly?: boolean; onPick: () => void;
 }) {
   const t = useTranslations();
   return entries.filter((entry) => entry.area === area).map((entry) => {
     const Icon = entry.icon;
     const selected = entry.id === activeId;
+    const label = t(entry.labelKey);
+    if (iconOnly) {
+      return (
+        <Link key={entry.id} href={entry.href} aria-current={selected ? "page" : undefined} onClick={onPick} title={label} aria-label={label}
+          className={navTileClass(selected, "justify-center px-0")}>
+          <span className={navIconClass(selected)}><Icon size={NAV_ICON_PX} strokeWidth={1.5} aria-hidden /></span>
+        </Link>
+      );
+    }
     return (
       <Link key={entry.id} href={entry.href} aria-current={selected ? "page" : undefined} onClick={onPick}
         className={inPopup
@@ -23,7 +35,7 @@ export function NavLinkList({ entries, area, activeId, inPopup, onPick }: {
         {inPopup
           ? <Icon size={20} strokeWidth={1.5} aria-hidden className="shrink-0" />
           : <span className={navIconClass(selected)}><Icon size={NAV_ICON_PX} strokeWidth={1.5} aria-hidden /></span>}
-        <span className="min-w-0 truncate">{t(entry.labelKey)}</span>
+        <span className="min-w-0 truncate">{label}</span>
       </Link>
     );
   });
