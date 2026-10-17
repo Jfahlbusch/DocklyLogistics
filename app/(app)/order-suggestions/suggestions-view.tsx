@@ -284,7 +284,7 @@ export function SuggestionsView({
                       <td className="px-4 py-3">
                         {isRowPending && canConfirm ? (
                           <select
-                            className="px-2 py-1 rounded-md border border-border text-sm bg-card"
+                            className={NATIVE_SELECT_CLASS}
                             value={effectiveSupplierId ?? ""}
                             onChange={(e) =>
                               editDraft(r.id, { supplierId: e.target.value || null })
