@@ -4,6 +4,8 @@ import { useState, useTransition, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { CHECKBOX_CLASS, CHECK_LABEL_CLASS, CHIP_CLASS, NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
 
 type Row = {
   id: string;
@@ -163,11 +165,10 @@ export function SuggestionsView({
             {total} Vorschläge · Bulk-Confirm gruppiert je Lieferant und erzeugt direkt Bestellungen im Status REVIEW.
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {canConfirm && (
             <Button
               variant="outline"
-              className="text-sm"
               onClick={regenerate}
               disabled={isPending}
             >
@@ -178,7 +179,7 @@ export function SuggestionsView({
             <Button
               onClick={bulkConfirm}
               disabled={selected.size === 0 || isPending}
-              className="bg-gold-500 hover:bg-gold-400 text-foreground text-sm font-medium"
+              className="bg-gold-500 hover:bg-gold-400 text-foreground font-medium"
             >
               {selected.size} bestätigen
             </Button>
@@ -199,14 +200,14 @@ export function SuggestionsView({
         </div>
       )}
 
-      <div className="flex gap-1">
+      <div className="flex flex-wrap gap-1">
         {(["ALL", "PENDING", "CONFIRMED", "DISMISSED"] as const).map((s) => (
           <button
             key={s}
             type="button"
             onClick={() => applyStatusFilter(s)}
             className={
-              "px-3 py-1.5 rounded-lg text-xs border transition-colors " +
+              CHIP_CLASS + " rounded-lg " +
               (currentStatus === s ||
               (s === "ALL" && currentStatus === "PENDING" && !sp.get("status"))
                 ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 border-navy-900"
@@ -225,7 +226,7 @@ export function SuggestionsView({
           </CardContent>
         ) : (
           <>
-          <div className="hidden overflow-x-auto md:block">
+          <div className="hidden xl:block">
             <table className="w-full text-sm">
               <thead>
                 <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -241,11 +242,11 @@ export function SuggestionsView({
                     )}
                   </th>
                   <th className="text-left font-medium px-4 py-3">Artikel</th>
-                  <th className="text-left font-medium px-4 py-3">Grund</th>
+                  <th className="hidden text-left font-medium px-4 py-3 2xl:table-cell">Grund</th>
                   <th className="text-left font-medium px-4 py-3">Lieferant</th>
                   <th className="text-left font-medium px-4 py-3">Menge (OrderUnit)</th>
                   <th className="text-left font-medium px-4 py-3">Status</th>
-                  <th className="text-left font-medium px-4 py-3">Erstellt</th>
+                  <th className="hidden text-left font-medium px-4 py-3 2xl:table-cell">Erstellt</th>
                   <th className="text-right font-medium px-4 py-3">Aktion</th>
                 </tr>
               </thead>
@@ -273,8 +274,11 @@ export function SuggestionsView({
                         <div className="text-muted-foreground font-mono text-xs">
                           {r.article.sku} · {r.article.orderUnit} ({r.article.packFactor} Stk)
                         </div>
+                        <div className="mt-0.5 text-xs text-muted-foreground 2xl:hidden">
+                          {REASON_LABELS[r.reason] ?? r.reason} · {new Date(r.createdAt).toLocaleDateString("de-DE")}
+                        </div>
                       </td>
-                      <td className="px-4 py-3 text-xs">
+                      <td className="hidden px-4 py-3 text-xs 2xl:table-cell">
                         {REASON_LABELS[r.reason] ?? r.reason}
                       </td>
                       <td className="px-4 py-3">
@@ -325,7 +329,7 @@ export function SuggestionsView({
                           {r.status}
                         </span>
                       </td>
-                      <td className="px-4 py-3 text-xs text-muted-foreground">
+                      <td className="hidden px-4 py-3 text-xs text-muted-foreground 2xl:table-cell">
                         {new Date(r.createdAt).toLocaleString("de-DE", {
                           dateStyle: "short",
                           timeStyle: "short",
@@ -358,8 +362,8 @@ export function SuggestionsView({
             </table>
           </div>
 
-          {/* Mobile: cards instead of a horizontally-scrolling table */}
-          <div className="divide-y divide-border md:hidden">
+          {/* Mobil/Tablet (< xl): Karten statt Tabelle */}
+          <div data-slot="suggestion-cards" className="divide-y divide-border xl:hidden">
             {rows.map((r) => {
               const isRowPending = r.status === "PENDING";
               const edit = draftEdits[r.id] ?? {};
@@ -370,12 +374,14 @@ export function SuggestionsView({
               return (
                 <div key={r.id} className="flex items-start gap-2.5 px-4 py-3 text-sm">
                   {canConfirm && isRowPending && (
-                    <input
-                      type="checkbox"
-                      checked={selected.has(r.id)}
-                      onChange={() => toggleSelection(r.id)}
-                      className="mt-1 h-4 w-4"
-                    />
+                    <label className={CHECK_LABEL_CLASS + " -my-1.5 shrink-0"} aria-label={`${r.article.name} auswählen`}>
+                      <input
+                        type="checkbox"
+                        checked={selected.has(r.id)}
+                        onChange={() => toggleSelection(r.id)}
+                        className={CHECKBOX_CLASS}
+                      />
+                    </label>
                   )}
                   <div className="min-w-0 flex-1">
                     <div className="flex items-start justify-between gap-2">
@@ -405,7 +411,7 @@ export function SuggestionsView({
                           <select
                             value={effectiveSupplierId ?? ""}
                             onChange={(e) => editDraft(r.id, { supplierId: e.target.value || null })}
-                            className="rounded-md border border-border bg-card px-2 py-1.5 text-sm"
+                            className={NATIVE_SELECT_CLASS + " min-w-0 max-w-full"}
                           >
                             <option value="">— kein Lieferant —</option>
                             {suppliers.map((s) => (
@@ -414,14 +420,16 @@ export function SuggestionsView({
                               </option>
                             ))}
                           </select>
-                          <input
+                          <Input
                             type="number"
+                            inputMode="numeric"
                             min={1}
                             value={effectiveQty}
+                            aria-label={`Menge ${r.article.name}`}
                             onChange={(e) =>
                               editDraft(r.id, { qtyOrderUnit: Math.max(1, Number(e.target.value)) })
                             }
-                            className="w-20 rounded-md border border-border bg-card px-2 py-1.5 text-right text-sm"
+                            className="w-24 text-right"
                           />
                           <span className="text-xs text-muted-foreground">{r.article.orderUnit}</span>
                         </>
@@ -437,7 +445,7 @@ export function SuggestionsView({
                           <button
                             type="button"
                             onClick={() => savePatch(r.id)}
-                            className="rounded-md bg-navy-900 px-2.5 py-1 text-xs text-white dark:bg-gold-500 dark:text-navy-900"
+                            className="rounded-md bg-navy-900 px-4 text-sm text-white dark:bg-gold-500 dark:text-navy-900 max-md:h-11 md:px-2.5 md:py-1 md:text-xs"
                           >
                             Speichern
                           </button>
@@ -446,7 +454,7 @@ export function SuggestionsView({
                           <button
                             type="button"
                             onClick={() => dismissOne(r.id)}
-                            className="rounded-md border border-border px-2.5 py-1 text-xs text-foreground hover:bg-muted/40"
+                            className="rounded-md border border-border px-4 text-sm text-foreground hover:bg-muted/40 max-md:h-11 md:px-2.5 md:py-1 md:text-xs"
                           >
                             Verwerfen
                           </button>
