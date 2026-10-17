@@ -9,12 +9,13 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
+import { NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
 import { ArticleDetailModal } from "./article-detail-modal";
 import { useOpenParam } from "@/lib/search/use-open-param";
 import { ArticleForm, defaultArticleValues, type ArticleFormValues } from "./article-form";
@@ -60,6 +61,7 @@ export function ArticlesView({
   const [, startTransition] = useTransition();
   const [selected, setSelected] = useState<string | null>(null);
   const closeDetail = useOpenParam(setSelected);
+  const category = sp.get("category") ?? "";
   const [searchValue, setSearchValue] = useState(q);
   const [creating, setCreating] = useState(false);
   const [createBusy, setCreateBusy] = useState(false);
@@ -72,6 +74,14 @@ export function ArticlesView({
     const params = new URLSearchParams(sp.toString());
     if (searchValue) params.set("q", searchValue);
     else params.delete("q");
+    router.push(`/articles?${params.toString()}`);
+  }
+
+  function onCategoryChange(next: string) {
+    const params = new URLSearchParams(sp.toString());
+    if (next) params.set("category", next);
+    else params.delete("category");
+    params.delete("page");
     router.push(`/articles?${params.toString()}`);
   }
 
@@ -113,12 +123,24 @@ export function ArticlesView({
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
             placeholder="Suche nach SKU, EAN, Name…"
+            type="search"
+            enterKeyHint="search"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className="flex-1 min-w-[200px]"
           />
-          <select className="px-3 py-2 rounded-lg border border-border text-sm bg-card">
-            <option>Alle Kategorien</option>
+          <select
+            aria-label="Kategorie"
+            value={category}
+            onChange={(e) => onCategoryChange(e.target.value)}
+            className={NATIVE_SELECT_CLASS}
+          >
+            <option value="">Alle Kategorien</option>
             {categories.map((c) => (
-              <option key={c}>{c}</option>
+              <option key={c} value={c}>
+                {c}
+              </option>
             ))}
           </select>
           <select
@@ -126,7 +148,7 @@ export function ArticlesView({
             aria-label={tz("filterLabel")}
             value={zoneId}
             onChange={(e) => onZoneChange(e.target.value)}
-            className="min-h-11 px-3 py-2 rounded-lg border border-border bg-card text-base md:min-h-0 md:text-sm"
+            className={NATIVE_SELECT_CLASS}
           >
             <option value="">{tz("filterAll")}</option>
             {zones.map((z) => (
@@ -135,12 +157,12 @@ export function ArticlesView({
               </option>
             ))}
           </select>
-          <Button type="submit" variant="outline" className="text-sm">
+          <Button type="submit" variant="outline">
             Suchen
           </Button>
         </form>
 
-        <div className="hidden overflow-x-auto md:block">
+        <div className="hidden overflow-x-auto xl:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -150,9 +172,9 @@ export function ArticlesView({
                 <th className="text-left font-medium px-4 py-3">Lagerplatz</th>
                 <th className="text-left font-medium px-4 py-3">Bestand</th>
                 <th className="text-left font-medium px-4 py-3">Min</th>
-                <th className="text-left font-medium px-4 py-3">Einheit</th>
+                <th className="hidden 2xl:table-cell text-left font-medium px-4 py-3">Einheit</th>
                 <th className="text-left font-medium px-4 py-3">EK</th>
-                <th className="text-left font-medium px-4 py-3">Primärlieferant</th>
+                <th className="hidden 2xl:table-cell text-left font-medium px-4 py-3">Primärlieferant</th>
               </tr>
             </thead>
             <tbody>
@@ -182,13 +204,14 @@ export function ArticlesView({
                     <td className="px-4 py-3">{r.locationCode}</td>
                     <td className="px-4 py-3">
                       <span className={belowMin ? "text-rose-600 font-medium" : ""}>{r.stock}</span>
+                      <span className="text-muted-foreground text-xs 2xl:hidden"> {r.orderUnit}</span>
                     </td>
                     <td className="px-4 py-3">{r.minStock}</td>
-                    <td className="px-4 py-3 text-muted-foreground text-xs">{r.orderUnit}</td>
+                    <td className="hidden 2xl:table-cell px-4 py-3 text-muted-foreground text-xs">{r.orderUnit}</td>
                     <td className="px-4 py-3">
                       {r.ek !== null ? `€ ${Number(r.ek).toFixed(2)}` : "—"}
                     </td>
-                    <td className="px-4 py-3">{r.primarySupplierName}</td>
+                    <td className="hidden 2xl:table-cell px-4 py-3">{r.primarySupplierName}</td>
                   </tr>
                 );
               })}
@@ -196,8 +219,8 @@ export function ArticlesView({
           </table>
         </div>
 
-        {/* Mobile: cards instead of a horizontally-scrolling table */}
-        <div className="divide-y divide-border md:hidden">
+        {/* Bis xl: Karten statt (zu breiter) Tabelle */}
+        <div className="divide-y divide-border xl:hidden">
           {rows.length === 0 && (
             <div className="py-10 text-center text-muted-foreground">Keine Artikel gefunden.</div>
           )}
@@ -208,7 +231,7 @@ export function ArticlesView({
                 key={r.id}
                 type="button"
                 onClick={() => setSelected(r.id)}
-                className="flex w-full flex-col gap-1 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+                className="flex min-h-11 w-full flex-col gap-1 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
               >
                 <div className="flex items-baseline justify-between gap-2">
                   <span className="font-medium text-foreground">{r.name}</span>
@@ -236,7 +259,7 @@ export function ArticlesView({
         onClose={closeDetail}
       />
 
-      <Dialog
+      <ResponsiveDialog
         open={creating}
         onOpenChange={(o) => {
           if (!o) {
@@ -245,11 +268,11 @@ export function ArticlesView({
           }
         }}
       >
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-foreground">Neuer Artikel</DialogTitle>
-            <DialogDescription>Pflichtfelder sind mit * markiert.</DialogDescription>
-          </DialogHeader>
+        <ResponsiveDialogContent size="lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display text-2xl text-foreground">Neuer Artikel</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>Pflichtfelder sind mit * markiert.</ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <ArticleForm
             initial={defaultArticleValues}
             isCreate
@@ -287,8 +310,8 @@ export function ArticlesView({
               }
             }}
           />
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

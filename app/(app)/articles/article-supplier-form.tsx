@@ -5,6 +5,8 @@ import { FormField as Field } from "@/components/ui/form-field";
 import { useEffect, useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ResponsiveDialogBody, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
+import { CHECKBOX_CLASS, CHECK_LABEL_CLASS, NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
 
 export type LinkFormValues = {
   supplierId: string;
@@ -88,14 +90,15 @@ export function ArticleSupplierForm({
   );
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <ResponsiveDialogBody className="space-y-4">
       <Field label="Lieferant" required>
         <select
           value={v.supplierId}
           onChange={(e) => set("supplierId", e.target.value)}
           disabled={!isCreate}
           required
-          className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
+          className={`w-full ${NATIVE_SELECT_CLASS}`}
         >
           {isCreate && <option value="">— bitte wählen —</option>}
           {selectableSuppliers.map((s) => (
@@ -117,6 +120,7 @@ export function ArticleSupplierForm({
             type="number"
             min={0}
             step={0.01}
+            inputMode="decimal"
             value={v.purchasePrice}
             onChange={(e) => set("purchasePrice", Number(e.target.value))}
             required
@@ -138,6 +142,7 @@ export function ArticleSupplierForm({
             type="number"
             min={0}
             step={1}
+            inputMode="numeric"
             value={v.leadTimeDays}
             onChange={(e) => set("leadTimeDays", Number(e.target.value))}
           />
@@ -147,6 +152,7 @@ export function ArticleSupplierForm({
             type="number"
             min={1}
             step={1}
+            inputMode="numeric"
             value={v.minOrderQty}
             onChange={(e) => set("minOrderQty", Number(e.target.value))}
           />
@@ -156,14 +162,18 @@ export function ArticleSupplierForm({
             value={v.supplierSku ?? ""}
             onChange={(e) => set("supplierSku", e.target.value)}
             maxLength={64}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className="font-mono"
           />
         </Field>
       </div>
 
-      <label className="flex items-center gap-2 text-sm">
+      <label className={`${CHECK_LABEL_CLASS} text-sm`}>
         <input
           type="checkbox"
+          className={CHECKBOX_CLASS}
           checked={v.isPrimary}
           onChange={(e) => set("isPrimary", e.target.checked)}
         />
@@ -175,8 +185,9 @@ export function ArticleSupplierForm({
           {errorMessage}
         </div>
       )}
+      </ResponsiveDialogBody>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <ResponsiveDialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
           Abbrechen
         </Button>
@@ -187,7 +198,7 @@ export function ArticleSupplierForm({
         >
           {busy ? "Speichere…" : isCreate ? "Zuordnen" : "Speichern"}
         </Button>
-      </div>
+      </ResponsiveDialogFooter>
     </form>
   );
 }

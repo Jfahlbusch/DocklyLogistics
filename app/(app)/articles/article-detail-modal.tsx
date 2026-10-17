@@ -6,12 +6,14 @@ import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -206,35 +208,36 @@ export function ArticleDetailModal({
 
   return (
     <>
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl">
+    <ResponsiveDialog open={open} onOpenChange={(o) => !o && onClose()}>
+      <ResponsiveDialogContent size="xl" className="sm:max-w-3xl">
         {loading || !article ? (
           <>
-            <DialogHeader className="sr-only">
-              <DialogTitle>Artikel-Detail wird geladen</DialogTitle>
-            </DialogHeader>
-            <div className="py-10 text-center text-muted-foreground">Lade…</div>
+            <ResponsiveDialogHeader className="sr-only">
+              <ResponsiveDialogTitle>Artikel-Detail wird geladen</ResponsiveDialogTitle>
+            </ResponsiveDialogHeader>
+            <ResponsiveDialogBody className="py-10 text-center text-muted-foreground">Lade…</ResponsiveDialogBody>
           </>
         ) : (
           <>
-            <DialogHeader>
+            <ResponsiveDialogHeader>
               <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">
                 {article.sku}
               </div>
-              <DialogTitle className="font-display text-2xl text-foreground">
+              <ResponsiveDialogTitle className="font-display text-2xl text-foreground">
                 {article.name}
-              </DialogTitle>
-              {article.shortDesc && <DialogDescription>{article.shortDesc}</DialogDescription>}
-            </DialogHeader>
+              </ResponsiveDialogTitle>
+              {article.shortDesc && <ResponsiveDialogDescription>{article.shortDesc}</ResponsiveDialogDescription>}
+            </ResponsiveDialogHeader>
 
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 my-4">
+            {!editing && (
+            <ResponsiveDialogBody>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
               <Kpi label="Kategorie" value={article.category ?? "—"} />
               <Kpi label="Basiseinheit" value={article.baseUnit} />
               <Kpi label="Bestelleinheit" value={article.orderUnit} />
               <Kpi label="Mindestbestand" value={String(article.minStock)} />
             </div>
 
-            {!editing && (
               <Tabs defaultValue="stamm">
               <TabsList>
                 <TabsTrigger value="stamm">Stamm</TabsTrigger>
@@ -261,8 +264,8 @@ export function ArticleDetailModal({
               </TabsContent>
 
               <TabsContent value="suppliers" className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs text-muted-foreground">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="min-w-0 flex-1 text-xs text-muted-foreground">
                     Mehrere Lieferanten möglich · genau einer als <strong>primär</strong> markiert ·
                     Primärlieferant wird in Vorschlägen vorausgewählt.
                   </p>
@@ -291,7 +294,61 @@ export function ArticleDetailModal({
                     Noch keine Lieferanten zugeordnet.
                   </div>
                 ) : (
-                  <div className="overflow-x-auto">
+                  <>
+                  <ul data-testid="supplier-link-cards" className="space-y-2 xl:hidden">
+                    {suppliers.map((l) => (
+                      <li key={l.id} className="space-y-2 rounded-xl border border-border p-3 text-sm">
+                        <div className="flex flex-wrap items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="font-medium text-foreground break-words">{l.supplier.name}</div>
+                            {l.supplier.city && (
+                              <div className="text-xs text-muted-foreground">{l.supplier.city}</div>
+                            )}
+                          </div>
+                          <div className="flex flex-wrap items-center gap-1.5">
+                            <Badge variant="secondary">{l.supplier.channel}</Badge>
+                            {l.isPrimary && (
+                              <Badge className="bg-gold-500 text-foreground hover:bg-gold-400">primär</Badge>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
+                          <span>€ {Number(l.purchasePrice).toFixed(2)} {l.currency}</span>
+                          <span>{l.leadTimeDays} Tage</span>
+                          <span>Min {l.minOrderQty}</span>
+                          {l.supplierSku && <span className="font-mono break-all">{l.supplierSku}</span>}
+                        </div>
+                        {canEdit && (
+                          <div className="flex flex-wrap gap-2">
+                            {!l.isPrimary && (
+                              <Button type="button" variant="outline" onClick={() => makePrimary(l)}>
+                                als primär
+                              </Button>
+                            )}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              onClick={() => {
+                                setLinkError(null);
+                                setLinkDialog({ mode: "edit", link: l });
+                              }}
+                            >
+                              Bearbeiten
+                            </Button>
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="text-rose-700 border-rose-200 hover:bg-rose-50"
+                              onClick={() => deleteLink(l)}
+                            >
+                              Löschen
+                            </Button>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="hidden overflow-x-auto xl:block">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground bg-muted/40">
@@ -363,6 +420,7 @@ export function ArticleDetailModal({
                     </tbody>
                   </table>
                   </div>
+                  </>
                 )}
               </TabsContent>
 
@@ -409,23 +467,26 @@ export function ArticleDetailModal({
                       style={{ minHeight: "80px", imageRendering: "pixelated" }}
                     />
                     <div className="text-sm font-mono tracking-widest text-foreground">{barcode.value}</div>
-                    <div className="flex flex-wrap gap-3 pt-2 text-xs">
+                    <div className="flex flex-wrap gap-2 pt-2">
+                      <Button asChild variant="outline">
                       <a
                         href={`data:image/png;base64,${barcode.pngBase64}`}
                         download={`${article.sku}-${barcode.format}.png`}
-                        className="text-foreground underline hover:text-navy-700"
                       >
                         PNG herunterladen
                       </a>
+                      </Button>
+                      <Button asChild variant="outline">
                       <a
                         href={`data:image/svg+xml;utf8,${encodeURIComponent(barcode.svg)}`}
                         download={`${article.sku}-${barcode.format}.svg`}
-                        className="text-foreground underline hover:text-navy-700"
                       >
                         SVG herunterladen
                       </a>
-                      <button
+                      </Button>
+                      <Button
                         type="button"
+                        variant="outline"
                         onClick={() => {
                           const w = window.open("", "_blank", "width=480,height=320");
                           if (!w) return;
@@ -444,10 +505,9 @@ export function ArticleDetailModal({
                           );
                           w.document.close();
                         }}
-                        className="text-foreground underline hover:text-navy-700"
                       >
                         Drucken
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -457,6 +517,7 @@ export function ArticleDetailModal({
                 <StockPanel articleId={article.id} minStock={article.minStock} baseUnit={article.baseUnit} />
               </TabsContent>
             </Tabs>
+            </ResponsiveDialogBody>
             )}
 
             {editing && article && (
@@ -505,7 +566,7 @@ export function ArticleDetailModal({
             )}
 
             {!editing && article && (canEdit || canDelete) && (
-              <div className="flex justify-end gap-2 pt-4 border-t border-border">
+              <ResponsiveDialogFooter>
                 {canDelete && (
                   <Button
                     variant="outline"
@@ -533,15 +594,15 @@ export function ArticleDetailModal({
                     Bearbeiten
                   </Button>
                 )}
-              </div>
+              </ResponsiveDialogFooter>
             )}
           </>
         )}
-      </DialogContent>
-    </Dialog>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
 
     {linkDialog && articleId && (
-      <Dialog
+      <ResponsiveDialog
         open
         onOpenChange={(o) => {
           if (!o) {
@@ -550,17 +611,17 @@ export function ArticleDetailModal({
           }
         }}
       >
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-xl text-foreground">
+        <ResponsiveDialogContent size="lg" className="sm:max-w-xl">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display text-xl text-foreground">
               {linkDialog.mode === "create" ? "Lieferant zuordnen" : "Zuordnung bearbeiten"}
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               {linkDialog.mode === "create"
                 ? "Wähle einen Lieferanten und gib Konditionen für diesen Artikel an."
                 : `Konditionen für ${linkDialog.link.supplier.name} bearbeiten.`}
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           <ArticleSupplierForm
             initial={
               linkDialog.mode === "create"
@@ -585,8 +646,8 @@ export function ArticleDetailModal({
             }}
             onSubmit={submitLinkForm}
           />
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     )}
     </>
   );

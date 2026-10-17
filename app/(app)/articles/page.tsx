@@ -71,7 +71,10 @@ export default async function ArticlesPage({ searchParams }: { searchParams: Sea
     .map((z) => ({ id: z.id, name: z.name }));
 
   const categories = Array.from(
-    new Set(items.map((a) => a.category).filter((c): c is string => Boolean(c))),
+    new Set([
+      ...items.map((a) => a.category).filter((c): c is string => Boolean(c)),
+      ...(sp.category ? [sp.category] : []),
+    ]),
   );
 
   const rows = items.map((a) => {

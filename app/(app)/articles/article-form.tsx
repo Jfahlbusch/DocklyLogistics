@@ -7,6 +7,8 @@ import { useTranslations } from "next-intl";
 import { validateStockLevels } from "@/lib/domain/article-quantities";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ResponsiveDialogBody, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
+import { NATIVE_SELECT_CLASS, NATIVE_TEXTAREA_CLASS } from "@/components/ui/native-field";
 
 const UNIT_KINDS = ["PIECE", "KG", "G", "L", "ML", "PACK", "SACK", "BOX", "PALLET", "OTHER"] as const;
 const BARCODE_SOURCES = ["SKU", "EAN"] as const;
@@ -151,7 +153,8 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <ResponsiveDialogBody className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="SKU" required>
           <Input
@@ -160,6 +163,9 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
             required
             maxLength={64}
             disabled={!isCreate}
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             className="font-mono"
           />
           {!isCreate && (
@@ -190,7 +196,7 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
           onChange={(e) => set("longDesc", e.target.value)}
           rows={2}
           maxLength={5000}
-          className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
+          className={`w-full ${NATIVE_TEXTAREA_CLASS}`}
         />
       </Field>
 
@@ -200,6 +206,7 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
             value={v.category ?? ""}
             onChange={(e) => set("category", e.target.value)}
             maxLength={100}
+            autoCapitalize="none"
             placeholder="z.B. Mehl, Zucker"
           />
         </Field>
@@ -235,6 +242,7 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
             type="number"
             min={1}
             step={1}
+            inputMode="numeric"
             value={v.packFactor}
             onChange={(e) => set("packFactor", Math.max(1, Number(e.target.value)))}
             required
@@ -256,6 +264,7 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
             min={0}
             max={100}
             step={0.01}
+            inputMode="decimal"
             value={v.vatRate ?? ""}
             onChange={(e) => set("vatRate", e.target.value === "" ? null : Number(e.target.value))}
           />
@@ -319,15 +328,16 @@ export function ArticleForm({ initial, isCreate, busy, errorMessage, fieldErrors
           {errorMessage}
         </div>
       )}
+      </ResponsiveDialogBody>
 
-      <div className="flex justify-end gap-2 pt-2">
+      <ResponsiveDialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
           Abbrechen
         </Button>
         <Button type="submit" disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900">
           {busy ? "Speichere…" : isCreate ? "Anlegen" : "Speichern"}
         </Button>
-      </div>
+      </ResponsiveDialogFooter>
     </form>
   );
 }
@@ -370,7 +380,7 @@ function QtyField({
           onChange={(e) => onChange(e.target.value.replace(/\D/g, ""))}
           aria-invalid={invalid ? true : undefined}
           aria-describedby={invalid ? errId : undefined}
-          className="pr-12 text-base"
+          className="pr-12"
         />
         <span className="pointer-events-none absolute inset-y-0 right-3 flex items-center text-xs text-muted-foreground">
           {unit}
@@ -419,7 +429,7 @@ function Select({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       aria-invalid={errors && errors.length > 0 ? true : undefined}
-      className="w-full min-h-11 px-3 py-2 border border-border rounded-lg bg-card text-base md:min-h-0 md:text-sm"
+      className={`w-full ${NATIVE_SELECT_CLASS}`}
     >
       {options.map((opt, i) => (
         <option key={`${opt}-${i}`} value={opt}>
