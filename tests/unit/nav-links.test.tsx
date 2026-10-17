@@ -64,12 +64,12 @@ function renderNav({
   );
 }
 
-describe("Navigation ohne Scrollfläche", () => {
+// Nutzerwunsch 18.10.2026: Jeder Bereich öffnet sich direkt im Menü — nie wegen Platzmangel als Popup; reicht die Höhe nicht, scrollt die
+// Bereichsliste. Popups gibt es nur noch für zugeklappte Bereiche der eingeklappten Leiste (Rail, ohne Bereichskopf).
+describe("Navigation", () => {
   it.each([
-    { name: "Desktop, ausgeklappt", collapsed: false, mobile: false, width: 244 },
     { name: "Desktop, eingeklappt", collapsed: true, mobile: false, width: 44 },
-    { name: "Mobiler Drawer", collapsed: false, mobile: true, width: 44 },
-  ])("positioniert das erste seitliche Menü an einem verbundenen Anker ($name)", async ({ collapsed, mobile, width }) => {
+  ])("positioniert das Popover eines zugeklappten Rail-Bereichs an seiner Kachel ($name)", async ({ collapsed, mobile, width }) => {
     nav.short = mobile;
     vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(186);
     // JSDOM hat kein Layout: verbundene Bedienelemente bekommen messbare Geometrie.
@@ -80,7 +80,7 @@ describe("Navigation ohne Scrollfläche", () => {
       if (this.matches('[data-slot="popover-anchor"]')) return new DOMRect(8, 200, 44, 44);
       return new DOMRect();
     });
-    renderNav({ collapsed });
+    renderNav({ collapsed, initialOpen: ADMIN_CLOSED });
     const trigger = screen.getByRole("button", { name: "Verwaltung" });
     for (let opening = 0; opening < 2; opening++) {
       fireEvent.click(trigger);
@@ -120,7 +120,6 @@ describe("Navigation ohne Scrollfläche", () => {
   });
   it.each([
     { collapsed: true, area: "Verwaltung", link: "Einstellungen", href: "/settings", count: 3 },
-    { collapsed: false, area: "Lager", link: "Artikel / Rohstoffe", href: "/articles", count: 4 },
   ])("erreicht die Ziele im Popover (eingeklappt=$collapsed)", ({ collapsed, area, link, href, count }) => {
     nav.short = !collapsed;
     renderNav({ collapsed, initialOpen: ADMIN_CLOSED });
@@ -171,9 +170,29 @@ describe("Auswahl ohne Seitenstreifen", () => {
     expect(link).toHaveAttribute("aria-current", "page");
     expect(link.className).not.toMatch(/border-(?:l|s)-|border-gold/);
   });
-  it("besitzt keine scrollende Navigationsfläche", () => {
+  it("lässt die Bereichsliste bei Platzmangel scrollen (statt Popups)", () => {
     renderNav();
-    expect(screen.getByRole("navigation").className).not.toMatch(/overflow-(?:y-)?auto/);
+    expect(screen.getByRole("navigation")).toHaveClass("overflow-y-auto", "overscroll-contain", "min-h-0", "flex-1");
+  });
+  it.each([false, true])("öffnet jeden Bereich direkt im Menü, auch bei wenig Höhe (Drawer/Touch=%s) — nie als Popup", (short) => {
+    nav.short = short;
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(186);
+    renderNav({ pathname: "/orders" });
+    for (const name of ["Übersicht", "Einkauf", "Lager", "Verwaltung"]) {
+      expect(screen.getByRole("button", { name })).toHaveAttribute("aria-expanded", "true");
+    }
+    for (const name of ["Dashboard", "Bestellungen", "Lagermodus", "Einstellungen"]) expect(screen.getByRole("link", { name })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Lager" }));
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Lager" }));
+    expect(screen.getByRole("link", { name: "Lagermodus" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+  it("scrollt den aktiven Eintrag ins Bild", () => {
+    const spy = vi.fn();
+    Element.prototype.scrollIntoView = spy;
+    renderNav({ pathname: "/settings" });
+    expect(spy).toHaveBeenCalledWith({ block: "nearest" });
   });
 });
 
@@ -232,11 +251,12 @@ describe("Portal-Aufbau der Bereiche (develop 1aff3fd)", () => {
     expect(screen.getByRole("link", { name: "Einstellungen" })).toHaveAttribute("title", "Einstellungen");
     expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
-  it("lagert eingeklappt bei Platzmangel auch aufgeklappte Bereiche ins Popover aus (kein Scrollen)", () => {
+  it("zeigt eingeklappt aufgeklappte Bereiche auch bei wenig Höhe direkt (kein Popover)", () => {
     nav.short = true;
+    vi.spyOn(HTMLElement.prototype, "clientHeight", "get").mockReturnValue(186);
     renderNav({ collapsed: true });
-    expect(screen.getByRole("button", { name: "Lager" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Lagermodus" })).not.toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Lager" })).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Lagermodus" })).toBeInTheDocument();
   });
   it("gibt der Kachel die Maße des Portals: Rand 1 px, Radius 10 px, 16 px / 500, Abstand 12,8 px, Innenabstand 7,8 × 12,6 px", () => {
     renderNav({ pathname: "/articles" });
