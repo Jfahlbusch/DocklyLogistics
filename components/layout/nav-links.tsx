@@ -41,7 +41,7 @@ export function NavLinks({ role, allowed, collapsed, onNavigate }: {
     measure();
     return () => observer.disconnect();
   }, []);
-  const overflowAreas = navigationFlyouts(entries, openAreas, height, density);
+  const overflowAreas = navigationFlyouts(entries, openAreas, height, density, active?.area);
 
   const pick = () => { setPopup(null); onNavigate?.(); };
   const list = (area: NavArea, inPopup: boolean) => <NavLinkList entries={entries} area={area} activeId={active?.id} inPopup={inPopup} onPick={pick} />;

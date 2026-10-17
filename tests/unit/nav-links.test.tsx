@@ -7,6 +7,9 @@ import de from "../../messages/de.json";
 const en = de;
 import { NavigationStateProvider } from "@/components/layout/navigation-state";
 import { NavLinks } from "@/components/layout/nav-links";
+import { DEFAULT_OPEN_AREAS, type OpenNavigationAreas } from "@/lib/navigation-preference";
+
+const ADMIN_CLOSED: OpenNavigationAreas = { ...DEFAULT_OPEN_AREAS, admin: false };
 import type { UserRole } from "@/lib/auth/role";
 
 // Sidebar und Drawer aus der Registry (A8.16): Gruppen je `visibleAreas(role)`, aktiver
@@ -41,6 +44,7 @@ type Options = {
   collapsed?: boolean;
   allowed?: readonly string[];
   onNavigate?: () => void;
+  initialOpen?: OpenNavigationAreas;
 };
 
 function renderNav({
@@ -50,11 +54,12 @@ function renderNav({
   collapsed,
   allowed,
   onNavigate,
+  initialOpen,
 }: Options = {}) {
   nav.pathname = pathname ?? (locale === "de" ? "/" : "/en");
   return render(
     <NextIntlClientProvider locale={locale} messages={locale === "de" ? de : en}>
-      <NavigationStateProvider><NavLinks role={role} allowed={allowed} collapsed={collapsed} onNavigate={onNavigate} /></NavigationStateProvider>
+      <NavigationStateProvider initialOpen={initialOpen}><NavLinks role={role} allowed={allowed} collapsed={collapsed} onNavigate={onNavigate} /></NavigationStateProvider>
     </NextIntlClientProvider>,
   );
 }
@@ -85,14 +90,15 @@ describe("Navigation ohne Scrollfläche", () => {
       expect(screen.queryByRole("dialog", { name: "Verwaltung" })).not.toBeInTheDocument();
     }
   });
-  it("öffnet standardmäßig alle Bereiche außer Verwaltung und klappt andere nicht zu", () => {
+  // Nutzerwunsch 18.10.2026: „Einstellungen“ steht direkt im Menü — Verwaltung ist standardmäßig offen.
+  it("öffnet standardmäßig alle Bereiche inklusive Verwaltung (Einstellungen direkt im Menü); Zuklappen betrifft nur diesen Bereich", () => {
     renderNav({ pathname: "/articles/abc" });
     expect(screen.getByRole("link", { name: "Artikel / Rohstoffe" })).toHaveAttribute("aria-current", "page");
-    expect(screen.getByRole("link", { name: "Dashboard" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Bestellungen" })).toBeInTheDocument();
-    expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Verwaltung" }));
+    expect(screen.getByRole("link", { name: "Einstellungen" })).toHaveAttribute("href", "/settings");
     expect(screen.getByRole("link", { name: "Administration" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Verwaltung" }));
+    expect(screen.queryByRole("link", { name: "Einstellungen" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Artikel / Rohstoffe" })).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Bestellungen" })).toHaveAttribute("href", "/orders");
   });
@@ -108,7 +114,6 @@ describe("Navigation ohne Scrollfläche", () => {
   // Abweichung von der Vorlage: Sichtbarkeit regeln bei uns die Feature-Rechte (`allowed`), nicht `minRole`.
   it("zeigt nur erlaubte Einträge und blendet Bereiche ohne erlaubten Eintrag aus", () => {
     renderNav({ role: "VIEWER", allowed: ["dashboard", "stock", "settings"] });
-    fireEvent.click(screen.getByRole("button", { name: "Verwaltung" }));
     expect(screen.getAllByRole("link").map(link => link.textContent)).toEqual(["Dashboard", "Lager & Bestand", "Einstellungen"]);
     expect(screen.queryByRole("button", { name: "Einkauf" })).not.toBeInTheDocument();
     expect(screen.queryByRole("link", { name: "Audit" })).not.toBeInTheDocument();
@@ -118,7 +123,7 @@ describe("Navigation ohne Scrollfläche", () => {
     { collapsed: false, area: "Lager", link: "Artikel / Rohstoffe", href: "/articles", count: 4 },
   ])("erreicht die Ziele im Popover (eingeklappt=$collapsed)", ({ collapsed, area, link, href, count }) => {
     nav.short = !collapsed;
-    renderNav({ collapsed });
+    renderNav({ collapsed, initialOpen: ADMIN_CLOSED });
     fireEvent.click(screen.getByRole("button", { name: area }));
     const popup = screen.getByRole("dialog", { name: area });
     expect(within(popup).getByRole("link", { name: link })).toHaveAttribute("href", href);
@@ -154,7 +159,7 @@ describe("Navigation ohne Scrollfläche", () => {
     renderNav();
     vi.spyOn(document, "cookie", "set").mockImplementation(() => { throw new Error("blocked"); });
     fireEvent.click(screen.getByRole("button", { name: "Verwaltung" }));
-    expect(screen.getByRole("link", { name: "Administration" })).toBeVisible();
+    expect(screen.queryByRole("link", { name: "Administration" })).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Artikel / Rohstoffe" })).toBeVisible();
   });
 });
@@ -191,12 +196,12 @@ describe("Portal-Aufbau der Bereiche (develop 1aff3fd)", () => {
   it("dreht den Pfeil nur bei geöffnetem Bereich", () => {
     renderNav();
     const arrow = () => screen.getByRole("button", { name: "Verwaltung" }).querySelector("svg");
-    expect(arrow()?.getAttribute("class")).not.toContain("rotate-180");
-    fireEvent.click(screen.getByRole("button", { name: "Verwaltung" }));
     expect(arrow()?.getAttribute("class")).toContain("rotate-180");
+    fireEvent.click(screen.getByRole("button", { name: "Verwaltung" }));
+    expect(arrow()?.getAttribute("class")).not.toContain("rotate-180");
   });
   it("zeigt eingeklappt (Rail) einen zugeklappten Bereich als Icon-Kachel ohne Überschrift und Pfeil, mit Trennlinie ab dem zweiten Bereich", () => {
-    renderNav({ collapsed: true });
+    renderNav({ collapsed: true, initialOpen: ADMIN_CLOSED });
     const trigger = screen.getByRole("button", { name: "Verwaltung" });
     expect(trigger.textContent).toBe("");
     expect(trigger.querySelectorAll("svg")).toHaveLength(1);
@@ -208,7 +213,7 @@ describe("Portal-Aufbau der Bereiche (develop 1aff3fd)", () => {
   });
   // Nutzerwunsch 18.10.2026: Aufgeklappte Bereiche bleiben auch im eingeklappten Menü sichtbar — ihre Ziele stehen als Icon-Kacheln da.
   it("zeigt eingeklappt die Ziele aufgeklappter Bereiche direkt als Icon-Kacheln (Name als Tooltip und aria-label)", () => {
-    renderNav({ collapsed: true, pathname: "/stock" });
+    renderNav({ collapsed: true, pathname: "/stock", initialOpen: ADMIN_CLOSED });
     expect(screen.queryByRole("button", { name: "Lager" })).not.toBeInTheDocument();
     const stock = screen.getByRole("link", { name: "Lager & Bestand" });
     expect(stock).toHaveAttribute("title", "Lager & Bestand");
@@ -221,6 +226,11 @@ describe("Portal-Aufbau der Bereiche (develop 1aff3fd)", () => {
     // zugeklappter Bereich bleibt Kachel mit Popover, seine Ziele sind nicht direkt sichtbar
     expect(screen.queryByRole("link", { name: "Einstellungen" })).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Verwaltung" })).toBeInTheDocument();
+  });
+  it("zeigt eingeklappt standardmäßig auch Einstellungen direkt als Icon-Kachel (kein Popup)", () => {
+    renderNav({ collapsed: true, pathname: "/stock" });
+    expect(screen.getByRole("link", { name: "Einstellungen" })).toHaveAttribute("title", "Einstellungen");
+    expect(screen.queryAllByRole("button")).toHaveLength(0);
   });
   it("lagert eingeklappt bei Platzmangel auch aufgeklappte Bereiche ins Popover aus (kein Scrollen)", () => {
     nav.short = true;
