@@ -4,7 +4,10 @@ import { registry } from "@/lib/api/openapi";
 export const StorageLocationCreateSchema = z.object({
   code: z.string().min(1).max(60),
   name: z.string().min(1).max(200),
-  zone: z.string().max(80).optional(),
+  /** @deprecated Freitext wird ignoriert — stattdessen `zoneId` (Zone aus /zones). */
+  zone: z.string().max(80).optional().openapi({ deprecated: true, description: "Veraltet und ohne Wirkung; `zoneId` verwenden." }),
+  /** Zone des Mandanten; null löst die Zuordnung. Fremde/unbekannte Zone → 422. */
+  zoneId: z.string().min(1).max(64).nullable().optional(),
   bin: z.string().max(40).optional(),
   capacity: z.number().int().min(0).optional(),
   active: z.boolean().default(true),

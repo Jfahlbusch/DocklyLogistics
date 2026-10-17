@@ -1,11 +1,12 @@
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
+import { zoneRepo } from "@/lib/db/repos/zone";
 import { storageLocationRepo } from "@/lib/db/repos/storage-location";
 import { appendAudit } from "@/lib/audit/append";
 import { auth } from "@/lib/auth";
 import { handler } from "@/lib/api/handler";
 import { requireRoleFromHeaders, UnauthenticatedError } from "@/lib/api/guard";
-import { ok, noContent, fail } from "@/lib/api/respond";
+import { ok, noContent, fail, failFields } from "@/lib/api/respond";
 import { StorageLocationUpdateSchema } from "@/lib/schemas/storage-location";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -26,6 +27,10 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
   const existing = await storageLocationRepo.findById(ctx.tenantId, id);
   if (!existing) return fail(404, "Not Found");
 
+  if (body.zoneId && !(await zoneRepo.existsInTenant(ctx.tenantId, body.zoneId))) {
+    return failFields([{ field: "zoneId", message: "Zone not found" }]);
+  }
+
   const session = await auth();
   if (!session?.user) throw new UnauthenticatedError();
   const actorEmail = session.user.email ?? "unknown";
@@ -36,8 +41,8 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
     await appendAudit(tx, {
       tenantId: ctx.tenantId, entity: "StorageLocation", entityId: id, action: "UPDATE",
       actorId, actorEmail,
-      before: { code: existing.code, name: existing.name, zone: existing.zone },
-      after: { code: u.code, name: u.name, zone: u.zone },
+      before: { code: existing.code, name: existing.name, zone: existing.zone, zoneId: existing.zoneId },
+      after: { code: u.code, name: u.name, zone: u.zone, zoneId: u.zoneId },
     });
     return u;
   });

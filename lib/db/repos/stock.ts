@@ -23,13 +23,20 @@ export const stockRepo = {
         take: pageSize,
         include: {
           article: { select: { sku: true, name: true, minStock: true } },
-          location: { select: { code: true, name: true, zone: true } },
+          location: { select: { code: true, name: true, zone: true, zoneRef: { select: { name: true } } } },
         },
         orderBy: [{ article: { name: "asc" } }, { location: { code: "asc" } }],
       }),
       prisma.stockBalance.count({ where }),
     ]);
-    return { items, total };
+    // `location.zone` bleibt für bestehende Aufrufer: Zonenname (Fallback: alter Freitext)
+    return {
+      items: items.map(({ location: { zoneRef, ...loc }, ...b }) => ({
+        ...b,
+        location: { ...loc, zone: zoneRef?.name ?? loc.zone },
+      })),
+      total,
+    };
   },
 
   /** Total stock for each articleId in the tenant, aggregated across all locations. */

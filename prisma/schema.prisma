@@ -138,6 +138,7 @@ model Article {
   maxStock          Int?     // Lagerkapazität in Basiseinheiten, null = nicht gesetzt
   targetStock       Int?     // empfohlene Menge in Basiseinheiten, null = nicht gesetzt
   defaultLocationId String?
+  zoneId            String?
   vatRate           Decimal? @db.Decimal(5,2)
   active            Boolean  @default(true)
   createdAt         DateTime @default(now())
@@ -145,6 +146,7 @@ model Article {
 
   suppliers         ArticleSupplier[]
   defaultLocation   StorageLocation? @relation(fields: [defaultLocationId], references: [id])
+  zone              Zone?            @relation(fields: [zoneId], references: [id], onDelete: SetNull)
   balances          StockBalance[]
   movements         StockMovement[]
   suggestions       OrderSuggestion[]
@@ -153,6 +155,7 @@ model Article {
   @@unique([tenantId, sku])
   @@index([tenantId])
   @@index([tenantId, eanGtin])
+  @@index([zoneId])
 }
 
 model Supplier {
@@ -206,18 +209,37 @@ model StorageLocation {
   tenantId  String
   code      String   // z.B. A-02-3
   name      String
-  zone      String?
+  zone      String?  // veraltet: Freitext, wird nicht mehr geschrieben (Ersatz: zoneId)
+  zoneId    String?
   bin       String?
   capacity  Int?
   active    Boolean  @default(true)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
+  zoneRef   Zone?    @relation(fields: [zoneId], references: [id], onDelete: Restrict)
   articles  Article[]
   balances  StockBalance[]
   movements StockMovement[]
 
   @@unique([tenantId, code])
+  @@index([tenantId])
+  @@index([zoneId])
+}
+
+model Zone {
+  id        String   @id @default(cuid())
+  tenantId  String
+  name      String
+  sortOrder Int      @default(0)
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  locations StorageLocation[]
+  articles  Article[]
+
+  @@unique([tenantId, name])
   @@index([tenantId])
 }
 

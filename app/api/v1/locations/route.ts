@@ -1,11 +1,12 @@
 import type { NextRequest } from "next/server";
 import { prisma } from "@/lib/db/client";
+import { zoneRepo } from "@/lib/db/repos/zone";
 import { storageLocationRepo } from "@/lib/db/repos/storage-location";
 import { appendAudit } from "@/lib/audit/append";
 import { auth } from "@/lib/auth";
 import { handler } from "@/lib/api/handler";
 import { requireRoleFromHeaders, UnauthenticatedError } from "@/lib/api/guard";
-import { ok, created, fail } from "@/lib/api/respond";
+import { ok, created, fail, failFields } from "@/lib/api/respond";
 import { StorageLocationCreateSchema, StorageLocationListQuerySchema } from "@/lib/schemas/storage-location";
 
 export const GET = handler(async (req: NextRequest) => {
@@ -22,6 +23,10 @@ export const POST = handler(async (req: NextRequest) => {
   const dup = await storageLocationRepo.findByCode(ctx.tenantId, body.code);
   if (dup) return fail(409, "StorageLocation code already exists");
 
+  if (body.zoneId && !(await zoneRepo.existsInTenant(ctx.tenantId, body.zoneId))) {
+    return failFields([{ field: "zoneId", message: "Zone not found" }]);
+  }
+
   const session = await auth();
   if (!session?.user) throw new UnauthenticatedError();
   const actorEmail = session.user.email ?? "unknown";
@@ -34,7 +39,7 @@ export const POST = handler(async (req: NextRequest) => {
       actorId, actorEmail,
       ip: req.headers.get("x-forwarded-for") ?? undefined,
       userAgent: req.headers.get("user-agent") ?? undefined,
-      after: { code: l.code, name: l.name, zone: l.zone },
+      after: { code: l.code, name: l.name, zone: l.zone, zoneId: l.zoneId },
     });
     return l;
   });

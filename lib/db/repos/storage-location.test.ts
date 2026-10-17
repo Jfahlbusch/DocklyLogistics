@@ -6,6 +6,7 @@ const TENANT_ID = "test-loc-tenant";
 
 async function cleanup() {
   await prisma.storageLocation.deleteMany({ where: { tenantId: TENANT_ID } });
+  await prisma.zone.deleteMany({ where: { tenantId: TENANT_ID } });
   await prisma.tenant.deleteMany({ where: { id: TENANT_ID } });
 }
 
@@ -21,13 +22,14 @@ afterAll(async () => {
 
 beforeEach(async () => {
   await prisma.storageLocation.deleteMany({ where: { tenantId: TENANT_ID } });
+  await prisma.zone.deleteMany({ where: { tenantId: TENANT_ID } });
 });
 
 describe("storageLocationRepo", () => {
   it("creates and finds by code", async () => {
     await prisma.$transaction(async (tx) => {
       await storageLocationRepo.create(tx, TENANT_ID, {
-        code: "A-01-1", name: "Trockenlager A/Regal 1", zone: "Trocken", capacity: 40, active: true,
+        code: "A-01-1", name: "Trockenlager A/Regal 1", capacity: 40, active: true,
       });
     });
     const f = await storageLocationRepo.findByCode(TENANT_ID, "A-01-1");
@@ -35,9 +37,11 @@ describe("storageLocationRepo", () => {
   });
 
   it("filters by zone", async () => {
+    const trocken = await prisma.zone.create({ data: { tenantId: TENANT_ID, name: "Trocken" } });
+    const kuehl = await prisma.zone.create({ data: { tenantId: TENANT_ID, name: "Kühl" } });
     await prisma.$transaction(async (tx) => {
-      await storageLocationRepo.create(tx, TENANT_ID, { code: "A-1", name: "A", zone: "Trocken", active: true });
-      await storageLocationRepo.create(tx, TENANT_ID, { code: "C-1", name: "C", zone: "Kühl", active: true });
+      await storageLocationRepo.create(tx, TENANT_ID, { code: "A-1", name: "A", zoneId: trocken.id, active: true });
+      await storageLocationRepo.create(tx, TENANT_ID, { code: "C-1", name: "C", zoneId: kuehl.id, active: true });
     });
     const r = await storageLocationRepo.list({ tenantId: TENANT_ID, zone: "Kühl", page: 1, pageSize: 25 });
     expect(r.items.length).toBe(1);

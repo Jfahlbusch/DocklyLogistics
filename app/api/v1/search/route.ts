@@ -4,6 +4,7 @@ import { requireRoleFromHeaders } from "@/lib/api/guard";
 import { ok } from "@/lib/api/respond";
 import { articleRepo } from "@/lib/db/repos/article";
 import { supplierRepo } from "@/lib/db/repos/supplier";
+import { zoneRepo } from "@/lib/db/repos/zone";
 import { orderRepo } from "@/lib/db/repos/order";
 
 /**
@@ -47,10 +48,11 @@ export const GET = handler(async (req: NextRequest) => {
   // Hard guard: never scan the DB on a single keystroke.
   if (q.length < MIN_LEN) return ok({ groups: [] as SearchGroup[] });
 
-  const [articles, suppliers, orders] = await Promise.all([
+  const [articles, suppliers, orders, zones] = await Promise.all([
     articleRepo.list({ tenantId: ctx.tenantId, q, page: 1, pageSize: PER_GROUP }),
     supplierRepo.list({ tenantId: ctx.tenantId, q, page: 1, pageSize: PER_GROUP }),
     orderRepo.list({ tenantId: ctx.tenantId, q, page: 1, pageSize: PER_GROUP }),
+    zoneRepo.list(ctx.tenantId, { q, limit: PER_GROUP }),
   ]);
 
   const groups: SearchGroup[] = [
@@ -82,6 +84,16 @@ export const GET = handler(async (req: NextRequest) => {
         title: o.orderNo,
         subtitle: joinParts(o.supplier?.name, ORDER_STATUS_LABEL[o.status] ?? o.status),
         href: `/orders?open=${o.id}`,
+      })),
+    },
+    {
+      key: "zones",
+      label: "Zonen",
+      items: zones.map((z) => ({
+        id: z.id,
+        title: z.name,
+        subtitle: joinParts(`${z.locationCount} Lagerplätze`, `${z.articleCount} Artikel`),
+        href: `/stock?tab=zones&open=${z.id}`,
       })),
     },
   ].filter((g) => g.items.length > 0);
