@@ -9,12 +9,12 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog,
+  ResponsiveDialogContent,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+  ResponsiveDialogDescription,
+} from "@/components/ui/responsive-dialog";
 import { WebhooksTab, type WebhookRow } from "./webhooks-tab";
 import { ApiKeysTab } from "./api-keys-tab";
 import { PdfTab } from "./pdf-tab";
@@ -193,13 +193,13 @@ export function SettingsView({
               <div className="flex flex-wrap gap-3">
                 <a
                   href="/api-docs"
-                  className="inline-flex items-center px-4 py-2 rounded-lg bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 text-sm font-medium hover:bg-navy-700"
+                  className="inline-flex min-h-11 items-center px-4 py-2 md:min-h-0 rounded-lg bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 text-sm font-medium hover:bg-navy-700"
                 >
                   Scalar UI öffnen
                 </a>
                 <a
                   href="/api/v1/openapi.json"
-                  className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted/40 font-mono"
+                  className="inline-flex min-h-11 items-center px-4 py-2 md:min-h-0 rounded-lg border border-border text-sm hover:bg-muted/40 font-mono"
                 >
                   openapi.json
                 </a>
@@ -213,13 +213,13 @@ export function SettingsView({
                 <div className="flex flex-wrap gap-3 mt-3">
                   <a
                     href="/api-docs/public"
-                    className="inline-flex items-center px-4 py-2 rounded-lg bg-navy-900 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm font-medium hover:bg-navy-700"
+                    className="inline-flex min-h-11 items-center px-4 py-2 md:min-h-0 rounded-lg bg-navy-900 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm font-medium hover:bg-navy-700"
                   >
                     Public Scalar UI öffnen
                   </a>
                   <a
                     href="/api/public/v1/openapi.json"
-                    className="inline-flex items-center px-4 py-2 rounded-lg border border-border text-sm hover:bg-muted/40 font-mono"
+                    className="inline-flex min-h-11 items-center px-4 py-2 md:min-h-0 rounded-lg border border-border text-sm hover:bg-muted/40 font-mono"
                   >
                     public openapi.json
                   </a>
@@ -252,7 +252,7 @@ export function SettingsView({
         )}
       </Tabs>
 
-      <Dialog
+      <ResponsiveDialog
         open={dialogOpen}
         onOpenChange={(o) => {
           if (!o) {
@@ -262,13 +262,13 @@ export function SettingsView({
           }
         }}
       >
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="font-display text-2xl text-foreground">
+        <ResponsiveDialogContent size="lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display text-2xl text-foreground">
               {isCreate ? "Neues Versand-Profil" : "Profil bearbeiten"}
-            </DialogTitle>
-            <DialogDescription>Konfiguration je Kanal als JSON pflegen.</DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>Konfiguration je Kanal als JSON pflegen.</ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           {dialogOpen && initial && (
             <ChannelForm
               initial={initial}
@@ -319,8 +319,8 @@ export function SettingsView({
               }}
             />
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }
@@ -441,11 +441,11 @@ function ProfileRow({
 
 function Field({ label, value, mono }: { label: string; value: string; mono?: boolean }) {
   return (
-    <div className="flex gap-2 items-baseline">
-      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground w-40 flex-shrink-0">
+    <div className="flex flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-2">
+      <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground sm:w-40 sm:flex-shrink-0">
         {label}
       </div>
-      <div className={mono ? "font-mono text-sm" : "text-sm"}>{value}</div>
+      <div className={mono ? "min-w-0 font-mono text-sm break-all" : "min-w-0 text-sm break-words"}>{value}</div>
     </div>
   );
 }

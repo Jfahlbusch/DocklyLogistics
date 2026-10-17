@@ -5,6 +5,13 @@ import { FormField as Field } from "@/components/ui/form-field";
 import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { ResponsiveDialogBody, ResponsiveDialogFooter } from "@/components/ui/responsive-dialog";
+import {
+  CHECKBOX_CLASS,
+  CHECK_LABEL_CLASS,
+  NATIVE_SELECT_CLASS,
+  NATIVE_TEXTAREA_MONO_CLASS,
+} from "@/components/ui/native-field";
 
 const CHANNELS = ["EMAIL", "API", "EDI"] as const;
 
@@ -87,13 +94,14 @@ export function ChannelForm({ initial, isCreate, busy, errorMessage, onSubmit, o
   }
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <ResponsiveDialogBody className="space-y-4 pb-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Kanal" required>
           <select
             value={v.channel}
             onChange={(e) => onChannelChange(e.target.value as (typeof CHANNELS)[number])}
-            className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
+            className={`w-full ${NATIVE_SELECT_CLASS}`}
             disabled={!isCreate}
           >
             {CHANNELS.map((c) => (
@@ -116,18 +124,20 @@ export function ChannelForm({ initial, isCreate, busy, errorMessage, onSubmit, o
         </Field>
       </div>
 
-      <div className="flex gap-6 text-sm">
-        <label className="flex items-center gap-2">
+      <div className="flex flex-wrap gap-x-6 text-sm">
+        <label className={CHECK_LABEL_CLASS}>
           <input
             type="checkbox"
+            className={CHECKBOX_CLASS}
             checked={v.isDefault}
             onChange={(e) => set("isDefault", e.target.checked)}
           />
           Als Standard verwenden
         </label>
-        <label className="flex items-center gap-2">
+        <label className={CHECK_LABEL_CLASS}>
           <input
             type="checkbox"
+            className={CHECKBOX_CLASS}
             checked={v.active}
             onChange={(e) => set("active", e.target.checked)}
           />
@@ -140,7 +150,10 @@ export function ChannelForm({ initial, isCreate, busy, errorMessage, onSubmit, o
           value={configText}
           onChange={(e) => setConfigText(e.target.value)}
           rows={10}
-          className="w-full px-3 py-2 border border-border rounded-lg bg-card text-xs font-mono"
+          className={`w-full ${NATIVE_TEXTAREA_MONO_CLASS}`}
+          spellCheck={false}
+          autoCapitalize="none"
+          autoCorrect="off"
         />
         {configError && <p className="text-xs text-rose-700 mt-1">{configError}</p>}
         <p className="text-[10px] text-muted-foreground mt-1">
@@ -158,14 +171,16 @@ export function ChannelForm({ initial, isCreate, busy, errorMessage, onSubmit, o
         </div>
       )}
 
-      <div className="flex justify-end gap-2 pt-2">
+      </ResponsiveDialogBody>
+
+      <ResponsiveDialogFooter>
         <Button type="button" variant="outline" onClick={onCancel} disabled={busy}>
           Abbrechen
         </Button>
         <Button type="submit" disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900">
           {busy ? "Speichere…" : isCreate ? "Anlegen" : "Speichern"}
         </Button>
-      </div>
+      </ResponsiveDialogFooter>
     </form>
   );
 }
