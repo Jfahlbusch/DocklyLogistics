@@ -247,10 +247,9 @@ describe("regenerateAutoSuggestions", () => {
     ).toBe(1);
   });
 
-  // F-B1, wird in T4 behoben: Heute ignoriert die Engine einen offenen
-  // MANUAL_SCAN-Vorschlag und legt einen zweiten offenen Vorschlag an.
-  // Korrektes Verhalten: genau ein offener Vorschlag je Artikel.
-  it.fails("F-B1: offener MANUAL_SCAN + Engine-Lauf -> genau ein offener Vorschlag", async () => {
+  // F-B1: Die Engine darf neben einem offenen Vorschlag (egal welcher reason)
+  // keinen zweiten anlegen - genau ein offener Vorschlag je Artikel.
+  it("F-B1: offener MANUAL_SCAN + Engine-Lauf -> genau ein offener Vorschlag", async () => {
     await prisma.stockBalance.create({
       data: { tenantId: TENANT_ID, articleId, locationId, quantity: 10 },
     });

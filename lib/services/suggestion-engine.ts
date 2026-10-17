@@ -8,7 +8,7 @@ type EngineResult = {
 
 /**
  * Recompute AUTO_MIN_STOCK suggestions for every article whose total stock is below minStock.
- * For each such article, create a PENDING suggestion if none already exists.
+ * For each such article, create a PENDING suggestion if the article has no open (PENDING) suggestion of any reason.
  * Quantity is ceil((minStock - currentStock) / packFactor), in OrderUnit.
  * Primary supplier (ArticleSupplier.isPrimary=true) is preselected, else null.
  */
@@ -32,9 +32,9 @@ export async function regenerateAutoSuggestions(
   });
   const totals = new Map(rows.map((r) => [r.articleId, r._sum.quantity ?? 0]));
 
-  // Existing PENDING auto suggestions to avoid duplicates
+  // Jeder offene Vorschlag (egal welcher reason) verhindert einen zweiten
   const existing = await tx.orderSuggestion.findMany({
-    where: { tenantId, status: "PENDING", reason: "AUTO_MIN_STOCK" },
+    where: { tenantId, status: "PENDING" },
     select: { articleId: true },
   });
   const existingArticles = new Set(existing.map((s) => s.articleId));
