@@ -4,11 +4,12 @@ import { useEffect, useState, type ChangeEvent } from "react";
 import { FlashBanner } from "@/components/ui/flash-banner";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { NATIVE_TEXTAREA_CLASS } from "@/components/ui/native-field";
 
 type Settings = { logoDataUri: string | null; headerText: string | null; footerText: string | null };
 
 const LABEL = "text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1";
-const FIELD = "w-full rounded-lg border border-border bg-background px-3 py-2 text-sm";
+const FIELD = `w-full ${NATIVE_TEXTAREA_CLASS}`;
 
 export function PdfTab({ canManage }: { canManage: boolean }) {
   const [logo, setLogo] = useState<string | null>(null);
@@ -67,7 +68,7 @@ export function PdfTab({ canManage }: { canManage: boolean }) {
         <CardContent className="space-y-5 pt-5">
           <div>
             <div className={LABEL}>Briefkopf-Logo</div>
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="flex h-16 w-40 items-center justify-center overflow-hidden rounded-lg border border-border bg-muted/30">
                 {logo ? (
                   // eslint-disable-next-line @next/next/no-img-element -- Daten-URI-Vorschau, kein optimierbares Asset
@@ -78,12 +79,12 @@ export function PdfTab({ canManage }: { canManage: boolean }) {
               </div>
               {canManage && (
                 <div className="flex flex-col items-start gap-2">
-                  <label className="inline-flex cursor-pointer items-center justify-center rounded-lg border border-border bg-background px-3 py-1.5 text-sm transition-colors hover:bg-muted">
+                  <label className="inline-flex min-h-11 cursor-pointer items-center justify-center rounded-lg border border-border bg-background px-3 py-1.5 text-sm md:min-h-0 transition-colors hover:bg-muted">
                     Bild wählen
                     <input type="file" accept="image/*" className="hidden" onChange={onPickLogo} />
                   </label>
                   {logo && (
-                    <button onClick={() => setLogo(null)} className="text-xs text-muted-foreground hover:text-foreground">
+                    <button onClick={() => setLogo(null)} className="min-h-11 px-2 text-xs text-muted-foreground hover:text-foreground md:min-h-0 md:px-0">
                       entfernen
                     </button>
                   )}
@@ -119,7 +120,7 @@ export function PdfTab({ canManage }: { canManage: boolean }) {
             />
           </label>
 
-          <div className="flex items-center gap-4 pt-1">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 pt-1">
             {canManage && (
               <Button onClick={save} disabled={saving}>
                 {saving ? "Speichert…" : "Speichern"}
@@ -129,7 +130,7 @@ export function PdfTab({ canManage }: { canManage: boolean }) {
               href="/api/v1/settings/pdf/preview"
               target="_blank"
               rel="noreferrer"
-              className="text-sm text-navy-700 hover:underline dark:text-gold-400"
+              className="inline-flex min-h-11 items-center text-sm text-navy-700 hover:underline md:min-h-0 dark:text-gold-400"
             >
               Vorschau öffnen ↗
             </a>

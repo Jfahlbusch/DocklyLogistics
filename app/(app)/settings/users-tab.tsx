@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { FlashBanner } from "@/components/ui/flash-banner";
 import { Card, CardContent } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
+import { CHECKBOX_CLASS, CHECK_LABEL_CLASS } from "@/components/ui/native-field";
 
 type FeatureDef = { key: string; label: string; group: string };
 type User = { id: string; email: string; name: string | null; role: string; lastLoginAt: string | null };
@@ -124,7 +125,7 @@ export function UsersTab({ canManage }: { canManage: boolean }) {
                   key={r}
                   onClick={() => setActiveRole(r)}
                   className={cn(
-                    "rounded-md px-3 py-1.5 text-sm transition-colors",
+                    "min-h-11 rounded-md px-3 py-1.5 text-sm transition-colors md:min-h-0",
                     activeRole === r ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900" : "text-muted-foreground hover:text-foreground",
                   )}
                 >
@@ -142,14 +143,14 @@ export function UsersTab({ canManage }: { canManage: boolean }) {
                   {g.items.map((f) => {
                     const on = roleMaps[activeRole]?.[f.key] ?? false;
                     return (
-                      <label key={f.key} className="flex cursor-pointer items-center justify-between gap-3 px-3 py-2.5 text-sm">
+                      <label key={f.key} className={cn(CHECK_LABEL_CLASS, "cursor-pointer justify-between px-3 py-2.5 text-sm")}>
                         <span className="text-foreground">{f.label}</span>
                         <input
                           type="checkbox"
                           checked={on}
                           disabled={!canManage}
                           onChange={(e) => toggleRole(activeRole, f.key, e.target.checked)}
-                          className="h-4 w-4 accent-navy-900 dark:accent-gold-500"
+                          className={cn(CHECKBOX_CLASS, "shrink-0 accent-navy-900 dark:accent-gold-500")}
                         />
                       </label>
                     );
@@ -202,14 +203,14 @@ export function UsersTab({ canManage }: { canManage: boolean }) {
                                 const state: "inherit" | "on" | "off" = ovr === undefined ? "inherit" : ovr ? "on" : "off";
                                 const roleHas = userData.roleDefault[f.key];
                                 return (
-                                  <div key={f.key} className="flex items-center justify-between gap-3 px-3 py-2.5 text-sm">
+                                  <div key={f.key} className="flex flex-col gap-2 px-3 py-2.5 text-sm md:flex-row md:items-center md:justify-between md:gap-3">
                                     <span className="text-foreground">
                                       {f.label}
                                       <span className="ml-2 text-[10px] text-muted-foreground">
                                         Rolle: {roleHas ? "erlaubt" : "gesperrt"}
                                       </span>
                                     </span>
-                                    <div className="inline-flex shrink-0 rounded-md border border-border">
+                                    <div className="inline-flex shrink-0 rounded-md border border-border max-md:w-full">
                                       {([
                                         ["inherit", "Rolle", null],
                                         ["on", "Erlaubt", true],
@@ -220,7 +221,7 @@ export function UsersTab({ canManage }: { canManage: boolean }) {
                                           disabled={!canManage}
                                           onClick={() => setOverride(u.id, f.key, val)}
                                           className={cn(
-                                            "px-2 py-1 text-xs transition-colors first:rounded-l-md last:rounded-r-md",
+                                            "px-2 py-1 text-xs transition-colors first:rounded-l-md last:rounded-r-md max-md:min-h-11 max-md:flex-1",
                                             state === s
                                               ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900"
                                               : "text-muted-foreground hover:text-foreground",
