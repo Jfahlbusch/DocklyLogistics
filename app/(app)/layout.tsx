@@ -6,6 +6,8 @@ import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
 import { TabBar } from "@/components/layout/tab-bar";
 import { NavigationStateProvider } from "@/components/layout/navigation-state";
+import { ConfirmProvider } from "@/components/ui/confirm-dialog";
+import { Toaster } from "@/components/ui/sonner";
 import { CommandPalette } from "@/components/search/command-palette";
 import { NAV_ENTRIES } from "@/lib/navigation";
 import { NAVIGATION_COOKIE, readNavigationPreference } from "@/lib/navigation-preference";
@@ -47,6 +49,7 @@ export default async function AppLayout({ children }: { children: React.ReactNod
 
   return (
     <NavigationStateProvider initialOpen={initialOpen}>
+      <ConfirmProvider>
       <div className="flex min-h-dvh">
         <Sidebar
           role={session.role}
@@ -72,6 +75,8 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         <TabBar role={session.role} allowed={allowedNav} />
         <CommandPalette allowedNav={allowedNav} />
       </div>
+      <Toaster />
+      </ConfirmProvider>
     </NavigationStateProvider>
   );
 }
