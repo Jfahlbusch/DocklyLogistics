@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
 import { StatusPill } from "@/components/ui/status-pill";
 import { FlashBanner } from "@/components/ui/flash-banner";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog, ResponsiveDialogBody, ResponsiveDialogContent, ResponsiveDialogDescription,
+  ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
+import { CHIP_CLASS, NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
 
 type Row = {
   id: string;
@@ -163,7 +165,7 @@ export function EdiView({
                 type="button"
                 onClick={() => setParam("direction", v)}
                 className={
-                  "px-3 py-1.5 rounded-lg text-xs border transition-colors " +
+                  CHIP_CLASS + " " +
                   (filters.direction === v
                     ? "bg-navy-900 text-white dark:bg-gold-500 dark:text-navy-900 border-navy-900"
                     : "bg-card text-foreground border-border hover:bg-muted/40")
@@ -174,7 +176,7 @@ export function EdiView({
             ))}
           </div>
           <select
-            className="px-3 py-2 rounded-lg border border-border text-sm bg-card"
+            className={NATIVE_SELECT_CLASS}
             value={filters.status}
             onChange={(e) => setParam("status", e.target.value)}
           >
@@ -185,18 +187,18 @@ export function EdiView({
           </select>
           {pages > 1 && (
             <div className="ml-auto flex items-center gap-2 text-xs text-muted-foreground">
-              <Button variant="outline" className="px-2 py-1 text-xs" disabled={page <= 1} onClick={() => goPage(page - 1)}>
+              <Button variant="outline" className="px-2 py-1 text-xs max-md:h-11 max-md:px-4" disabled={page <= 1} onClick={() => goPage(page - 1)}>
                 Zurück
               </Button>
               Seite {page}/{pages}
-              <Button variant="outline" className="px-2 py-1 text-xs" disabled={page >= pages} onClick={() => goPage(page + 1)}>
+              <Button variant="outline" className="px-2 py-1 text-xs max-md:h-11 max-md:px-4" disabled={page >= pages} onClick={() => goPage(page + 1)}>
                 Weiter
               </Button>
             </div>
           )}
         </div>
 
-        <div className="hidden overflow-x-auto md:block">
+        <div className="hidden xl:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -242,8 +244,8 @@ export function EdiView({
           </table>
         </div>
 
-        {/* Mobile: cards instead of a horizontally-scrolling table */}
-        <div className="divide-y divide-border md:hidden">
+        {/* Mobil/Tablet (< xl): Karten statt Tabelle */}
+        <div data-slot="edi-cards" className="divide-y divide-border xl:hidden">
           {rows.length === 0 && (
             <div className="px-4 py-10 text-center text-muted-foreground">Noch keine EDI-Nachrichten.</div>
           )}
@@ -252,7 +254,7 @@ export function EdiView({
               key={r.id}
               type="button"
               onClick={() => setSelected(r.id)}
-              className="flex w-full flex-col gap-1.5 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+              className="flex min-h-11 w-full flex-col gap-1.5 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
             >
               <div className="flex items-center justify-between gap-2">
                 <DirectionBadge direction={r.direction} />
@@ -270,19 +272,20 @@ export function EdiView({
         </div>
       </Card>
 
-      <Dialog open={selected !== null} onOpenChange={(o) => { if (!o) setSelected(null); }}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-3xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="font-display">
+      <ResponsiveDialog open={selected !== null} onOpenChange={(o) => { if (!o) setSelected(null); }}>
+        <ResponsiveDialogContent size="lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display">
               EDI-Nachricht {detail ? `· ${detail.type}` : ""}
-            </DialogTitle>
-            <DialogDescription>
+            </ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               {detail ? `${detail.direction === "IN" ? "Eingegangen" : "Versendet"} ${fmtTime(detail.createdAt)}` : "Lade…"}
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
 
           {detail && (
-            <div className="space-y-4 text-sm">
+            <>
+            <ResponsiveDialogBody className="space-y-4 text-sm">
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <div>
                   <div className="text-[11px] tracking-[0.16em] uppercase text-muted-foreground">Status</div>
@@ -325,7 +328,26 @@ export function EdiView({
                     {typeof detail.parsed.matchedLines === "number" &&
                       ` (${detail.parsed.matchedLines}/${detail.parsed.lines.length} Artikeln zugeordnet)`}
                   </div>
-                  <div className="overflow-x-auto rounded-lg border border-border">
+                  <div data-slot="edi-line-cards" className="divide-y divide-border rounded-lg border border-border md:hidden">
+                    {detail.parsed.lines.map((l) => (
+                      <div key={l.lineNo} className="space-y-0.5 px-3 py-2 text-xs">
+                        <div className="flex justify-between gap-2">
+                          <span className="font-medium text-foreground">
+                            {l.lineNo}. {l.articleName ?? l.name ?? "—"}
+                            {l.articleId
+                              ? <span className="ml-1 text-emerald-600">✓</span>
+                              : <span className="ml-1 text-muted-foreground">(kein Match)</span>}
+                          </span>
+                          <span className="shrink-0">{l.price != null ? `€ ${l.price.toFixed(2)}` : "—"}</span>
+                        </div>
+                        <div className="flex justify-between gap-2 text-muted-foreground">
+                          <span className="font-mono break-all">{l.ean ?? l.sku ?? "—"}</span>
+                          <span className="shrink-0">{l.qty ?? "—"} {l.unit ?? ""}</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="hidden overflow-x-auto rounded-lg border border-border md:block">
                     <table className="w-full text-xs">
                       <thead>
                         <tr className="bg-muted/40 text-[10px] tracking-[0.14em] uppercase text-muted-foreground">
@@ -364,24 +386,25 @@ export function EdiView({
                 </pre>
               </div>
 
-              <div className="flex flex-wrap justify-end gap-2">
-                <Button variant="outline" className="text-xs" onClick={copyPayload}>
-                  Payload kopieren
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
+              <Button variant="outline" onClick={copyPayload}>
+                Payload kopieren
+              </Button>
+              {canManage && detail.direction === "IN" && (
+                <Button
+                  className="bg-navy-900 text-white hover:bg-navy-700 dark:bg-gold-500 dark:text-navy-900 dark:hover:bg-gold-400"
+                  disabled={busy}
+                  onClick={() => reprocess(detail.id)}
+                >
+                  {busy ? "Verarbeite…" : "Erneut verarbeiten"}
                 </Button>
-                {canManage && detail.direction === "IN" && (
-                  <Button
-                    className="bg-navy-900 text-white hover:bg-navy-700 dark:bg-gold-500 dark:text-navy-900 dark:hover:bg-gold-400 text-xs"
-                    disabled={busy}
-                    onClick={() => reprocess(detail.id)}
-                  >
-                    {busy ? "Verarbeite…" : "Erneut verarbeiten"}
-                  </Button>
-                )}
-              </div>
-            </div>
+              )}
+            </ResponsiveDialogFooter>
+            </>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }
