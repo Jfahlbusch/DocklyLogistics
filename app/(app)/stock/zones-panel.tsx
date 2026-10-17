@@ -7,20 +7,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { FlashBanner } from "@/components/ui/flash-banner";
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-} from "@/components/ui/dialog";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetDescription,
-} from "@/components/ui/sheet";
-import { useMediaQuery, MD_QUERY } from "@/hooks/use-media-query";
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { ZoneForm, defaultZoneValues } from "./zone-form";
 
 export type ZoneRow = {
@@ -91,7 +84,6 @@ export function ZonesPanel({
   const t = useTranslations("zones");
   const router = useRouter();
   const [, startTransition] = useTransition();
-  const isDesktop = useMediaQuery(MD_QUERY, true);
 
   const [zones, setZones] = useState<ZoneRow[]>(initialZones);
   const [flash, setFlash] = useState<{ ok: boolean; text: string } | null>(null);
@@ -368,27 +360,15 @@ export function ZonesPanel({
         )}
       </Card>
 
-      {isDesktop ? (
-        <Dialog open={form !== null} onOpenChange={(o) => !o && closeForm()}>
-          <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-md">
-            <DialogHeader>
-              <DialogTitle className="font-display text-2xl text-foreground">{title}</DialogTitle>
-              <DialogDescription>{t("form.description")}</DialogDescription>
-            </DialogHeader>
-            {formNode}
-          </DialogContent>
-        </Dialog>
-      ) : (
-        <Sheet open={form !== null} onOpenChange={(o) => !o && closeForm()}>
-          <SheetContent side="bottom" className="max-h-[90dvh] overflow-y-auto rounded-t-2xl pb-[env(safe-area-inset-bottom)]">
-            <SheetHeader>
-              <SheetTitle className="font-display text-xl text-foreground">{title}</SheetTitle>
-              <SheetDescription>{t("form.description")}</SheetDescription>
-            </SheetHeader>
-            <div className="px-4 pb-4">{formNode}</div>
-          </SheetContent>
-        </Sheet>
-      )}
+      <ResponsiveDialog open={form !== null} onOpenChange={(o) => !o && closeForm()}>
+        <ResponsiveDialogContent size="md">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display text-2xl text-foreground">{title}</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>{t("form.description")}</ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
+          <ResponsiveDialogBody className="pb-4">{formNode}</ResponsiveDialogBody>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

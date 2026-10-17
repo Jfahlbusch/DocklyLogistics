@@ -20,3 +20,16 @@ describe("DialogContent", () => {
     expect(dialog).toHaveClass("max-h-[calc(100dvh-2rem)]", "overflow-y-auto", "overscroll-contain");
   });
 });
+
+describe("DialogContent Schließen-Knopf", () => {
+  it("ist mobil 44 px groß", () => {
+    render(
+      <Dialog open>
+        <DialogContent aria-describedby={undefined}>
+          <DialogTitle>Test</DialogTitle>
+        </DialogContent>
+      </Dialog>,
+    );
+    expect(screen.getByRole("button", { name: /close|schließen/i })).toHaveClass("max-md:size-11");
+  });
+});
