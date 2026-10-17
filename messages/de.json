@@ -89,8 +89,7 @@
       "targetStock": "Empfohlene Menge",
       "maxStock": "Maximalmenge (Lagerkapazität)",
       "notSet": "—",
-      "optionalHint": "Optional – leer lassen, wenn nicht gesetzt.",
-      "detailTitle": "Mengen"
+      "optionalHint": "Optional – leer lassen, wenn nicht gesetzt."
     }
   }
 }
