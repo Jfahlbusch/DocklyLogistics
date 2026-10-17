@@ -2,6 +2,8 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
+import { groupStatuses } from "@/lib/reports/status-groups";
 import { MD_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import {
   ResponsiveContainer,
@@ -31,17 +33,19 @@ type SupplierRow = {
   volume: number;
 };
 
-const STATUS_COLORS: Record<string, string> = {
-  DRAFT: "#A8A29E",
-  REVIEW: "#C9A24B",
-  APPROVED: "#D6B55E",
-  SENT: "#1E3A60",
-  CONFIRMED: "#10B981",
-  PARTIALLY_RECEIVED: "#34D399",
-  RECEIVED: "#059669",
-  CLOSED: "#78716C",
-  CANCELLED: "#E11D48",
-};
+/** Tooltip-Stil der Balkendiagramme: nur Theme-Tokens (hell/dunkel). */
+const BAR_TOOLTIP = {
+  contentStyle: {
+    background: "var(--popover)",
+    border: "1px solid var(--border)",
+    borderRadius: 8,
+    color: "var(--popover-foreground)",
+    fontSize: 12,
+  },
+  labelStyle: { color: "var(--popover-foreground)" },
+  itemStyle: { color: "var(--muted-foreground)" },
+  cursor: { fill: "var(--muted)" },
+} as const;
 
 function fmtEur(n: number) {
   return n.toLocaleString("de-DE", { style: "currency", currency: "EUR" });
@@ -56,6 +60,7 @@ export function ReportsView({
   bySupplier: SupplierRow[];
   yearStart: string;
 }) {
+  const t = useTranslations("reports");
   const isDesktop = useMediaQuery(MD_QUERY, true);
   const topSuppliers = bySupplier.slice(0, 8);
   const totalSent =
@@ -69,10 +74,16 @@ export function ReportsView({
   const cancelledCount = summary.byStatus.CANCELLED?.count ?? 0;
   const cancelRate = summary.total > 0 ? (cancelledCount / summary.total) * 100 : 0;
 
-  const statusPie = Object.entries(summary.byStatus).map(([status, v]) => ({
-    status,
-    count: v.count,
-    fill: STATUS_COLORS[status] ?? "#A8A29E",
+  const statusPie = groupStatuses(summary.byStatus).map((g) => ({
+    ...g,
+    name: t(`statusGroups.${g.key}`),
+    fill: g.color,
+    breakdown:
+      g.details.length > 1
+        ? t("breakdown", {
+            details: g.details.map((d) => `${t(`statuses.${d.status}` as "statuses.DRAFT")} ${d.count}`).join(", "),
+          })
+        : null,
   }));
 
   function exportCsv() {
@@ -121,32 +132,35 @@ export function ReportsView({
                     <Pie
                       data={statusPie}
                       dataKey="count"
-                      nameKey="status"
+                      nameKey="name"
                       outerRadius={isDesktop ? 100 : 80}
                       label={
                         isDesktop
                           ? (e: unknown) => {
-                              const x = e as { status?: string; count?: number };
-                              return `${x.status}: ${x.count}`;
+                              const x = e as { name?: string; count?: number };
+                              return `${x.name}: ${x.count}`;
                             }
                           : false
                       }
                     >
                       {statusPie.map((s) => (
-                        <Cell key={s.status} fill={s.fill} />
+                        <Cell key={s.key} fill={s.fill} />
                       ))}
                     </Pie>
-                    <Tooltip />
+                    <Tooltip content={<StatusTooltip />} />
                   </PieChart>
                 </ResponsiveContainer>
               </div>
               {/* Mobil: Legende mit Werten statt Außen-Labels */}
               <ul data-slot="status-legend" className="mt-3 space-y-1.5 text-sm md:hidden">
                 {statusPie.map((s) => (
-                  <li key={s.status} className="flex items-center gap-2">
-                    <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: s.fill }} aria-hidden="true" />
-                    <span className="flex-1 text-foreground">{s.status}</span>
-                    <span className="font-medium">{s.count}</span>
+                  <li key={s.key}>
+                    <div className="flex items-center gap-2">
+                      <span className="size-3 shrink-0 rounded-full" style={{ backgroundColor: s.fill }} aria-hidden="true" />
+                      <span className="flex-1 text-foreground">{s.name}</span>
+                      <span className="font-medium">{s.count}</span>
+                    </div>
+                    {s.breakdown && <div className="ml-5 text-xs text-muted-foreground">{s.breakdown}</div>}
                   </li>
                 ))}
               </ul>
@@ -173,22 +187,22 @@ export function ReportsView({
                       data={topSuppliers}
                       margin={{ top: 8, right: 24, bottom: 16, left: 8 }}
                     >
-                      <CartesianGrid stroke="#E7E5E4" strokeDasharray="3 3" />
+                      <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" />
                       <XAxis
                         dataKey="supplierName"
-                        tick={{ fontSize: 11, fill: "#78716C" }}
+                        tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                         interval={0}
                         angle={-12}
                         textAnchor="end"
                         height={56}
                       />
                       <YAxis
-                        tick={{ fontSize: 11, fill: "#78716C" }}
+                        tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                         tickFormatter={(v: number) => v.toLocaleString("de-DE")}
                       />
-                      <Tooltip formatter={(v) => fmtEur(Number(v ?? 0))} />
-                      <Legend />
-                      <Bar name="Volume (EUR)" dataKey="volume" fill="#0F2A44" />
+                      <Tooltip {...BAR_TOOLTIP} formatter={(v) => fmtEur(Number(v ?? 0))} />
+                      <Legend formatter={(v) => <span style={{ color: "var(--muted-foreground)", fontSize: 12 }}>{v}</span>} />
+                      <Bar name="Volume (EUR)" dataKey="volume" fill="var(--chart-1)" />
                     </BarChart>
                   ) : (
                     <BarChart
@@ -196,22 +210,22 @@ export function ReportsView({
                       data={topSuppliers}
                       margin={{ top: 4, right: 56, bottom: 4, left: 0 }}
                     >
-                      <CartesianGrid stroke="#E7E5E4" strokeDasharray="3 3" horizontal={false} />
+                      <CartesianGrid stroke="var(--border)" strokeDasharray="3 3" horizontal={false} />
                       <XAxis type="number" hide />
                       <YAxis
                         type="category"
                         dataKey="supplierName"
                         width={96}
                         interval={0}
-                        tick={{ fontSize: 11, fill: "#78716C" }}
+                        tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                       />
-                      <Tooltip formatter={(v) => fmtEur(Number(v ?? 0))} />
-                      <Bar name="Volume (EUR)" dataKey="volume" fill="#0F2A44">
+                      <Tooltip {...BAR_TOOLTIP} formatter={(v) => fmtEur(Number(v ?? 0))} />
+                      <Bar name="Volume (EUR)" dataKey="volume" fill="var(--chart-1)">
                         <LabelList
                           dataKey="volume"
                           position="right"
                           formatter={(v: unknown) => Number(v ?? 0).toLocaleString("de-DE")}
-                          style={{ fontSize: 11, fill: "#78716C" }}
+                          style={{ fontSize: 11, fill: "var(--muted-foreground)" }}
                         />
                       </Bar>
                     </BarChart>
@@ -275,6 +289,22 @@ export function ReportsView({
           ))}
         </div>
       </Card>
+    </div>
+  );
+}
+
+type TooltipPayload = { payload?: { name: string; count: number; breakdown: string | null } };
+
+/** Tooltip nur mit Tokens: Gruppe, Summe und Aufschlüsselung je Status. */
+function StatusTooltip({ active, payload }: { active?: boolean; payload?: TooltipPayload[] }) {
+  const p = payload?.[0]?.payload;
+  if (!active || !p) return null;
+  return (
+    <div className="rounded-md border border-border bg-popover px-3 py-2 text-xs text-popover-foreground shadow-soft">
+      <div className="font-medium">
+        {p.name} {p.count}
+      </div>
+      {p.breakdown && <div className="text-muted-foreground">{p.breakdown}</div>}
     </div>
   );
 }

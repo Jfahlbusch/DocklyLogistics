@@ -220,5 +220,26 @@
       "label": "Zone",
       "none": "— keine —"
     }
+  },
+  "reports": {
+    "statusGroups": {
+      "draft": "Entwurf",
+      "sent": "Versendet",
+      "confirmed": "Bestätigt",
+      "received": "Wareneingang",
+      "cancelled": "Storniert"
+    },
+    "statuses": {
+      "DRAFT": "Entwurf",
+      "REVIEW": "In Prüfung",
+      "APPROVED": "Freigegeben",
+      "SENT": "Versendet",
+      "CONFIRMED": "Bestätigt",
+      "PARTIALLY_RECEIVED": "Teilweise",
+      "RECEIVED": "Erhalten",
+      "CLOSED": "Abgeschlossen",
+      "CANCELLED": "Storniert"
+    },
+    "breakdown": "davon {details}"
   }
 }
