@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
-import { Search, CornerDownLeft, Loader2, Package, Truck, ShoppingCart, type LucideIcon } from "lucide-react";
+import { Search, CornerDownLeft, Loader2, Package, X, Truck, ShoppingCart, type LucideIcon } from "lucide-react";
 import { paletteNavEntries } from "@/lib/navigation";
 import { useGlobalSearch } from "@/lib/search/use-global-search";
 import { SEARCH_OPEN_EVENT } from "./open-search";
@@ -136,14 +136,14 @@ export function CommandPalette({ allowedNav }: { allowedNav?: string[] }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm px-4 pt-[12vh]"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/40 backdrop-blur-sm md:px-4 md:pt-[12dvh]"
       onClick={close}
       role="dialog"
       aria-modal="true"
       aria-label="Globale Suche"
     >
       <div
-        className="w-full max-w-xl overflow-hidden rounded-xl border border-border bg-popover text-popover-foreground shadow-lg"
+        className="flex w-full max-w-xl flex-col overflow-hidden border-border bg-popover pt-[env(safe-area-inset-top)] text-popover-foreground shadow-lg max-md:h-dvh max-md:max-w-none md:rounded-xl md:border md:pt-0"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Search input */}
@@ -158,17 +158,31 @@ export function CommandPalette({ allowedNav }: { allowedNav?: string[] }) {
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             onKeyDown={onKeyDown}
+            type="search"
+            enterKeyHint="search"
+            autoComplete="off"
+            autoCapitalize="none"
+            autoCorrect="off"
+            spellCheck={false}
             placeholder="Suchen: Artikel, Lieferanten, Bestellungen oder Seite…"
             aria-label="Suchbegriff"
-            className="h-12 flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+            className="h-14 min-w-0 flex-1 bg-transparent text-base text-foreground placeholder:text-muted-foreground focus:outline-none md:h-12 md:text-sm [&::-webkit-search-cancel-button]:appearance-none"
           />
-          <kbd className="hidden rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground sm:block">
+          <kbd className="hidden rounded border border-border bg-muted px-1.5 py-0.5 text-[10px] font-medium text-muted-foreground md:block">
             ESC
           </kbd>
+          <button
+            type="button"
+            onClick={close}
+            aria-label="Schließen"
+            className="-mr-3 flex size-11 shrink-0 items-center justify-center rounded-md text-muted-foreground hover:bg-muted hover:text-foreground md:hidden"
+          >
+            <X size={20} strokeWidth={1.5} aria-hidden />
+          </button>
         </div>
 
         {/* Results */}
-        <div ref={listRef} className="max-h-[60vh] overflow-y-auto p-2">
+        <div ref={listRef} className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-2 md:max-h-[60dvh] md:flex-none">
           {entries.map((entry, index) => {
             const header = entry.group !== lastGroup ? entry.group : null;
             lastGroup = entry.group;
@@ -188,7 +202,7 @@ export function CommandPalette({ allowedNav }: { allowedNav?: string[] }) {
                   onMouseMove={() => setActiveIndex(index)}
                   onClick={() => select(entry)}
                   className={cn(
-                    "flex w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors",
+                    "flex min-h-11 w-full items-center gap-3 rounded-md px-2 py-2 text-left text-sm transition-colors",
                     isActive ? "bg-accent/15 text-foreground" : "text-foreground hover:bg-muted",
                   )}
                 >
@@ -227,7 +241,7 @@ export function CommandPalette({ allowedNav }: { allowedNav?: string[] }) {
         </div>
 
         {/* Footer hint */}
-        <div className="flex items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground">
+        <div className="hidden items-center justify-between border-t border-border px-4 py-2 text-[11px] text-muted-foreground md:flex">
           <span className="flex items-center gap-2">
             <kbd className="rounded border border-border bg-muted px-1 py-0.5">↑</kbd>
             <kbd className="rounded border border-border bg-muted px-1 py-0.5">↓</kbd>
