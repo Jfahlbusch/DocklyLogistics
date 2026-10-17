@@ -5,7 +5,8 @@ import { appendAudit } from "@/lib/audit/append";
 import { auth } from "@/lib/auth";
 import { handler } from "@/lib/api/handler";
 import { requireRoleFromHeaders, UnauthenticatedError } from "@/lib/api/guard";
-import { ok, created, fail } from "@/lib/api/respond";
+import { ok, created, fail, failFields } from "@/lib/api/respond";
+import { validateStockLevels } from "@/lib/domain/article-quantities";
 import { ArticleCreateSchema, ArticleListQuerySchema } from "@/lib/schemas/article";
 
 export const GET = handler(async (req: NextRequest) => {
@@ -18,6 +19,9 @@ export const GET = handler(async (req: NextRequest) => {
 export const POST = handler(async (req: NextRequest) => {
   const ctx = await requireRoleFromHeaders(req.headers, "USER");
   const body = ArticleCreateSchema.parse(await req.json());
+
+  const levelErrors = validateStockLevels(body);
+  if (levelErrors.length) return failFields(levelErrors);
 
   const dup = await articleRepo.findBySku(ctx.tenantId, body.sku);
   if (dup) return fail(409, "SKU already exists", `Article with SKU '${body.sku}' already exists.`);

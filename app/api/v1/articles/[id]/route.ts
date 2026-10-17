@@ -5,7 +5,8 @@ import { appendAudit } from "@/lib/audit/append";
 import { auth } from "@/lib/auth";
 import { handler } from "@/lib/api/handler";
 import { requireRoleFromHeaders, UnauthenticatedError } from "@/lib/api/guard";
-import { ok, noContent, fail } from "@/lib/api/respond";
+import { ok, noContent, fail, failFields } from "@/lib/api/respond";
+import { validateStockLevels } from "@/lib/domain/article-quantities";
 import { ArticleUpdateSchema } from "@/lib/schemas/article";
 
 type Ctx = { params: Promise<{ id: string }> };
@@ -25,6 +26,14 @@ export const PATCH = handler(async (req: NextRequest, { params }: Ctx) => {
 
   const existing = await articleRepo.findById(ctx.tenantId, id);
   if (!existing) return fail(404, "Not Found");
+
+  // Teil-Updates mit den gespeicherten Werten zusammenführen, bevor validiert wird.
+  const levelErrors = validateStockLevels({
+    minStock: body.minStock ?? existing.minStock,
+    targetStock: body.targetStock !== undefined ? body.targetStock : existing.targetStock,
+    maxStock: body.maxStock !== undefined ? body.maxStock : existing.maxStock,
+  });
+  if (levelErrors.length) return failFields(levelErrors);
 
   const session = await auth();
   if (!session?.user) throw new UnauthenticatedError();

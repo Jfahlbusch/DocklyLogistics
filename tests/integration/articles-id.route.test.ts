@@ -130,4 +130,94 @@ describe("/api/v1/articles/[id]", () => {
     expect(res.status).toBe(404);
     expect(await prisma.article.findUnique({ where: { id: foreignId } })).not.toBeNull();
   });
+
+  describe("Maximal- und empfohlene Menge (T2)", () => {
+    const patch = async (role: "VIEWER" | "USER", body: unknown, id = ownId, tenant = T) =>
+      PATCH(
+        makeRequest(url(id), { method: "PATCH", headers: await sessionHeaders(role, tenant), body }),
+        routeParams({ id }),
+      );
+    const reset = () =>
+      prisma.article.update({ where: { id: ownId }, data: { minStock: 0, maxStock: null, targetStock: null } });
+
+    it("setzt maxStock/targetStock (200) und liefert sie in GET", async () => {
+      await reset();
+      const res = await patch("USER", { maxStock: 500, targetStock: 300 });
+      expect(res.status).toBe(200);
+      const row = await prisma.article.findUnique({ where: { id: ownId } });
+      expect(row?.maxStock).toBe(500);
+      expect(row?.targetStock).toBe(300);
+      const get = await GET(
+        makeRequest(url(ownId), { headers: await sessionHeaders("VIEWER", T) }),
+        routeParams({ id: ownId }),
+      );
+      const body = await readJson<{ data: { maxStock: number | null; targetStock: number | null } }>(get);
+      expect(body.data.maxStock).toBe(500);
+      expect(body.data.targetStock).toBe(300);
+    });
+
+    it("null löscht die Werte", async () => {
+      await prisma.article.update({ where: { id: ownId }, data: { maxStock: 500, targetStock: 300 } });
+      const res = await patch("USER", { maxStock: null, targetStock: null });
+      expect(res.status).toBe(200);
+      const row = await prisma.article.findUnique({ where: { id: ownId } });
+      expect(row?.maxStock).toBeNull();
+      expect(row?.targetStock).toBeNull();
+    });
+
+    it("targetStock < minStock → 422 mit Feldname", async () => {
+      await reset();
+      const res = await patch("USER", { minStock: 100, targetStock: 50 });
+      expect(res.status).toBe(422);
+      const body = await readJson<{ errors: Record<string, string[]> }>(res);
+      expect(Object.keys(body.errors)).toContain("targetStock");
+      expect((await prisma.article.findUnique({ where: { id: ownId } }))?.targetStock).toBeNull();
+    });
+
+    it("targetStock > maxStock → 422 mit Feldname", async () => {
+      await reset();
+      const res = await patch("USER", { targetStock: 600, maxStock: 500 });
+      expect(res.status).toBe(422);
+      expect(Object.keys((await readJson<{ errors: Record<string, string[]> }>(res)).errors)).toContain("targetStock");
+    });
+
+    it("minStock > maxStock → 422 mit Feldname", async () => {
+      await reset();
+      const res = await patch("USER", { minStock: 100, maxStock: 50 });
+      expect(res.status).toBe(422);
+      expect(Object.keys((await readJson<{ errors: Record<string, string[]> }>(res)).errors)).toContain("maxStock");
+    });
+
+    it("Teil-Update wird mit gespeicherten Werten geprüft (nur maxStock=50, gespeichert min=100 → 422)", async () => {
+      await prisma.article.update({ where: { id: ownId }, data: { minStock: 100, maxStock: null, targetStock: null } });
+      const res = await patch("USER", { maxStock: 50 });
+      expect(res.status).toBe(422);
+      expect(Object.keys((await readJson<{ errors: Record<string, string[]> }>(res)).errors)).toContain("maxStock");
+      expect((await prisma.article.findUnique({ where: { id: ownId } }))?.maxStock).toBeNull();
+    });
+
+    it("negative Werte → 422", async () => {
+      await reset();
+      expect((await patch("USER", { maxStock: -1 })).status).toBe(422);
+    });
+
+    it("PATCH ohne minStock/barcodeSource lässt die gespeicherten Werte unverändert", async () => {
+      await prisma.article.update({ where: { id: ownId }, data: { minStock: 40, barcodeSource: "EAN" } });
+      expect((await patch("USER", { name: "Nur Name" })).status).toBe(200);
+      const row = await prisma.article.findUnique({ where: { id: ownId } });
+      expect(row?.minStock).toBe(40);
+      expect(row?.barcodeSource).toBe("EAN");
+      await prisma.article.update({ where: { id: ownId }, data: { barcodeSource: "SKU" } });
+    });
+
+    it("VIEWER → 403", async () => {
+      await reset();
+      expect((await patch("VIEWER", { maxStock: 10 })).status).toBe(403);
+    });
+
+    it("fremder Mandant → 404", async () => {
+      expect((await patch("USER", { maxStock: 10 }, foreignId)).status).toBe(404);
+      expect((await prisma.article.findUnique({ where: { id: foreignId } }))?.maxStock).toBeNull();
+    });
+  });
 });

@@ -21,6 +21,8 @@ const ArticleBaseSchema = z.object({
   packFactor: z.number().int().min(1),
   barcodeSource: BarcodeSourceSchema,
   minStock: z.number().int().min(0),
+  maxStock: z.number().int().min(0).nullable().optional(),
+  targetStock: z.number().int().min(0).nullable().optional(),
   defaultLocationId: z.string().cuid().optional(),
   vatRate: z.number().min(0).max(100).optional(),
 });
@@ -55,6 +57,8 @@ export const ArticleSchema = z.object({
   packFactor: z.number(),
   barcodeSource: BarcodeSourceSchema,
   minStock: z.number(),
+  maxStock: z.number().nullable(),
+  targetStock: z.number().nullable(),
   defaultLocationId: z.string().nullable(),
   vatRate: z.string().nullable(), // Prisma Decimal returns as string
   active: z.boolean(),
@@ -103,7 +107,7 @@ registry.registerPath({
   },
   responses: {
     201: { description: "Artikel angelegt", content: { "application/json": { schema: z.object({ data: ArticleSchema }) } } },
-    422: { description: "Validierungsfehler" },
+    422: { description: "Validierungsfehler (u. a. Mindestmenge ≤ empfohlene Menge ≤ Maximalmenge; Feldfehler unter `errors`)" },
   },
 });
 
@@ -131,6 +135,7 @@ registry.registerPath({
   responses: {
     200: { description: "Aktualisiert" },
     404: { description: "Nicht gefunden" },
+    422: { description: "Validierungsfehler. `maxStock`/`targetStock`: `null` löscht den Wert; Teil-Updates werden gegen die gespeicherten Werte geprüft (Mindestmenge ≤ empfohlene Menge ≤ Maximalmenge), Feldfehler unter `errors`." },
   },
 });
 

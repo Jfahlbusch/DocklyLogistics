@@ -135,6 +135,8 @@ model Article {
   packFactor        Int      // Basiseinheiten pro Bestelleinheit
   barcodeSource     BarcodeSource @default(SKU)
   minStock          Int      @default(0)
+  maxStock          Int?     // Lagerkapazität in Basiseinheiten, null = nicht gesetzt
+  targetStock       Int?     // empfohlene Menge in Basiseinheiten, null = nicht gesetzt
   defaultLocationId String?
   vatRate           Decimal? @db.Decimal(5,2)
   active            Boolean  @default(true)

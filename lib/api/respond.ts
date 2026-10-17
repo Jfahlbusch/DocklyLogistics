@@ -42,3 +42,12 @@ export function fail(
     },
   );
 }
+
+/** 422 im Format des Zod-Handlers (`errors` = Feldname → Meldungen) für fachliche Feldfehler. */
+export function failFields(errors: { field: string; message: string }[]): NextResponse {
+  const byField: Record<string, string[]> = {};
+  for (const e of errors) (byField[e.field] ??= []).push(e.message);
+  return fail(422, "Validation failed", errors.map((e) => `${e.field}: ${e.message}`).join("; "), {
+    errors: byField,
+  });
+}
