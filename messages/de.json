@@ -91,5 +91,15 @@
       "notSet": "—",
       "optionalHint": "Optional – leer lassen, wenn nicht gesetzt."
     }
+  },
+  "warehouse": {
+    "stepper": {
+      "decrease": "Menge verringern",
+      "increase": "Menge erhöhen",
+      "quantityLabel": "Bestellmenge",
+      "inBaseUnit": "= {amount} {unit}",
+      "freeCapacity": "frei bis Kapazität: {amount} {unit}",
+      "capacityWarning": "Achtung: Mit dieser Menge wird die Maximalmenge überschritten ({amount} {unit} frei)."
+    }
   }
 }
