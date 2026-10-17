@@ -1,9 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
+import { NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
 
 type Location = { id: string; code: string; name: string };
 type OrderItemLite = {
@@ -72,33 +80,34 @@ export function ReceiveModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[60] bg-black/40 flex items-center justify-center p-4" onClick={onClose}>
-      <Card className="w-full max-w-2xl shadow-soft" onClick={(e) => e.stopPropagation()}>
-        <CardContent className="p-5 space-y-4">
-          <div>
-            <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">{order.orderNo}</div>
-            <h3 className="font-display text-xl text-foreground">Wareneingang buchen</h3>
-          </div>
+    <ResponsiveDialog open onOpenChange={(o) => { if (!o && !busy) onClose(); }}>
+      <ResponsiveDialogContent size="lg">
+        <ResponsiveDialogHeader>
+          <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">{order.orderNo}</div>
+          <ResponsiveDialogTitle className="font-display text-xl text-foreground">Wareneingang buchen</ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
 
+        <ResponsiveDialogBody className="space-y-4">
           <div className="space-y-3">
             {order.items.map((it) => {
               const open = Math.max(0, it.qtyBase - it.qtyReceived);
               return (
-                <div key={it.id} className="grid grid-cols-[2fr_1fr_1.5fr] gap-3 items-center border-b border-border pb-3 last:border-b-0 last:pb-0">
+                <div key={it.id} className="grid grid-cols-1 gap-3 items-center border-b border-border pb-3 last:border-b-0 last:pb-0 sm:grid-cols-[2fr_1fr_1.5fr]">
                   <div>
                     <div className="font-medium text-foreground">{it.article.name}</div>
                     <div className="text-muted-foreground font-mono text-xs">{it.article.sku} · offen: {open} {it.article.baseUnit}</div>
                   </div>
                   <Input
-                    type="number" min={0} max={open}
+                    type="number" inputMode="numeric" min={0} max={open}
                     value={lines[it.id]?.qty ?? 0}
                     onChange={(e) => setQty(it.id, Number(e.target.value))}
-                    className="text-sm"
+                    aria-label={`Menge ${it.article.name}`}
                   />
                   <select
                     value={lines[it.id]?.locationId ?? ""}
                     onChange={(e) => setLoc(it.id, e.target.value)}
-                    className="px-3 py-2 border border-border rounded-lg bg-card text-sm"
+                    aria-label={`Lagerplatz ${it.article.name}`}
+                    className={NATIVE_SELECT_CLASS}
                   >
                     <option value="">{it.article.defaultLocationId ? "Standard-Lagerplatz" : "— Lagerplatz wählen —"}</option>
                     {locations.map((l) => <option key={l.id} value={l.id}>{l.code} · {l.name}</option>)}
@@ -114,13 +123,13 @@ export function ReceiveModal({
           </label>
 
           {err && <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">{err}</div>}
+        </ResponsiveDialogBody>
 
-          <div className="flex justify-end gap-2 pt-1">
-            <Button variant="outline" onClick={onClose} disabled={busy}>Abbrechen</Button>
-            <Button onClick={submit} disabled={busy} className="bg-emerald-600 hover:bg-emerald-500 text-white">{busy ? "Buche…" : "Wareneingang buchen"}</Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        <ResponsiveDialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>Abbrechen</Button>
+          <Button onClick={submit} disabled={busy} className="bg-emerald-600 hover:bg-emerald-500 text-white">{busy ? "Buche…" : "Wareneingang buchen"}</Button>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }

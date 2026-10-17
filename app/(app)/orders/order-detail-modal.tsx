@@ -4,7 +4,15 @@ import { FlashBanner } from "@/components/ui/flash-banner";
 
 import { useCallback, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogDescription,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ReceiveModal } from "./receive-modal";
@@ -110,31 +118,32 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
 
   return (
     <>
-      <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-4xl">
+      <ResponsiveDialog open={open} onOpenChange={(o) => !o && onClose()}>
+        <ResponsiveDialogContent size="xl">
           {loading || !order ? (
             <>
-              <DialogHeader className="sr-only">
-                <DialogTitle>Bestellungs-Detail wird geladen</DialogTitle>
-              </DialogHeader>
+              <ResponsiveDialogHeader className="sr-only">
+                <ResponsiveDialogTitle>Bestellungs-Detail wird geladen</ResponsiveDialogTitle>
+              </ResponsiveDialogHeader>
               <div className="py-10 text-center text-muted-foreground">Lade…</div>
             </>
           ) : (
             <>
-              <DialogHeader>
+              <ResponsiveDialogHeader>
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground font-mono">{order.orderNo}</div>
-                    <DialogTitle className="font-display text-2xl text-foreground">{order.supplier.name}</DialogTitle>
-                    <DialogDescription className="text-muted-foreground">{order.supplier.city ?? "—"} · {order.supplier.email ?? "—"}</DialogDescription>
+                    <ResponsiveDialogTitle className="font-display text-2xl text-foreground">{order.supplier.name}</ResponsiveDialogTitle>
+                    <ResponsiveDialogDescription className="text-muted-foreground">{order.supplier.city ?? "—"} · {order.supplier.email ?? "—"}</ResponsiveDialogDescription>
                   </div>
                   <div className="flex items-center gap-2 flex-wrap">
                     <StatusPill style={STATUS_STYLES[order.status]}>{order.status}</StatusPill>
                     <Badge variant="outline" className="text-xs">{order.supplier.channel}</Badge>
                   </div>
                 </div>
-              </DialogHeader>
+              </ResponsiveDialogHeader>
 
+              <ResponsiveDialogBody className="space-y-4">
               <FlashBanner flash={message} />
 
               {/* Summary KPIs */}
@@ -145,8 +154,32 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
                 <Kpi label="Versendet" value={order.sentAt ? new Date(order.sentAt).toLocaleString("de-DE", { dateStyle: "short", timeStyle: "short" }) : "—"} />
               </div>
 
-              {/* Items table */}
-              <div className="border border-border rounded-xl overflow-hidden">
+              {/* Positionen: Karten mobil, Grid ab md */}
+              <div data-slot="order-item-cards" className="divide-y divide-border rounded-xl border border-border md:hidden">
+                {order.items.map((it) => (
+                  <div key={it.id} className="space-y-1.5 px-4 py-3 text-sm">
+                    <div>
+                      <div className="font-medium text-foreground">{it.article.name}</div>
+                      <div className="text-muted-foreground font-mono text-xs">{it.article.sku}</div>
+                    </div>
+                    <div className="flex flex-wrap items-baseline justify-between gap-x-3">
+                      <span>{it.qtyOrderUnit} × {it.article.orderUnit} <span className="text-muted-foreground text-xs">({it.qtyBase} {it.article.baseUnit})</span></span>
+                      <span className={(it.qtyReceived >= it.qtyBase ? "text-emerald-700" : it.qtyReceived > 0 ? "text-gold-700" : "text-muted-foreground")}>
+                        Erhalten: {it.qtyReceived} / {it.qtyBase} {it.article.baseUnit}
+                      </span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-3">
+                      <span className="text-xs text-muted-foreground">EK {Number(it.unitPrice).toFixed(2)} {order.currency}</span>
+                      <span className="font-medium">{Number(it.lineTotal).toFixed(2)} {order.currency}</span>
+                    </div>
+                  </div>
+                ))}
+                <div className="flex justify-between bg-muted/40 px-4 py-3 font-display text-sm text-foreground">
+                  <span>Gesamt</span>
+                  <span>{Number(order.total).toFixed(2)} {order.currency}</span>
+                </div>
+              </div>
+              <div className="hidden overflow-hidden rounded-xl border border-border md:block">
                 <div className="bg-muted/40 px-4 py-2 text-[11px] tracking-[0.16em] uppercase text-muted-foreground grid grid-cols-[2fr_1fr_1fr_1fr_1fr] gap-3">
                   <div>Artikel</div><div>Menge</div><div>Erhalten</div><div className="text-right">EK</div><div className="text-right">Summe</div>
                 </div>
@@ -200,40 +233,40 @@ export function OrderDetailModal({ orderId, onClose }: { orderId: string | null;
                 </ol>
               </div>
 
-              {/* Actions */}
-              <div className="flex justify-between gap-2 pt-2 flex-wrap">
-                <div className="flex gap-2 flex-wrap">
-                  <a href={`/api/v1/orders/${order.id}/pdf`} target="_blank" rel="noreferrer">
-                    <Button variant="outline" className="text-sm">PDF</Button>
-                  </a>
-                </div>
-                <div className="flex gap-2 flex-wrap">
+              </ResponsiveDialogBody>
+
+              {/* Aktionen */}
+              <ResponsiveDialogFooter className="md:justify-between">
+                <a href={`/api/v1/orders/${order.id}/pdf`} target="_blank" rel="noreferrer" className="max-md:w-full">
+                  <Button variant="outline" className="max-md:w-full">PDF</Button>
+                </a>
+                <div className="flex gap-2 max-md:flex-col max-md:*:w-full md:flex-wrap">
                   {can.cancel && (
-                    <Button variant="outline" onClick={() => transition("cancel", { successText: "Storniert" })} disabled={busy} className="text-sm text-rose-600 border-rose-200 hover:bg-rose-50">
+                    <Button variant="outline" onClick={() => transition("cancel", { successText: "Storniert" })} disabled={busy} className="text-rose-600 border-rose-200 hover:bg-rose-50">
                       Stornieren
                     </Button>
                   )}
                   {can.approve && (
-                    <Button onClick={() => transition("approve", { successText: "Freigegeben (APPROVED)" })} disabled={busy} className="bg-gold-500 hover:bg-gold-400 text-foreground text-sm font-medium">
+                    <Button onClick={() => transition("approve", { successText: "Freigegeben (APPROVED)" })} disabled={busy} className="bg-gold-500 hover:bg-gold-400 text-foreground font-medium">
                       Freigeben
                     </Button>
                   )}
                   {can.send && (
-                    <Button onClick={() => transition("send", { successText: "Versendet — Status SENT" })} disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900 text-sm">
+                    <Button onClick={() => transition("send", { successText: "Versendet — Status SENT" })} disabled={busy} className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900">
                       Senden
                     </Button>
                   )}
                   {can.receive && (
-                    <Button onClick={() => setReceiveOpen(true)} disabled={busy} className="bg-emerald-600 hover:bg-emerald-500 text-white text-sm">
+                    <Button onClick={() => setReceiveOpen(true)} disabled={busy} className="bg-emerald-600 hover:bg-emerald-500 text-white">
                       Wareneingang
                     </Button>
                   )}
                 </div>
-              </div>
+              </ResponsiveDialogFooter>
             </>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
 
       {order && receiveOpen && (
         <ReceiveModal

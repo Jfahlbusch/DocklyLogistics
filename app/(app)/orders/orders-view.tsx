@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { OrderDetailModal } from "./order-detail-modal";
 import { useOpenParam } from "@/lib/search/use-open-param";
 import { StatusPill } from "@/components/ui/status-pill";
+import { NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
 
 type Row = {
   id: string;
@@ -33,6 +34,8 @@ const STATUS_STYLES: Record<string, string> = {
   CLOSED:             "bg-muted text-muted-foreground",
   CANCELLED:          "bg-rose-50 text-rose-700",
 };
+
+const CREATE_HINT = "Manuelle Anlage über die API (Scalar) oder über Bestellvorschläge → Bulk-Confirm";
 
 const CHANNEL_STYLES: Record<string, string> = {
   EMAIL: "bg-muted text-foreground",
@@ -74,29 +77,32 @@ export function OrdersView({
           <p className="text-sm text-muted-foreground mt-1">{total} Bestellungen im Zeitraum</p>
         </div>
         {canCreate && (
-          <Button className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900" disabled title="Manuelle Anlage über die API (Scalar) oder über Bestellvorschläge → Bulk-Confirm">
-            + Neue Bestellung
-          </Button>
+          <div className="flex flex-col items-start gap-1 sm:items-end">
+            <Button className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900" disabled title={CREATE_HINT}>
+              + Neue Bestellung
+            </Button>
+            <p className="max-w-xs text-xs text-muted-foreground sm:text-right">{CREATE_HINT}</p>
+          </div>
         )}
       </div>
 
       <Card className="shadow-soft">
         <form onSubmit={onSearch} className="flex flex-wrap items-center gap-2 px-5 py-4 border-b border-border">
-          <Input value={searchValue} onChange={(e) => setSearchValue(e.target.value)} placeholder="Suche nach Bestell-Nr. oder Lieferant…" className="flex-1 min-w-[240px]" />
-          <select className="px-3 py-2 rounded-lg border border-border text-sm bg-card" value={filters.status} onChange={(e) => setParam("status", e.target.value)}>
+          <Input value={searchValue} onChange={(e) => setSearchValue(e.target.value)} type="search" enterKeyHint="search" placeholder="Suche nach Bestell-Nr. oder Lieferant…" className="flex-1 min-w-[240px]" />
+          <select className={NATIVE_SELECT_CLASS} value={filters.status} onChange={(e) => setParam("status", e.target.value)}>
             <option value="">Alle Status</option>
             {["DRAFT","REVIEW","APPROVED","SENT","CONFIRMED","PARTIALLY_RECEIVED","RECEIVED","CLOSED","CANCELLED"].map((s) =>
               <option key={s} value={s}>{s}</option>
             )}
           </select>
-          <select className="px-3 py-2 rounded-lg border border-border text-sm bg-card" value={filters.supplierId} onChange={(e) => setParam("supplierId", e.target.value)}>
+          <select className={NATIVE_SELECT_CLASS} value={filters.supplierId} onChange={(e) => setParam("supplierId", e.target.value)}>
             <option value="">Alle Lieferanten</option>
             {suppliers.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
           </select>
-          <Button type="submit" variant="outline" className="text-sm">Suchen</Button>
+          <Button type="submit" variant="outline">Suchen</Button>
         </form>
 
-        <div className="hidden overflow-x-auto md:block">
+        <div className="hidden xl:block">
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-muted/40 text-[11px] tracking-[0.16em] uppercase text-muted-foreground">
@@ -134,8 +140,8 @@ export function OrdersView({
           </table>
         </div>
 
-        {/* Mobile: cards instead of a horizontally-scrolling table */}
-        <div className="divide-y divide-border md:hidden">
+        {/* Mobil/Tablet (< xl): Karten statt Tabelle */}
+        <div data-slot="orders-cards" className="divide-y divide-border xl:hidden">
           {rows.length === 0 && (
             <div className="py-10 text-center text-muted-foreground">Keine Bestellungen.</div>
           )}
@@ -144,7 +150,7 @@ export function OrdersView({
               key={r.id}
               type="button"
               onClick={() => setSelected(r.id)}
-              className="flex w-full flex-col gap-1.5 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+              className="flex min-h-11 w-full flex-col gap-1.5 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
             >
               <div className="flex items-baseline justify-between gap-2">
                 <span className="font-mono text-xs text-foreground">{r.orderNo}</span>
