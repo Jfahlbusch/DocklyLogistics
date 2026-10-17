@@ -6,8 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FlashBanner } from "@/components/ui/flash-banner";
 import {
-  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
+  ResponsiveDialog, ResponsiveDialogBody, ResponsiveDialogContent, ResponsiveDialogDescription,
+  ResponsiveDialogFooter, ResponsiveDialogHeader, ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
+import {
+  CHECKBOX_CLASS, CHECK_LABEL_CLASS, NATIVE_SELECT_CLASS, NATIVE_TEXTAREA_MONO_CLASS,
+} from "@/components/ui/native-field";
+import { cn } from "@/lib/utils";
 import { SftpSection } from "./sftp-section";
 
 type EdiSettings = {
@@ -273,7 +278,7 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                     </span>
                   </div>
                   {canManage && (
-                    <div className="flex flex-wrap gap-1.5">
+                    <div className="grid w-full grid-cols-2 gap-2 sm:flex sm:w-auto sm:flex-wrap sm:gap-1.5">
                       <Button
                         variant="outline"
                         className="px-2 py-1 text-xs"
@@ -410,10 +415,10 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
           </div>
 
           <div className="space-y-3 border-t border-border pt-4">
-            <label className="flex items-start gap-3">
+            <label className={cn(CHECK_LABEL_CLASS, "items-start py-1 md:py-0")}>
               <input
                 type="checkbox"
-                className="mt-0.5 h-4 w-4"
+                className={cn(CHECKBOX_CLASS, "mt-0.5 shrink-0")}
                 checked={settings.inboundActive}
                 disabled={!canManage || busy}
                 onChange={(e) => patch({ inboundActive: e.target.checked })}
@@ -425,10 +430,10 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                 </span>
               </span>
             </label>
-            <label className="flex items-start gap-3">
+            <label className={cn(CHECK_LABEL_CLASS, "items-start py-1 md:py-0")}>
               <input
                 type="checkbox"
-                className="mt-0.5 h-4 w-4"
+                className={cn(CHECKBOX_CLASS, "mt-0.5 shrink-0")}
                 checked={settings.autoConfirm}
                 disabled={!canManage || busy}
                 onChange={(e) => patch({ autoConfirm: e.target.checked })}
@@ -476,18 +481,19 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
       </Card>
 
       {/* Anlege-Dialog */}
-      <Dialog open={draft !== null} onOpenChange={(o) => { if (!o) setDraft(null); }}>
-        <DialogContent className="max-w-[calc(100%-2rem)] sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-display">{draft?.id ? "Partner-Postfach bearbeiten" : "Neues Partner-Postfach"}</DialogTitle>
-            <DialogDescription>
+      <ResponsiveDialog open={draft !== null} onOpenChange={(o) => { if (!o) setDraft(null); }}>
+        <ResponsiveDialogContent size="lg">
+          <ResponsiveDialogHeader>
+            <ResponsiveDialogTitle className="font-display">{draft?.id ? "Partner-Postfach bearbeiten" : "Neues Partner-Postfach"}</ResponsiveDialogTitle>
+            <ResponsiveDialogDescription>
               {draft?.id
                 ? "Änderungen wirken sofort. Der Postfach-Token bleibt unverändert (zum Rotieren den Button in der Liste nutzen)."
                 : "Der Partner erhält eine eigene Empfangs-URL. GLN und Lieferant sind optional, erhöhen aber die Sicherheit (Absender-Prüfung, Bestätigungs-Bindung)."}
-            </DialogDescription>
-          </DialogHeader>
+            </ResponsiveDialogDescription>
+          </ResponsiveDialogHeader>
           {draft && (
-            <div className="space-y-3 text-sm">
+            <>
+            <ResponsiveDialogBody className="space-y-3 pb-4 text-sm">
               <div>
                 <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Name *</label>
                 <Input
@@ -502,12 +508,13 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                   value={draft.partnerGln}
                   onChange={(e) => setDraft({ ...draft, partnerGln: e.target.value })}
                   placeholder="optional, z. B. 4012345000009"
+                  inputMode="numeric"
                 />
               </div>
               <div>
                 <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Lieferant verknüpfen</label>
                 <select
-                  className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm"
+                  className={`w-full ${NATIVE_SELECT_CLASS}`}
                   value={draft.supplierId}
                   onChange={(e) => setDraft({ ...draft, supplierId: e.target.value })}
                 >
@@ -529,6 +536,9 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                       value={draft.as2Id}
                       onChange={(e) => setDraft({ ...draft, as2Id: e.target.value })}
                       placeholder="z. B. PARTNER-AS2"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                     />
                   </div>
                   <div>
@@ -537,6 +547,11 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                       value={draft.as2Url}
                       onChange={(e) => setDraft({ ...draft, as2Url: e.target.value })}
                       placeholder="https://as2.partner.de/receive"
+                      type="url"
+                      inputMode="url"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
                     />
                   </div>
                 </div>
@@ -551,7 +566,10 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                         : "-----BEGIN CERTIFICATE-----"
                     }
                     rows={4}
-                    className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs"
+                    className={`w-full ${NATIVE_TEXTAREA_MONO_CLASS}`}
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    spellCheck={false}
                   />
                   <p className="mt-1 text-xs text-muted-foreground">
                     {draft.id && draft.hadCert
@@ -562,7 +580,8 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                   </p>
                 </div>
               </div>
-              <div className="flex justify-end gap-2 pt-1">
+            </ResponsiveDialogBody>
+            <ResponsiveDialogFooter>
                 <Button variant="outline" onClick={() => setDraft(null)}>Abbrechen</Button>
                 <Button
                   disabled={busy || draft.name.trim().length === 0}
@@ -571,11 +590,11 @@ export function EdiTab({ canManage }: { canManage: boolean }) {
                 >
                   {busy ? "Speichere…" : draft.id ? "Speichern" : "Anlegen"}
                 </Button>
-              </div>
-            </div>
+            </ResponsiveDialogFooter>
+            </>
           )}
-        </DialogContent>
-      </Dialog>
+        </ResponsiveDialogContent>
+      </ResponsiveDialog>
     </div>
   );
 }

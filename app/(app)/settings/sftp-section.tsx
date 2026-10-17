@@ -5,6 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FlashBanner } from "@/components/ui/flash-banner";
+import {
+  CHECKBOX_CLASS, CHECK_LABEL_CLASS, NATIVE_SELECT_CLASS, NATIVE_TEXTAREA_MONO_CLASS,
+} from "@/components/ui/native-field";
+
+const NO_AUTOFIX = { autoCapitalize: "none", autoCorrect: "off", spellCheck: false } as const;
 
 type SftpView = {
   host: string; port: number; username: string; authType: "KEY" | "PASSWORD";
@@ -121,19 +126,19 @@ export function SftpSection({ canManage }: { canManage: boolean }) {
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
           <div className="sm:col-span-2">
             <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Host</label>
-            <Input value={form.host} disabled={disabled} onChange={(e) => set("host", e.target.value)} placeholder="sftp.intern.example / 172.16.x.x" />
+            <Input value={form.host} disabled={disabled} onChange={(e) => set("host", e.target.value)} {...NO_AUTOFIX} placeholder="sftp.intern.example / 172.16.x.x" />
           </div>
           <div>
             <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Port</label>
-            <Input value={form.port} disabled={disabled} onChange={(e) => set("port", e.target.value)} placeholder="22" />
+            <Input value={form.port} disabled={disabled} onChange={(e) => set("port", e.target.value)} inputMode="numeric" placeholder="22" />
           </div>
           <div>
             <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Benutzer</label>
-            <Input value={form.username} disabled={disabled} onChange={(e) => set("username", e.target.value)} />
+            <Input value={form.username} disabled={disabled} onChange={(e) => set("username", e.target.value)} {...NO_AUTOFIX} />
           </div>
           <div>
             <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Auth</label>
-            <select className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={form.authType} disabled={disabled} onChange={(e) => set("authType", e.target.value as Form["authType"])}>
+            <select className={`w-full ${NATIVE_SELECT_CLASS}`} value={form.authType} disabled={disabled} onChange={(e) => set("authType", e.target.value as Form["authType"])}>
               <option value="KEY">Privater Schlüssel</option>
               <option value="PASSWORD">Passwort</option>
             </select>
@@ -153,7 +158,8 @@ export function SftpSection({ canManage }: { canManage: boolean }) {
             <textarea
               value={form.secret} disabled={disabled} onChange={(e) => set("secret", e.target.value)} rows={3}
               placeholder={view?.hasPrivateKey ? "hinterlegt — leer lassen zum Behalten, neuen Key einfügen zum Ersetzen" : "-----BEGIN OPENSSH PRIVATE KEY-----"}
-              className="w-full rounded-lg border border-border bg-card px-3 py-2 font-mono text-xs"
+              className={`w-full ${NATIVE_TEXTAREA_MONO_CLASS}`}
+              {...NO_AUTOFIX}
             />
           ) : (
             <Input type="password" value={form.secret} disabled={disabled} onChange={(e) => set("secret", e.target.value)} placeholder={view?.hasPassword ? "hinterlegt — leer lassen zum Behalten" : "Passwort"} />
@@ -172,31 +178,31 @@ export function SftpSection({ canManage }: { canManage: boolean }) {
           </div>
           <div>
             <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Eingangs-Format (für die WaWi)</label>
-            <select className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={form.inboxFormat} disabled={disabled} onChange={(e) => set("inboxFormat", e.target.value as Form["inboxFormat"])}>
+            <select className={`w-full ${NATIVE_SELECT_CLASS}`} value={form.inboxFormat} disabled={disabled} onChange={(e) => set("inboxFormat", e.target.value as Form["inboxFormat"])}>
               <option value="XML">XML (Standard)</option>
               <option value="EDIFACT">EDIFACT (roh)</option>
             </select>
           </div>
           <div>
             <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Routing (Ausgang)</label>
-            <select className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm" value={form.routing} disabled={disabled} onChange={(e) => set("routing", e.target.value as Form["routing"])}>
+            <select className={`w-full ${NATIVE_SELECT_CLASS}`} value={form.routing} disabled={disabled} onChange={(e) => set("routing", e.target.value as Form["routing"])}>
               <option value="FILE">Empfänger aus der Datei (EDIFACT-UNB)</option>
               <option value="SUBFOLDER">Unterordner je Partner-GLN</option>
             </select>
           </div>
           <div>
             <label className="mb-1 block text-[11px] uppercase tracking-[0.16em] text-muted-foreground">Host-Key-Fingerprint (optional, SHA256)</label>
-            <Input value={form.hostKeyFingerprint} disabled={disabled} onChange={(e) => set("hostKeyFingerprint", e.target.value)} placeholder="MITM-Schutz — leer = keine Prüfung" />
+            <Input value={form.hostKeyFingerprint} disabled={disabled} onChange={(e) => set("hostKeyFingerprint", e.target.value)} {...NO_AUTOFIX} placeholder="MITM-Schutz — leer = keine Prüfung" />
           </div>
         </div>
 
         <div className="flex flex-wrap gap-4 border-t border-border pt-3">
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="h-4 w-4" checked={form.active} disabled={disabled} onChange={(e) => set("active", e.target.checked)} />
+          <label className={`${CHECK_LABEL_CLASS} text-sm`}>
+            <input type="checkbox" className={CHECKBOX_CLASS} checked={form.active} disabled={disabled} onChange={(e) => set("active", e.target.checked)} />
             Anbindung aktiv
           </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input type="checkbox" className="h-4 w-4" checked={form.autoSend} disabled={disabled} onChange={(e) => set("autoSend", e.target.checked)} />
+          <label className={`${CHECK_LABEL_CLASS} text-sm`}>
+            <input type="checkbox" className={CHECKBOX_CLASS} checked={form.autoSend} disabled={disabled} onChange={(e) => set("autoSend", e.target.checked)} />
             Ausgangsordner automatisch versenden (Cron)
           </label>
         </div>
