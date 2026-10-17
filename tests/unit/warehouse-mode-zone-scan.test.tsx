@@ -56,11 +56,11 @@ describe("Lagermodus: Zonen-QR", () => {
     expect(push).not.toHaveBeenCalled();
   });
 
-  it("zeigt mit zoneId den Zonen-Rundgang-Platzhalter mit der ID", () => {
+  it("zeigt mit zoneId den Rundgang statt des Scanners", () => {
     renderWithIntl(<WarehouseModeView role="USER" tenant="t" zoneId="z-42" />);
-    const walk = screen.getByTestId("zone-walk");
-    expect(walk).toHaveTextContent("Zonen-Rundgang");
-    expect(walk).toHaveTextContent("z-42");
+    expect(screen.getByTestId("zone-walk")).toBeInTheDocument();
+    expect(screen.queryByPlaceholderText(/SKU \/ EAN/)).toBeNull();
+    expect(screen.getByRole("link", { name: /Rundgang beenden/ })).toHaveAttribute("href", "/warehouse-mode");
   });
 
   it("zeigt ohne zoneId keinen Rundgang", () => {

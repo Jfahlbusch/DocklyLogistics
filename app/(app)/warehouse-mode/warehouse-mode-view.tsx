@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ArrowLeft, Camera, KeyRound, Upload } from "lucide-react";
 import { parseScan } from "@/lib/warehouse/parse-scan";
+import { ZoneWalk } from "@/components/warehouse/zone-walk";
 import { ArticleOrderCard } from "@/components/warehouse/article-order-card";
 import {
   addToOfflineQueue,
@@ -47,11 +48,14 @@ type ResetReader = { reset?: () => void };
 export function WarehouseModeView({
   role,
   zoneId,
+  initialIndex,
 }: {
   role: string;
   tenant: string;
-  /** Aus dem Deep-Link `/warehouse-mode?zone=<id>` (Zonen-QR); T14 ersetzt den Platzhalter durch den Rundgang. */
+  /** Aus dem Deep-Link `/warehouse-mode?zone=<id>` (Zonen-QR): zeigt den Zonen-Rundgang statt des Scanners. */
   zoneId?: string;
+  /** Startposition des Rundgangs (`&i=<index>`). */
+  initialIndex?: number;
 }) {
   const t = useTranslations("warehouse.walk");
   const router = useRouter();
@@ -260,7 +264,7 @@ export function WarehouseModeView({
           <div className="text-[11px] tracking-[0.18em] uppercase text-gold-700 font-medium">
             Lagermodus
           </div>
-          <h1 className="font-display text-2xl sm:text-3xl text-foreground">Scanner</h1>
+          <h1 className="font-display text-2xl sm:text-3xl text-foreground">{zoneId ? t("title") : "Scanner"}</h1>
         </div>
         <div className="flex gap-2 items-center">
           {scanning && (
@@ -269,9 +273,9 @@ export function WarehouseModeView({
               Kamera aktiv
             </span>
           )}
-          <Link href="/dashboard">
-            <Button variant="outline" className="text-sm gap-2">
-              <ArrowLeft size={14} /> Beenden
+          <Link href={zoneId ? "/warehouse-mode" : "/dashboard"}>
+            <Button variant="outline" className="text-sm gap-2 h-11">
+              <ArrowLeft size={14} /> {zoneId ? t("end") : "Beenden"}
             </Button>
           </Link>
         </div>
@@ -290,16 +294,9 @@ export function WarehouseModeView({
         </div>
       )}
 
-      {zoneId && (
-        <Card className="shadow-soft" data-testid="zone-walk">
-          <CardContent className="p-5 space-y-1">
-            <h2 className="font-display text-lg text-foreground">{t("title")}</h2>
-            <div className="text-sm text-foreground">{t("zone", { id: zoneId })}</div>
-            <p className="text-sm text-muted-foreground">{t("placeholder")}</p>
-          </CardContent>
-        </Card>
-      )}
+      {zoneId && <ZoneWalk zoneId={zoneId} initialIndex={initialIndex} />}
 
+      {!zoneId && (
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Scanner */}
         <div className="space-y-3">
@@ -442,7 +439,10 @@ export function WarehouseModeView({
         </Card>
       </div>
 
+      )}
+
       {/* Open suggestions footer */}
+      {!zoneId && (
       <Card className="shadow-soft">
         <div className="px-5 py-4 border-b border-border flex items-center justify-between">
           <h2 className="font-display text-lg text-foreground">
@@ -483,6 +483,7 @@ export function WarehouseModeView({
           )}
         </CardContent>
       </Card>
+      )}
 
       {adjustOpen && article && (
         <AdjustModal

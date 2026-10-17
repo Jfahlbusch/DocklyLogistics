@@ -125,8 +125,28 @@
     },
     "walk": {
       "title": "Zonen-Rundgang",
-      "zone": "Zone: {id}",
-      "placeholder": "Der Rundgang durch die Artikel dieser Zone wird hier angezeigt."
+      "end": "Rundgang beenden",
+      "header": "Zone {zone} · {current} / {total}",
+      "progress": "Fortschritt des Rundgangs",
+      "location": "Lagerplatz",
+      "noLocation": "Kein Lagerplatz",
+      "next": "Übernehmen & weiter",
+      "skip": "Überspringen",
+      "back": "Zurück",
+      "loading": "Rundgang wird geladen…",
+      "notFound": "Zone nicht gefunden",
+      "backToWarehouse": "Zurück zum Lagermodus",
+      "loadFailed": "Der Rundgang konnte nicht geladen werden.",
+      "retry": "Erneut versuchen",
+      "empty": "Keine Artikel in dieser Zone",
+      "toZones": "Zur Zonenverwaltung",
+      "doneTitle": "Rundgang abgeschlossen",
+      "doneZone": "Zone {zone}",
+      "accepted": "Übernommen",
+      "skipped": "Übersprungen",
+      "warnings": "Mit Kapazitätswarnung",
+      "toSuggestions": "Zu den Bestellvorschlägen",
+      "restart": "Rundgang neu starten"
     }
   },
   "zones": {

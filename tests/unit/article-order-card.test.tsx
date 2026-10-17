@@ -142,4 +142,21 @@ describe("ArticleOrderCard", () => {
     expect(submit().hasAttribute("disabled")).toBe(true);
     expect(input().disabled).toBe(true);
   });
+
+  it("submitLabel ersetzt die Beschriftung; onSaved liefert dismissed", async () => {
+    mockFetch({ put: { status: 200, body: { data: { status: "DISMISSED" } } } });
+    const onSaved = vi.fn();
+    renderWithIntl(<ArticleOrderCard article={article} stockTotal={120} onSaved={onSaved} submitLabel="Weiter" />);
+    fireEvent.click(screen.getByRole("button", { name: "Weiter" }));
+    await waitFor(() => expect(onSaved).toHaveBeenCalledTimes(1));
+    expect(onSaved.mock.calls[0][0]).toMatchObject({ dismissed: true, capacityWarning: false });
+  });
+
+  it("onNothingToOrder wird bei 204 aufgerufen", async () => {
+    mockFetch({ put: { status: 204 } });
+    const onNothing = vi.fn();
+    renderWithIntl(<ArticleOrderCard article={article} stockTotal={400} onNothingToOrder={onNothing} />);
+    fireEvent.click(submit());
+    await waitFor(() => expect(onNothing).toHaveBeenCalledTimes(1));
+  });
 });

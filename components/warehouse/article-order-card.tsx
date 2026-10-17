@@ -19,7 +19,7 @@ export type OrderCardArticle = {
   maxStock?: number | null;
 };
 
-export type OrderCardSaved = { qtyOrderUnit: number; capacityWarning: boolean };
+export type OrderCardSaved = { qtyOrderUnit: number; capacityWarning: boolean; dismissed: boolean };
 
 type Props = {
   article: OrderCardArticle;
@@ -30,6 +30,10 @@ type Props = {
   /** Zusatzinhalt zwischen Stepper und Übernehmen-Knopf (z. B. Bestand pro Lagerplatz). */
   children?: ReactNode;
   disabled?: boolean;
+  /** Beschriftung des Übernehmen-Knopfs (Standard: „In Bestellvorschläge übernehmen“; Rundgang: „Übernehmen & weiter“). */
+  submitLabel?: string;
+  /** Wird aufgerufen, wenn der Server 204 liefert (Menge 0, kein offener Vorschlag) – Anfrage war erfolgreich, es gibt nichts zu speichern. */
+  onNothingToOrder?: () => void;
 };
 
 type Message = { ok: boolean; text: string };
@@ -50,7 +54,7 @@ function Kpi({ label, value }: { label: string; value: string }) {
  * zur empfohlenen Menge bzw. dem offenen Vorschlag) und Übernahme in die Bestellvorschläge.
  * Reine Props/Callbacks – kennt weder Scanner noch Seitenzustand.
  */
-export function ArticleOrderCard({ article, stockTotal, onSaved, children, disabled = false }: Props) {
+export function ArticleOrderCard({ article, stockTotal, onSaved, children, disabled = false, submitLabel, onNothingToOrder }: Props) {
   const t = useTranslations("warehouse.card");
   const suggested = suggestedOrderQty(article, stockTotal);
   const [qty, setQty] = useState(suggested);
@@ -104,6 +108,7 @@ export function ArticleOrderCard({ article, stockTotal, onSaved, children, disab
       });
       if (r.status === 204) {
         setMessage({ ok: true, text: t("nothingToOrder") });
+        onNothingToOrder?.();
         return;
       }
       if (!r.ok) {
@@ -120,7 +125,7 @@ export function ArticleOrderCard({ article, stockTotal, onSaved, children, disab
           ? t("dismissed")
           : t("saved", { qty, unit: article.orderUnit }) + (warning ? ` ${t("capacityHint")}` : ""),
       });
-      onSaved?.({ qtyOrderUnit: qty, capacityWarning: warning });
+      onSaved?.({ qtyOrderUnit: qty, capacityWarning: warning, dismissed });
     } catch {
       setMessage({ ok: false, text: t("saveFailed") });
     } finally {
@@ -185,7 +190,7 @@ export function ArticleOrderCard({ article, stockTotal, onSaved, children, disab
         disabled={disabled || busy}
         className="h-14 w-full bg-gold-500 text-base font-medium text-foreground hover:bg-gold-400"
       >
-        {busy ? t("saving") : t("submit")}
+        {busy ? t("saving") : (submitLabel ?? t("submit"))}
       </Button>
     </div>
   );
