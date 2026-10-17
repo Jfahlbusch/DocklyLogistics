@@ -49,3 +49,15 @@ registry.registerPath({
     500: { description: "Basis-URL (NEXT_PUBLIC_APP_URL) nicht konfiguriert" },
   },
 });
+registry.registerPath({
+  method: "get", path: "/zones/{id}/walk",
+  summary: "Artikel einer Zone in Rundgang-Reihenfolge (Lagerplatz-Code natürlich aufsteigend, dann Name; ohne Lagerplatz zuletzt)",
+  description: "Nur aktive Artikel der Zone. Je Eintrag: article, location (Standard-Lagerplatz oder null), stockTotal (Summe aller Lagerplätze), suggestedQty (Bestelleinheiten) und pendingSuggestion (offener Vorschlag oder null).",
+  tags: ["Zones"],
+  request: { params: z.object({ id: ZoneIdSchema }) },
+  responses: {
+    200: { description: "{ data: { zone: {id, name}, items: [{ article, location, stockTotal, suggestedQty, pendingSuggestion }] } }" },
+    401: { description: "Nicht angemeldet" },
+    404: { description: "Zone nicht gefunden" },
+  },
+});
