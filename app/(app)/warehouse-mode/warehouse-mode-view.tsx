@@ -7,6 +7,15 @@ import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { NATIVE_SELECT_CLASS } from "@/components/ui/native-field";
+import {
+  ResponsiveDialog,
+  ResponsiveDialogBody,
+  ResponsiveDialogContent,
+  ResponsiveDialogFooter,
+  ResponsiveDialogHeader,
+  ResponsiveDialogTitle,
+} from "@/components/ui/responsive-dialog";
 import { ArrowLeft, Camera, KeyRound, Upload } from "lucide-react";
 import { parseScan } from "@/lib/warehouse/parse-scan";
 import { ZoneWalk } from "@/components/warehouse/zone-walk";
@@ -274,7 +283,7 @@ export function WarehouseModeView({
             </span>
           )}
           <Link href={zoneId ? "/warehouse-mode" : "/dashboard"}>
-            <Button variant="outline" className="text-sm gap-2 h-11">
+            <Button variant="outline" className="text-sm gap-2 h-11 md:h-8">
               <ArrowLeft size={14} /> {zoneId ? t("end") : "Beenden"}
             </Button>
           </Link>
@@ -347,7 +356,7 @@ export function WarehouseModeView({
           <div className="flex flex-wrap gap-2">
             <Button
               variant="outline"
-              className="text-sm gap-2"
+              className="text-sm gap-2 h-11 md:h-8"
               onClick={scanning ? stopScanner : startScanner}
             >
               <Camera size={14} />{" "}
@@ -367,15 +376,19 @@ export function WarehouseModeView({
                 value={manualValue}
                 onChange={(e) => setManualValue(e.target.value)}
                 placeholder="SKU / EAN manuell eingeben…"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                enterKeyHint="search"
                 className="flex-1"
               />
-              <Button type="submit" variant="outline" className="text-sm gap-2">
+              <Button type="submit" variant="outline" className="text-sm gap-2 h-11 md:h-8">
                 <KeyRound size={14} /> Suche
               </Button>
             </form>
             <Button
               variant="outline"
-              className="text-sm gap-2"
+              className="text-sm gap-2 h-11 md:h-8"
               onClick={flushQueue}
             >
               <Upload size={14} /> Offline-Queue ({offlineCount})
@@ -449,7 +462,7 @@ export function WarehouseModeView({
             Offene Bestellvorschläge ({suggestions.length})
           </h2>
           <Link href="/order-suggestions">
-            <Button variant="outline" className="text-sm">
+            <Button variant="outline" className="text-sm h-11 md:h-8">
               Zur Übersicht
             </Button>
           </Link>
@@ -547,18 +560,14 @@ function AdjustModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
-      onClick={onClose}
-    >
-      <Card
-        className="w-full max-w-md shadow-soft"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <CardContent className="p-5 space-y-3">
-          <h3 className="font-display text-lg text-foreground">
+    <ResponsiveDialog open onOpenChange={(o) => !o && onClose()}>
+      <ResponsiveDialogContent size="md">
+        <ResponsiveDialogHeader>
+          <ResponsiveDialogTitle className="font-display text-lg text-foreground">
             Bestand korrigieren — {article.sku}
-          </h3>
+          </ResponsiveDialogTitle>
+        </ResponsiveDialogHeader>
+        <ResponsiveDialogBody className="space-y-3">
           <label className="block text-sm">
             <div className="text-[11px] tracking-[0.18em] uppercase text-muted-foreground mb-1">
               Lagerplatz
@@ -566,7 +575,7 @@ function AdjustModal({
             <select
               value={locationId}
               onChange={(e) => setLocationId(e.target.value)}
-              className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
+              className={`${NATIVE_SELECT_CLASS} w-full`}
             >
               <option value="">— bitte wählen —</option>
               {locations.map((l) => (
@@ -595,7 +604,7 @@ function AdjustModal({
               onChange={(e) =>
                 setReason(e.target.value as typeof reason)
               }
-              className="w-full px-3 py-2 border border-border rounded-lg bg-card text-sm"
+              className={`${NATIVE_SELECT_CLASS} w-full`}
             >
               <option value="CORRECTION">Korrektur</option>
               <option value="RECEIPT">Wareneingang</option>
@@ -615,24 +624,24 @@ function AdjustModal({
             />
           </label>
           {err && (
-            <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
+            <div role="alert" className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-lg px-3 py-2">
               {err}
             </div>
           )}
-          <div className="flex justify-end gap-2 pt-2">
-            <Button variant="outline" onClick={onClose} disabled={busy}>
-              Abbrechen
-            </Button>
-            <Button
-              onClick={submit}
-              disabled={busy || !locationId || delta === 0}
-              className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
-            >
-              {busy ? "Speichere…" : "Speichern"}
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+        </ResponsiveDialogBody>
+        <ResponsiveDialogFooter>
+          <Button variant="outline" onClick={onClose} disabled={busy}>
+            Abbrechen
+          </Button>
+          <Button
+            onClick={submit}
+            disabled={busy || !locationId || delta === 0}
+            className="bg-navy-900 hover:bg-navy-700 text-white dark:bg-gold-500 dark:hover:bg-gold-400 dark:text-navy-900"
+          >
+            {busy ? "Speichere…" : "Speichern"}
+          </Button>
+        </ResponsiveDialogFooter>
+      </ResponsiveDialogContent>
+    </ResponsiveDialog>
   );
 }
